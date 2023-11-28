@@ -1,0 +1,8 @@
+{
+  "semi": true, // 세미콜론(;) 사용 여부
+  "tabWidth": 2, // 탭 너비
+  "printWidth": 80, // 자동 줄 바꿈이 되는 길이
+  "singleQuote": true, // 싱클 쿼테이션('') 적용 여부
+  "trailingComma": "none", // 여러줄일때 후행 콤마 방식
+  "jsxSingleQuote": true // JSX에 싱글 퀘테이션 사용 여부
+}
