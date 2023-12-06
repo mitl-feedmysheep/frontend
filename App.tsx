@@ -41,6 +41,7 @@ import {
 import { styled } from "styled-components/native";
 import { colorSet } from "./src/constants";
 import { Typo } from "./src/components/common";
+import SearchAddress from "./src/screens/SearchAddress";
 
 const toastConfig = {
   successToast: ({ props }) => {
@@ -94,6 +95,7 @@ function App(): JSX.Element {
           component={ChurchRegistrationCompleteScreen}
         />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="SearchAddress" component={SearchAddress} />
       </Stack.Navigator>
       <Toast config={toastConfig} />
     </NavigationContainer>

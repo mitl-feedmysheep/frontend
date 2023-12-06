@@ -8,7 +8,7 @@ import { colorSet } from "../../constants";
 import { InputAccessoryView, Button } from "react-native";
 
 type Props = {
-  title: string;
+  title?: string;
   textValue: string;
   placeholder: string;
   keyboardType: string;
@@ -20,6 +20,7 @@ type Props = {
   onFocus?: () => {};
   readOnly?: boolean;
   onPressOut?: () => {};
+  onTouchStart?: () => {};
 };
 
 const TextInputWithTitle: React.FC<Props> = ({
@@ -35,20 +36,24 @@ const TextInputWithTitle: React.FC<Props> = ({
   onFocus,
   readOnly = false,
   onPressOut,
-  // isActived,
+  onTouchStart,
 }) => {
   const inputAccessoryViewID = "complete";
   const [isShownPassword, setIsShownPassword] = useState(false);
   const [isNameActivated, setIsNameActivated] = useState(false);
   return (
     <Container>
-      <Typo
-        type="actionBar"
-        color={isActived ? colorSet.neutral.N7 : colorSet.neutral.N4}
-      >
-        {title}
-      </Typo>
-      <EmptyArea height={4} />
+      {title && (
+        <>
+          <Typo
+            type="actionBar"
+            color={isActived ? colorSet.neutral.N7 : colorSet.neutral.N4}
+          >
+            {title}
+          </Typo>
+          <EmptyArea height={4} />
+        </>
+      )}
       <InputContainer isActived={isActived}>
         <Input
           value={textValue}
@@ -57,6 +62,7 @@ const TextInputWithTitle: React.FC<Props> = ({
             // if (test) test();
             if (onFocus) onFocus();
           }}
+          onTouchStart={onTouchStart}
           // onBlur={() => {
           //   if (setIsActived) setIsActived(false);
           // }}
