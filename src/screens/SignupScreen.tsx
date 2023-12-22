@@ -8,6 +8,9 @@ import { Header, EmptyArea, Typo, Shadow } from "../components/common";
 import { TextInputWithTitle } from "../components/text_input";
 import { RoundButton, SmallRoundButton } from "../components/buttons";
 import { colorSet } from "../constants";
+import { useQuery } from "@tanstack/react-query";
+import { verificationCode } from "../constants/apiQueryKeys";
+import { getVerificationNumber } from "../utils/apis";
 
 type Props = {};
 
@@ -45,6 +48,12 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
     useState(false);
   const [isAuthenticationCompleted, setIsAuthenticationCompleted] =
     useState(false);
+
+  const { data } = useQuery({
+    queryKey: [verificationCode, phoneNumber],
+    queryFn: () => getVerificationNumber(phoneNumber),
+    enabled: !!isAuthenticationRequested,
+  });
 
   const isButtonActivated = useMemo(() => {
     if (
@@ -198,8 +207,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               <EmptyArea width={10} />
               <SmallRoundButton
                 onPress={() => {
-                  if (!isAuthenticationCompleted)
+                  if (!isAuthenticationCompleted) {
                     setIsAuthenticationRequested(true);
+                    // 인증번호 api
+                  }
                 }}
                 buttonText={
                   isAuthenticationCompleted ? "인증완료" : "인증번호받기"
