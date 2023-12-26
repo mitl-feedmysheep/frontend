@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   SplashScreen,
   LoginScreen,
@@ -30,6 +31,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 const Stack = createNativeStackNavigator();
+const queryClient = new QueryClient();
 
 import {
   Colors,
@@ -41,6 +43,7 @@ import {
 import { styled } from "styled-components/native";
 import { colorSet } from "./src/constants";
 import { Typo } from "./src/components/common";
+import SearchAddress from "./src/screens/SearchAddress";
 
 const toastConfig = {
   successToast: ({ props }) => {
@@ -79,24 +82,30 @@ function App(): JSX.Element {
   const isDarkMode = useColorScheme() === "dark";
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="SignupComplete" component={SignupCompleteScreen} />
-        <Stack.Screen
-          name="ChurchRegistration"
-          component={ChurchRegistrationScreen}
-        />
-        <Stack.Screen
-          name="ChurchRegistrationComplete"
-          component={ChurchRegistrationCompleteScreen}
-        />
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
-      <Toast config={toastConfig} />
-    </NavigationContainer>
+    <QueryClientProvider client={queryClient}>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen
+            name="SignupComplete"
+            component={SignupCompleteScreen}
+          />
+          <Stack.Screen
+            name="ChurchRegistration"
+            component={ChurchRegistrationScreen}
+          />
+          <Stack.Screen
+            name="ChurchRegistrationComplete"
+            component={ChurchRegistrationCompleteScreen}
+          />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="SearchAddress" component={SearchAddress} />
+        </Stack.Navigator>
+        <Toast config={toastConfig} />
+      </NavigationContainer>
+    </QueryClientProvider>
   );
 }
 
