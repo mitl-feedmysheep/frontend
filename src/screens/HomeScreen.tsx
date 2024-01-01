@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { styled } from 'styled-components/native';
 import LogoSvg from "../assets/home/logo.svg";
 import MyPageSvg from "../assets/home/my-page.svg";
@@ -7,10 +7,102 @@ import EllipseSvg from "../assets/home/ellipse.svg";
 import WhiteEllipseSvg from "../assets/home/white-ellipse.svg";
 import MyGroupElement from '../components/home/MyGroupElement';
 import EventElement from '../components/home/EventElement';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { getAppMediaList, getAppText, getAppWords, getChurchEventList, getUserCellList, getUserChurchList, getUserInfo } from '../utils/apis';
 
 type Props = {};
 
 const HomeScreen: React.FC<Props> = () => {
+  const [churchName, setChurchName] = useState<string>("");
+  const [bodyName, setBodyName] = useState<string>("");
+  const [userImageUrl, setUserImageUrl] = useState<string>("");
+  const [bannerImageUrl, setBannerImageUrl] = useState<string>("");
+  const [bannerText, setBannerText] = useState<string>("");
+  const [bannerWords, setBannerWords] = useState<string>("");
+  const [myGroupElements, setMyGroupElements] = useState<any[]>([]);
+  const [calendarYear, setCalendarYear] = useState<string>("");
+  const [calendarMonth, setCalendarMonth] = useState<string>("");
+  const [eventElements, setEventElements] = useState<any[]>([]);
+  const [eventPageCount, setEventPageCount] = useState<number>(1);
+  const [currentEventPage, setCurrentEventPage] = useState<number>(0);
+
+  const [bodyId, setBodyId] = useState(0);
+  
+  const { data: churchListData } = useQuery({ 
+    queryKey: ["churchList"], 
+    queryFn: () => getUserChurchList()
+  });
+
+  const [
+    { data: userData },
+    { data: bannerImageData },
+    { data: bannerTextData },
+    { data: bannerWordsData } ,
+  ] = useQueries({ queries: [
+    { queryKey: ["userInfo"], queryFn: () => getUserInfo() },
+    { queryKey: ["bannerImage"], queryFn: () => getAppMediaList("home-on-top-of-cell-list") },
+    { queryKey: ["bannerText"], queryFn: () => getAppText("home-on-top-of-cell-list") },
+    { queryKey: ["bannerWords"], queryFn: () => getAppWords("home-on-top-of-cell-list") },
+  ] });
+
+  const { data: cellListData } = useQuery({  
+    queryKey: ["cellList"], 
+    queryFn: () => getUserCellList(bodyId), 
+    enabled: !!bodyId,
+  });
+
+  const { data: eventListData } = useQuery({  
+    queryKey: ["eventList"], 
+    queryFn: () => getChurchEventList(bodyId, calendarYear, calendarMonth, 0), 
+    enabled: !!bodyId,
+  });
+
+  useEffect(() => {
+    if (churchListData) {
+      const defaultData = churchListData.data;
+      setChurchName(defaultData?.churchName ?? "교회");
+      setBodyName(defaultData?.bodyList[0].bodyName ?? "공동체");
+      setBodyId(defaultData?.bodyList[0].bodyId ?? 0);
+    }
+  }, [churchListData]);
+
+  useEffect(() => {
+    if (userData) {
+      setUserImageUrl(userData.data.profileImageUrl);
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (bannerImageData) {
+      setBannerImageUrl(bannerImageData.data[0].mediaUrl);
+    }
+  }, [bannerImageData]);
+
+  useEffect(() => {
+    if (bannerTextData) {
+      setBannerText(bannerTextData.data.text);
+    }
+  }, [bannerTextData]);
+
+  useEffect(() => {
+    if (bannerWordsData) {
+      setBannerWords(bannerWordsData.data.words);
+    }
+  }, [bannerWordsData]);
+
+  useEffect(() => {
+    if (cellListData) {
+      setMyGroupElements(cellListData.data);
+    }
+  }, [cellListData])
+
+  useEffect(() => {
+    if (eventListData) {
+      setEventElements(eventListData.data.memberEventList);
+      setEventPageCount(Number(eventListData.data.memberEventList.length / 5));
+    }
+  }, [eventListData]);
+
   return (
     <Container>
       <AvoidingView contentContainerStyle={{ gap: 32 }}>
@@ -19,8 +111,8 @@ const HomeScreen: React.FC<Props> = () => {
 
             <LeftHeader>
               <LogoSvg/>
-              <HeaderChurchText>번동제일 교회</HeaderChurchText>
-              <HeaderChurchGroupText>청년 공동체</HeaderChurchGroupText>
+              <HeaderChurchText>{churchName}</HeaderChurchText>
+              <HeaderChurchGroupText>{bodyName}</HeaderChurchGroupText>
             </LeftHeader>
 
             <RightHeader>
@@ -29,10 +121,10 @@ const HomeScreen: React.FC<Props> = () => {
             
           </Header>
 
-          <Banner source={require("../assets/home/sample-banner.png")} >
+          <Banner source={{ uri: bannerImageUrl }}>
             <BannerTextContainer>
-              <BannerText>민영님, 안녕하세요!{"\n"}오늘은 어떤 하나님을 만나셨나요?</BannerText>
-              <BannerVerse>하나님이여 사슴이 시냇물을 갈급함 같이 내 영혼이 주를 찾기에{"\n"}갈급하니이다. (시편 41:1-2)</BannerVerse>
+              <BannerText>{bannerText}</BannerText>
+              <BannerVerse>{bannerWords}</BannerVerse>
             </BannerTextContainer>
           </Banner>
 
@@ -43,16 +135,23 @@ const HomeScreen: React.FC<Props> = () => {
           <MyGroupContainer>
             <MyGroupHeader>내 소그룹</MyGroupHeader>
             <MyGroupList horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <MyGroupElement imageUrl="../../assets/home/sample-group.png" peopleCount={12} place={"꿈의 교육관 1층"} title={"민영목장"} />
-              <MyGroupElement imageUrl="../../assets/home/sample-group.png" peopleCount={6} place={"꿈의 교육관 2층"} title={"민영목장"} />
-              <MyGroupElement imageUrl="../../assets/home/sample-group.png" peopleCount={4} place={"꿈의 교육관 3층"} title={"민영목장"} />
+              {myGroupElements.map((x) => {
+                return (
+                  <MyGroupElement 
+                    imageUrl={x.cellLogoUrl ?? "../../assets/home/sample-group.png"} 
+                    peopleCount={x.cellMemberCount} 
+                    place={x.cellPlace} 
+                    title={x.cellName}
+                  />    
+                );
+              })}
             </MyGroupList>
           </MyGroupContainer>
 
           <EventContainer>
             <EventHeader>
               <EventLeftHeader>
-                <EventDate>23년 12월</EventDate>
+                <EventDate>{calendarYear}년 {calendarMonth}월</EventDate>
                 <ArrowDownSvg/>
               </EventLeftHeader>
               <EventRightHeader></EventRightHeader>
@@ -61,17 +160,24 @@ const HomeScreen: React.FC<Props> = () => {
             <EventListContainer>
               <EventList horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, width: "100%" }}>
                 <EventVerticalView>
-                  <EventElement imageUrl="../../assets/home/sample-user.png" userName="유민영"></EventElement>
-                  <EventElement imageUrl="../../assets/home/sample-user.png" userName="유민영"></EventElement>
-                  <EventElement imageUrl="../../assets/home/sample-user.png" userName="유민영"></EventElement>
-                  <EventElement imageUrl="../../assets/home/sample-user.png" userName="유민영"></EventElement>
-                  <EventElement imageUrl="../../assets/home/sample-user.png" userName="유민영"></EventElement>
+                  {eventElements.map((x) => {
+                    return (
+                      <EventElement 
+                        userImageUrl={x.profileImageUrl ?? "../../assets/home/sample-user.png"}
+                        userName={x.userName}
+                      ></EventElement>  
+                    )
+                  })}
                 </EventVerticalView>
               </EventList>
               <EventPaging>
-                <EllipseSvg/>
-                <WhiteEllipseSvg/>
-                <WhiteEllipseSvg/>
+                {Array(eventPageCount).map((x, i) => {
+                  if (i === currentEventPage) {
+                    return (<EllipseSvg/>);
+                  } else {
+                    return (<WhiteEllipseSvg/>);
+                  }
+                })}
               </EventPaging>
             </EventListContainer>
           </EventContainer> 
