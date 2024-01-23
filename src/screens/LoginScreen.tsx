@@ -56,6 +56,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               activeOpacity={1}
               onPress={() => {
                 navigation.navigate("Signup");
+                // navigation.navigate("ChurchRegistration");
               }}
             >
               <Typo type="B2" color={colorSet.neutral.N5}>

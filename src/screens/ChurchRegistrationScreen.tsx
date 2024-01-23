@@ -2,11 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import { styled } from "styled-components/native";
 import Toast from "react-native-toast-message";
 import { getStatusBarHeight } from "react-native-safearea-height";
+import { useQuery } from "@tanstack/react-query";
+
 import { Header, EmptyArea, Typo, Shadow } from "../components/common";
 import { TextInputWithTitle } from "../components/text_input";
 import { RoundButton, SmallRoundButton } from "../components/buttons";
 import { colorSet } from "../constants";
 import { CheckSelectionList } from "../components/list";
+import { getChurchBodies, getChurches, signIn } from "../utils/apis";
+import {
+  getChurchBodiesQueryKey,
+  getChurchesQueryKey,
+  signInQueryKey,
+} from "../constants/apiQueryKeys";
 
 type Props = {};
 
@@ -28,16 +36,77 @@ type SignupFieldType =
 const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
   const [currentFieldType, setCurrentFieldType] =
     useState<SignupFieldType>("empty");
-  const [church, setChurch] = useState("");
+  const [church, setChurch] = useState("번동제일교회");
   const [selectedChurch, setSelectedChurch] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [department, setDepartment] = useState("");
+  const [departmentList, setDepartmentList] = useState([]);
   const [isVisibleDepartment, setIsVisibleDepartment] = useState(false);
   const [churchList, setChurchList] = useState([]);
+  const [isChurchListRequested, setChurchListRequested] = useState(false);
+  const [isChurchBodiesRequested, setChurchBodiesRequested] = useState(false);
+  const [accessToken, setAccessToken] = useState("");
+
+  const { data: signInData, isPending: isSignInPending } = useQuery({
+    queryKey: [signInQueryKey],
+    queryFn: () => signIn({ email: "5@5.com", password: "!mitl1991" }),
+    // enabled: !!isAuthenticationRequested,
+  });
+
+  const { data: churchListData, isPending: isChurchListPending } = useQuery({
+    queryKey: [getChurchesQueryKey, church],
+    queryFn: () => getChurches(church, accessToken),
+    enabled: !!isChurchListRequested,
+    gcTime: 0,
+  });
+
+  const { data: churchBodiesData, isPending: isChurchBodiesPending } = useQuery(
+    {
+      queryKey: [getChurchBodiesQueryKey],
+      queryFn: () => getChurchBodies(selectedChurch?.idx, accessToken),
+      enabled: !!isChurchBodiesRequested,
+      gcTime: 0,
+    }
+  );
 
   useEffect(() => {
-    if (selectedChurch) console.log("selectedChurch>>>", selectedChurch);
-  }, [selectedChurch]);
+    if (signInData?.data?.data?.accessToken && !isSignInPending) {
+      setAccessToken(signInData.data.data.accessToken);
+    }
+  }, [signInData, isSignInPending]);
+
+  useEffect(() => {
+    if (churchListData?.data?.data?.length > 0 && !isChurchListPending) {
+      console.log("churchListData.data.data>>>", churchListData.data.data);
+      setChurchList(
+        churchListData.data.data.map((item) => ({
+          title: item.churchName,
+          subTitle: item.churchLocation,
+          idx: item.churchId,
+        }))
+      );
+      setChurchListRequested(false);
+    }
+  }, [churchListData, isChurchListPending]);
+
+  useEffect(() => {
+    if (churchBodiesData?.data?.data?.length > 0 && !isChurchBodiesPending) {
+      console.log("churchBodiesData>>>", churchBodiesData);
+      setDepartmentList(
+        churchBodiesData?.data?.data.map((item) => ({
+          idx: item.bodyId,
+          title: item.bodyName,
+        }))
+      );
+      // setChurchList(
+      //   churchListData.data.data.map((item) => ({
+      //     title: item.churchName,
+      //     subTitle: item.churchLocation,
+      //     idx: item.churchId,
+      //   }))
+      // );
+      setChurchBodiesRequested(false);
+    }
+  }, [churchBodiesData, isChurchBodiesPending]);
 
   const isButtonActivated = useMemo(() => {
     if (selectedChurch && department) return true;
@@ -79,54 +148,55 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => {
                 setCurrentFieldType("church");
                 setSelectedChurch(null);
-                setChurchList([
-                  {
-                    idx: 0,
-                    title: "번동제일교회",
-                    subTitle: "경기도 고양시 일산서구 일산로 612 50",
-                    departments: [
-                      {
-                        idx: 0,
-                        title: "청년부",
-                      },
-                      {
-                        idx: 1,
-                        title: "장년부",
-                      },
-                      {
-                        idx: 2,
-                        title: "유년부",
-                      },
-                      {
-                        idx: 3,
-                        title: "청소년부",
-                      },
-                    ],
-                  },
-                  {
-                    idx: 1,
-                    title: "번동제일교회",
-                    subTitle: "경기도 고양시 일산서구 일산로 612 50",
-                    departments: [
-                      {
-                        idx: 0,
-                        title: "청년부",
-                      },
-                      {
-                        idx: 1,
-                        title: "장년부",
-                      },
-                      {
-                        idx: 2,
-                        title: "유년부",
-                      },
-                      {
-                        idx: 3,
-                        title: "청소년부",
-                      },
-                    ],
-                  },
-                ]);
+                setChurchListRequested(true);
+                // setChurchList([
+                //   {
+                //     idx: 0,
+                //     title: "번동제일교회",
+                //     subTitle: "경기도 고양시 일산서구 일산로 612 50",
+                //     departments: [
+                //       {
+                //         idx: 0,
+                //         title: "청년부",
+                //       },
+                //       {
+                //         idx: 1,
+                //         title: "장년부",
+                //       },
+                //       {
+                //         idx: 2,
+                //         title: "유년부",
+                //       },
+                //       {
+                //         idx: 3,
+                //         title: "청소년부",
+                //       },
+                //     ],
+                //   },
+                //   {
+                //     idx: 1,
+                //     title: "번동제일교회",
+                //     subTitle: "경기도 고양시 일산서구 일산로 612 50",
+                //     departments: [
+                //       {
+                //         idx: 0,
+                //         title: "청년부",
+                //       },
+                //       {
+                //         idx: 1,
+                //         title: "장년부",
+                //       },
+                //       {
+                //         idx: 2,
+                //         title: "유년부",
+                //       },
+                //       {
+                //         idx: 3,
+                //         title: "청소년부",
+                //       },
+                //     ],
+                //   },
+                // ]);
               }}
               buttonText="검색"
               isActived={currentFieldType === "church"}
@@ -144,6 +214,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
                   setCurrentFieldType("department");
                   setDepartment(null);
                   setIsVisibleDepartment(true);
+                  setChurchBodiesRequested(true);
                 }}
               />
               <EmptyArea height={12} />
@@ -176,10 +247,10 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
             readOnly
           />
           <EmptyArea height={24} />
-          {selectedChurch?.departments?.length > 0 && isVisibleDepartment && (
+          {departmentList?.length > 0 && isVisibleDepartment && (
             <>
               <CheckSelectionList
-                dataList={selectedChurch?.departments}
+                dataList={departmentList}
                 onPressSelection={(selectedDepartment) => {
                   setDepartment(selectedDepartment?.title);
                   setIsVisibleDepartment(false);

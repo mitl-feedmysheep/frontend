@@ -9,8 +9,18 @@ import { TextInputWithTitle } from "../components/text_input";
 import { RoundButton, SmallRoundButton } from "../components/buttons";
 import { colorSet } from "../constants";
 import { useQuery } from "@tanstack/react-query";
-import { verificationCode } from "../constants/apiQueryKeys";
-import { getVerificationNumber } from "../utils/apis";
+import {
+  checkEmailQueryKey,
+  checkVerificationCodeQueryKey,
+  signUpQueryKey,
+  verificationCodeQueryKey,
+} from "../constants/apiQueryKeys";
+import {
+  checkEmail,
+  checkVerificationCode,
+  getVerificationCode,
+  signUp,
+} from "../utils/apis";
 
 type Props = {};
 
@@ -46,14 +56,114 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [addressDetail, setAddressDetail] = useState("");
   const [isAuthenticationRequested, setIsAuthenticationRequested] =
     useState(false);
+  const [isAuthenticationShown, setIsAuthenticationShown] = useState(false);
+  const [isCheckAuthenticationRequested, setIsCheckAuthenticationRequested] =
+    useState(false);
   const [isAuthenticationCompleted, setIsAuthenticationCompleted] =
     useState(false);
+  const [isEmailChecked, setIsEmailChecked] = useState(false);
+  const [isEmailRequested, setIsEmailRequested] = useState(false);
+  const [isSignUpRequested, setIsSignUpRequested] = useState(false);
 
-  const { data } = useQuery({
-    queryKey: [verificationCode, phoneNumber],
-    queryFn: () => getVerificationNumber(phoneNumber),
-    enabled: !!isAuthenticationRequested,
+  const { data: verificationCodeData, isPending: isVerificationCodePending } =
+    useQuery({
+      queryKey: [verificationCodeQueryKey, phoneNumber],
+      queryFn: () => getVerificationCode(phoneNumber),
+      enabled: !!isAuthenticationRequested,
+      gcTime: 0,
+    });
+
+  const {
+    data: checkVerificationCodeData,
+    isPending: isCheckVerificationCodePending,
+  } = useQuery({
+    queryKey: [checkVerificationCodeQueryKey, authenticationNumber],
+    queryFn: () =>
+      checkVerificationCode({
+        phone: phoneNumber,
+        code: authenticationNumber,
+      }),
+    enabled: !!isCheckAuthenticationRequested,
+    gcTime: 0,
   });
+
+  const { data: emailData, isPending: isEmailPending } = useQuery({
+    queryKey: [checkEmailQueryKey, email],
+    queryFn: () => checkEmail(email),
+    enabled: !!isEmailRequested,
+    gcTime: 0,
+  });
+
+  const { data: signUpData, isPending: isSignUpPending } = useQuery({
+    queryKey: [signUpQueryKey],
+    queryFn: () =>
+      signUp({
+        memberName: name,
+        sex: isMan ? "M" : "F",
+        birthdaty: birthday.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+        phone: phoneNumber.substring(1, phoneNumber.length + 1),
+        email,
+        password,
+        address: `${address} ${addressDetail}`,
+      }),
+    enabled: !!isSignUpRequested,
+  });
+
+  useEffect(() => {
+    if (
+      verificationCodeData?.data?.common?.status &&
+      !isVerificationCodePending
+    ) {
+      if (verificationCodeData.data.common.status === "success") {
+        setIsAuthenticationShown(true);
+      } else {
+        showToast(`${verificationCodeData.data.common.message}`, "errorToast");
+      }
+      setIsAuthenticationRequested(false);
+    }
+  }, [verificationCodeData, isVerificationCodePending]);
+
+  useEffect(() => {
+    if (
+      checkVerificationCodeData?.data?.common?.status &&
+      !isCheckVerificationCodePending
+    ) {
+      if (checkVerificationCodeData.data.common.status === "success") {
+        setIsAuthenticationCompleted(true);
+        showToast("본인인증이 완료되었습니다", "successToast");
+      } else {
+        showToast(`인증번호가 틀렸습니다.`, "errorToast");
+      }
+      setIsCheckAuthenticationRequested(false);
+    }
+  }, [checkVerificationCodeData, isCheckVerificationCodePending]);
+
+  useEffect(() => {
+    if (emailData?.data?.common?.status && !isEmailPending) {
+      if (emailData.data.common.status === "success") {
+        setIsEmailChecked(true);
+      } else {
+        showToast(`${emailData.data.common.message}`, "errorToast");
+      }
+      setIsEmailRequested(false);
+    }
+  }, [isEmailPending, emailData]);
+
+  useEffect(() => {
+    if (signUpData?.data?.common?.status && !isSignUpPending) {
+      if (signUpData.data.common.status === "success") {
+        console.log("11>>>");
+        setIsSignUpRequested(true);
+        navigation.replace("SignupComplete");
+      } else {
+        console.log("22>>>");
+      }
+    }
+  }, [isSignUpPending, signUpData, navigation]);
+
+  useEffect(() => {
+    setIsEmailChecked(false);
+  }, [email]);
 
   const isButtonActivated = useMemo(() => {
     if (
@@ -63,8 +173,9 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       phoneNumber &&
       email &&
       password &&
-      passwordCheck
-      // && address
+      passwordCheck &&
+      isEmailChecked &&
+      address
     )
       return true;
     return false;
@@ -78,7 +189,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
     email,
     password,
     passwordCheck,
-    // address,
+    isEmailChecked,
+    address,
   ]);
 
   const showToast = (text, type) => {
@@ -207,9 +319,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               <EmptyArea width={10} />
               <SmallRoundButton
                 onPress={() => {
-                  if (!isAuthenticationCompleted) {
+                  if (!isAuthenticationCompleted && phoneNumber.length >= 10) {
                     setIsAuthenticationRequested(true);
-                    // 인증번호 api
                   }
                 }}
                 buttonText={
@@ -230,7 +341,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               />
             </InputContainer>
             <EmptyArea height={24} />
-            {isAuthenticationRequested && !isAuthenticationCompleted && (
+            {isAuthenticationShown && !isAuthenticationCompleted && (
               <>
                 <InputContainer>
                   <TextInputWithTitle
@@ -248,8 +359,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                   <SmallRoundButton
                     onPress={() => {
                       setCurrentFieldType("phoneNumber");
-                      setIsAuthenticationCompleted(true);
-                      showToast("본인인증이 완료되었습니다", "successToast");
+                      setIsCheckAuthenticationRequested(true);
                     }}
                     buttonText="인증완료"
                     isActived={currentFieldType === "authenticationNumber"}
@@ -274,14 +384,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               <EmptyArea width={10} />
               <SmallRoundButton
                 onPress={() => {
-                  showToast(
-                    `이메일이 중복되었습니다\n다른 이메일 주소를 사용해주세요`,
-                    "errorToast"
-                  );
+                  if (!isEmailChecked) setIsEmailRequested(true);
                 }}
-                buttonText="중복확인"
+                buttonText={isEmailChecked ? "사용가능" : "중복확인"}
                 isActived={currentFieldType === "email"}
-                buttonType="filled"
+                buttonType={isEmailChecked ? "complete" : "filled"}
               />
             </InputContainer>
             <EmptyArea height={24} />
@@ -355,15 +462,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               buttonText="다음"
               isActived={isButtonActivated}
               onPress={() => {
+                setIsSignUpRequested(true);
+                // navigation.replace("SignupComplete");
                 // showToast("토스트1", "successToast");
                 // showToast("토스트2", "errorToast")
-                // navigation.replace("SignupComplete");
-                navigation.navigate("SearchAddress", {
-                  onSendingAddress: ({ jibunAddress, address }) => {
-                    setAddress(address);
-                    setJibunAddress(jibunAddress);
-                  },
-                });
               }}
             />
           </InnnerContainer>
