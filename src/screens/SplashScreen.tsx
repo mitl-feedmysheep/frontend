@@ -1,15 +1,18 @@
 import React, { useEffect } from "react";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { styled } from "styled-components/native";
 import LogoSvg from "../assets/splash/logo.svg";
 import AppNameSvg from "../assets/splash/app-name.svg";
 import { colorSet } from "../constants";
+import { RootStackParamList } from "../types/common";
 
-type Props = {};
+type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     setTimeout(() => {
       navigation.replace("Login");
+      // navigation.replace("MeetingDetails", { passedScreenType: "infomation" });
     }, 2000);
   }, []);
 

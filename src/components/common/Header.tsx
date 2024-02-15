@@ -4,11 +4,11 @@ import { colorSet } from "../../constants";
 import LeftArrow from "../../assets/buttons/left-arrow.svg";
 import { useNavigation } from "@react-navigation/native";
 
-type Props = {
+interface Props {
   title: string;
-  isLeftButton: boolean;
-  onPressLeftButton: () => {};
-};
+  isLeftButton?: boolean;
+  onPressLeftButton?: () => {};
+}
 
 const Header: React.FC<Props> = ({
   title,
@@ -36,27 +36,27 @@ const Header: React.FC<Props> = ({
 const Container = styled.View`
   display: flex;
   flex-direction: row;
-  height: 50px;
+  height: 42px;
   width: 100%;
   align-items: center;
   justify-content: center;
-  color: #ffffffd1;
+  background-color: #ffffff;
 `;
 
 const Title = styled.Text`
   font-family: Pretendard-Regular;
-  color: ${colorSet.primary.P4_M};
-  font-size: 17px;
+  color: #313331;
+  font-size: 20px;
   font-style: normal;
-  font-weight: 500;
-  letter-spacing: 0.425px;
+  font-weight: 600;
+  letter-spacing: -0.408px;
 `;
 
 const LeftButton = styled.TouchableOpacity`
   position: absolute;
-  left: 0px;
-  height: 50px;
-  width: 50px;
+  left: 7px;
+  height: 24px;
+  width: 24px;
   justify-content: center;
   align-items: center;
 `;

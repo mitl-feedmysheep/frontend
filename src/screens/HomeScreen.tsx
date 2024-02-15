@@ -1,14 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { styled } from 'styled-components/native';
+import React, { useEffect, useState } from "react";
+import { styled } from "styled-components/native";
 import LogoSvg from "../assets/home/logo.svg";
 import MyPageSvg from "../assets/home/my-page.svg";
 import ArrowDownSvg from "../assets/home/arrow-down.svg";
 import EllipseSvg from "../assets/home/ellipse.svg";
 import WhiteEllipseSvg from "../assets/home/white-ellipse.svg";
-import MyGroupElement from '../components/home/MyGroupElement';
-import EventElement from '../components/home/EventElement';
-import { useQueries, useQuery } from '@tanstack/react-query';
-import { getAppMediaList, getAppText, getAppWords, getChurchEventList, getUserCellList, getUserChurchList, getUserInfo } from '../utils/apis';
+import MyGroupElement from "../components/home/MyGroupElement";
+import EventElement from "../components/home/EventElement";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import {
+  getAppMediaList,
+  getAppText,
+  getAppWords,
+  getChurchEventList,
+  getUserCellList,
+  getUserChurchList,
+  getUserInfo,
+} from "../utils/apis";
 
 type Props = {};
 
@@ -27,33 +35,44 @@ const HomeScreen: React.FC<Props> = () => {
   const [currentEventPage, setCurrentEventPage] = useState<number>(0);
 
   const [bodyId, setBodyId] = useState(0);
-  
-  const { data: churchListData } = useQuery({ 
-    queryKey: ["churchList"], 
-    queryFn: () => getUserChurchList()
+
+  const { data: churchListData } = useQuery({
+    queryKey: ["churchList"],
+    queryFn: () => getUserChurchList(),
   });
 
   const [
     { data: userData },
     { data: bannerImageData },
     { data: bannerTextData },
-    { data: bannerWordsData } ,
-  ] = useQueries({ queries: [
-    { queryKey: ["userInfo"], queryFn: () => getUserInfo() },
-    { queryKey: ["bannerImage"], queryFn: () => getAppMediaList("home-on-top-of-cell-list") },
-    { queryKey: ["bannerText"], queryFn: () => getAppText("home-on-top-of-cell-list") },
-    { queryKey: ["bannerWords"], queryFn: () => getAppWords("home-on-top-of-cell-list") },
-  ] });
+    { data: bannerWordsData },
+  ] = useQueries({
+    queries: [
+      { queryKey: ["userInfo"], queryFn: () => getUserInfo() },
+      {
+        queryKey: ["bannerImage"],
+        queryFn: () => getAppMediaList("home-on-top-of-cell-list"),
+      },
+      {
+        queryKey: ["bannerText"],
+        queryFn: () => getAppText("home-on-top-of-cell-list"),
+      },
+      {
+        queryKey: ["bannerWords"],
+        queryFn: () => getAppWords("home-on-top-of-cell-list"),
+      },
+    ],
+  });
 
-  const { data: cellListData } = useQuery({  
-    queryKey: ["cellList"], 
-    queryFn: () => getUserCellList(bodyId), 
+  const { data: cellListData } = useQuery({
+    queryKey: ["cellList"],
+    queryFn: () => getUserCellList(bodyId),
     enabled: !!bodyId,
   });
 
-  const { data: eventListData } = useQuery({  
-    queryKey: ["eventList"], 
-    queryFn: () => getChurchEventList(bodyId, calendarYear, calendarMonth, 0), 
+  const { data: eventListData } = useQuery({
+    queryKey: ["eventList"],
+    queryFn: () => getChurchEventList(bodyId, calendarYear, calendarMonth, 0),
     enabled: !!bodyId,
   });
 
@@ -67,25 +86,28 @@ const HomeScreen: React.FC<Props> = () => {
   }, [churchListData]);
 
   useEffect(() => {
-    if (userData) {
-      setUserImageUrl(userData.data.profileImageUrl);
+    if (userData?.data?.profileImageUrl) {
+      setUserImageUrl(userData?.data?.profileImageUrl);
     }
   }, [userData]);
 
   useEffect(() => {
-    if (bannerImageData) {
+    if (
+      bannerImageData?.data?.length > 0 &&
+      bannerImageData.data[0]?.mediaUrl
+    ) {
       setBannerImageUrl(bannerImageData.data[0].mediaUrl);
     }
   }, [bannerImageData]);
 
   useEffect(() => {
-    if (bannerTextData) {
+    if (bannerTextData?.data?.text) {
       setBannerText(bannerTextData.data.text);
     }
   }, [bannerTextData]);
 
   useEffect(() => {
-    if (bannerWordsData) {
+    if (bannerWordsData?.data?.words) {
       setBannerWords(bannerWordsData.data.words);
     }
   }, [bannerWordsData]);
@@ -94,10 +116,10 @@ const HomeScreen: React.FC<Props> = () => {
     if (cellListData) {
       setMyGroupElements(cellListData.data);
     }
-  }, [cellListData])
+  }, [cellListData]);
 
   useEffect(() => {
-    if (eventListData) {
+    if (eventListData?.data?.memberEventList) {
       setEventElements(eventListData.data.memberEventList);
       setEventPageCount(Number(eventListData.data.memberEventList.length / 5));
     }
@@ -108,17 +130,15 @@ const HomeScreen: React.FC<Props> = () => {
       <AvoidingView contentContainerStyle={{ gap: 32 }}>
         <HomeTopContainer>
           <Header>
-
             <LeftHeader>
-              <LogoSvg/>
+              <LogoSvg />
               <HeaderChurchText>{churchName}</HeaderChurchText>
               <HeaderChurchGroupText>{bodyName}</HeaderChurchGroupText>
             </LeftHeader>
 
             <RightHeader>
-              <MyPageSvg/>
+              <MyPageSvg />
             </RightHeader>
-            
           </Header>
 
           <Banner source={{ uri: bannerImageUrl }}>
@@ -127,22 +147,26 @@ const HomeScreen: React.FC<Props> = () => {
               <BannerVerse>{bannerWords}</BannerVerse>
             </BannerTextContainer>
           </Banner>
-
         </HomeTopContainer>
 
         <HomeBottomContainer>
-
           <MyGroupContainer>
             <MyGroupHeader>내 소그룹</MyGroupHeader>
-            <MyGroupList horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <MyGroupList
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
               {myGroupElements.map((x) => {
                 return (
-                  <MyGroupElement 
-                    imageUrl={x.cellLogoUrl ?? "../../assets/home/sample-group.png"} 
-                    peopleCount={x.cellMemberCount} 
-                    place={x.cellPlace} 
+                  <MyGroupElement
+                    imageUrl={
+                      x.cellLogoUrl ?? "../../assets/home/sample-group.png"
+                    }
+                    peopleCount={x.cellMemberCount}
+                    place={x.cellPlace}
                     title={x.cellName}
-                  />    
+                  />
                 );
               })}
             </MyGroupList>
@@ -151,37 +175,45 @@ const HomeScreen: React.FC<Props> = () => {
           <EventContainer>
             <EventHeader>
               <EventLeftHeader>
-                <EventDate>{calendarYear}년 {calendarMonth}월</EventDate>
-                <ArrowDownSvg/>
+                <EventDate>
+                  {calendarYear}년 {calendarMonth}월
+                </EventDate>
+                <ArrowDownSvg />
               </EventLeftHeader>
               <EventRightHeader></EventRightHeader>
             </EventHeader>
 
             <EventListContainer>
-              <EventList horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, width: "100%" }}>
+              <EventList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, width: "100%" }}
+              >
                 <EventVerticalView>
                   {eventElements.map((x) => {
                     return (
-                      <EventElement 
-                        userImageUrl={x.profileImageUrl ?? "../../assets/home/sample-user.png"}
+                      <EventElement
+                        userImageUrl={
+                          x.profileImageUrl ??
+                          "../../assets/home/sample-user.png"
+                        }
                         userName={x.userName}
-                      ></EventElement>  
-                    )
+                      ></EventElement>
+                    );
                   })}
                 </EventVerticalView>
               </EventList>
               <EventPaging>
                 {Array(eventPageCount).map((x, i) => {
                   if (i === currentEventPage) {
-                    return (<EllipseSvg/>);
+                    return <EllipseSvg />;
                   } else {
-                    return (<WhiteEllipseSvg/>);
+                    return <WhiteEllipseSvg />;
                   }
                 })}
               </EventPaging>
             </EventListContainer>
-          </EventContainer> 
-
+          </EventContainer>
         </HomeBottomContainer>
       </AvoidingView>
     </Container>
@@ -219,14 +251,14 @@ const LeftHeader = styled.View`
 
 const HeaderChurchText = styled.Text`
   font-family: Pretendard-Medium;
-  color: #20342F;
+  color: #20342f;
   font-size: 16px;
   font-weight: 700;
 `;
 
 const HeaderChurchGroupText = styled.Text`
   font-family: Pretendard-Medium;
-  color: #20342F;
+  color: #20342f;
   font-size: 16px;
   font-weight: 400;
 `;
@@ -257,7 +289,7 @@ const BannerText = styled.Text`
 
 const BannerVerse = styled.Text`
   font-family: Pretendard-Medium;
-  color: #20342F  ;
+  color: #20342f;
   font-size: 12px;
   line-height: 12px;
   font-weight: 300;
@@ -298,8 +330,8 @@ const EventHeader = styled.View`
 `;
 
 const EventLeftHeader = styled.View`
-   gap: 4px;
-   flex-direction: row;
+  gap: 4px;
+  flex-direction: row;
 `;
 
 const EventDate = styled.Text`
@@ -309,8 +341,7 @@ const EventDate = styled.Text`
   font-weight: 700;
 `;
 
-const EventRightHeader = styled.View`
-`;
+const EventRightHeader = styled.View``;
 
 const EventListContainer = styled.View`
   display: flex;

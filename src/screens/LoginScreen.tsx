@@ -1,11 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { TextInputProps } from "react-native";
 import { styled } from "styled-components/native";
-import { TextInputWithTitle } from "../components/text_input";
-import { EmptyArea, Header, Typo, Shadow } from "../components/common";
-import { RoundButton } from "../components/buttons";
-import { colorSet } from "../constants";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-type Props = {};
+import { EmptyArea, Header, Typo } from "../components/common";
+import { MainButton } from "../components/buttons";
+import { colorSet } from "../constants";
+import { RootStackParamList } from "../types/common";
+
+type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -20,38 +23,53 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <AvoidingView stickyHeaderIndices={[0]}>
         <Header title="로그인" />
         <InnnerContainer>
-          <EmptyArea height={24} />
-          <TextInputWithTitle
-            textValue={email}
-            title="이메일"
-            placeholder="이메일을 입력해주세요!"
-            keyboardType="email-address"
+          <EmptyArea height={170} />
+          <CustomTextInput
+            value={email}
             onChangeText={(text: string) => {
               setEmail(text);
             }}
-            // setText={setEmail}
-          />
-          <EmptyArea height={10} />
-          <TextInputWithTitle
-            textValue={password}
-            title="비밀번호"
-            placeholder="비밀번호를 입력해주세요!"
+            placeholder="이메일 주소 입력"
             keyboardType="email-address"
-            secureTextEntry
+          />
+          <EmptyArea height={12} />
+          <CustomTextInput
+            value={password}
             onChangeText={(text: string) => {
               setPassword(text);
             }}
+            placeholder="비밀번호 입력"
+            keyboardType="email-address"
+            secureTextEntry
           />
-          <EmptyArea height={30} />
-          <RoundButton
+          <EmptyArea height={12} />
+          <SearchContainer>
+            <SearchWrapper activeOpacity={1}>
+              <SearchText>이메일 찾기</SearchText>
+            </SearchWrapper>
+            <VerticalLine />
+            <SearchWrapper activeOpacity={1}>
+              <SearchText>비밀번호 찾기</SearchText>
+            </SearchWrapper>
+          </SearchContainer>
+          <EmptyArea height={32} />
+          <MainButton
             buttonText="로그인"
             isActived={isAbleToLogin}
+            activeType="active"
             onPress={() => {
+              // navigation.navigate("MeetingDetails", {
+              //   passedScreenType: "infomation",
+              // });
+              // navigation.navigate("MeetingDetails", {
+              //   passedScreenType: "view",
+              // });
               navigation.replace("Home");
             }}
           />
-          <EmptyArea height={15} />
+          <EmptyArea height={12} />
           <SignupContainer>
+            <SignupText1>계정이 없으신가요? </SignupText1>
             <SignupButton
               activeOpacity={1}
               onPress={() => {
@@ -59,38 +77,58 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 // navigation.navigate("ChurchRegistration");
               }}
             >
-              <Typo type="B2" color={colorSet.neutral.N5}>
-                가입할래요!
-              </Typo>
-            </SignupButton>
-            <EmptyArea width={10} />
-            <SignupButton
-              activeOpacity={1}
-              onPress={() => {
-                navigation.navigate("Signup");
-              }}
-            >
-              <Typo type="B2" color={colorSet.neutral.N5}>
-                고객센터 문의하기
-              </Typo>
+              <SignupText2>회원가입하기</SignupText2>
             </SignupButton>
           </SignupContainer>
-          <EmptyArea height={76} />
-          <Shadow type="xs">
-            <BibleContainer>
-              <BibleText
-                size="small"
-                type="caption"
-                color={colorSet.neutral.N5}
-                textAlign="center"
-              >
-                {`이같이 너희 빛을 사람 앞에 비취게 하여\n저희로 너희 착한 행실을 보고\n하늘에 계신 너희 아버지께 영광을 돌리게 하라.\n마5:16`}
-              </BibleText>
-            </BibleContainer>
-          </Shadow>
         </InnnerContainer>
       </AvoidingView>
     </Container>
+  );
+};
+
+const CustomTextInput = ({
+  value,
+  onChangeText,
+  editable,
+  placeholder,
+  inputRef,
+}: TextInputProps) => {
+  const [isFocused, setIsFocused] = useState(false);
+  // const inputRef = useRef(null);
+
+  const onFocus = () => {
+    setIsFocused(true);
+  };
+
+  const onBlur = () => {
+    setIsFocused(false);
+  };
+
+  return (
+    <TextInputContainer>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        multiline
+        scrollEnabled={false}
+        editable={editable}
+        placeholder={placeholder}
+        placeholderTextColor="#A5BAAF"
+        onFocus={onFocus}
+        onBlur={onBlur}
+        ref={inputRef}
+      />
+      {/* {value && value.length > 0 && isFocused && (
+        <CloseCircleButton
+          onPress={() => {
+            if (onChangeText) onChangeText("");
+          }}
+          activeOpacity={1}
+        >
+          <CloseCircle />
+        </CloseCircleButton>
+      )} */}
+    </TextInputContainer>
   );
 };
 
@@ -119,10 +157,25 @@ const SignupContainer = styled.SafeAreaView`
   justify-content: center;
 `;
 
-const SignupButton = styled.TouchableOpacity`
-  border-bottom-width: 1px;
-  border-color: ${colorSet.neutral.N5};
+const SignupText1 = styled.Text`
+  color: #636663;
+  font-family: Pretendard-Light;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
 `;
+
+const SignupText2 = styled.Text`
+  color: #636663;
+  font-family: Pretendard-SemiBold;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+`;
+
+const SignupButton = styled.TouchableOpacity``;
 
 const BibleContainer = styled.View`
   display: inline-flex;
@@ -137,6 +190,51 @@ const BibleContainer = styled.View`
 
 const BibleText = styled(Typo)`
   text-align: center;
+`;
+
+const SearchContainer = styled.View`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const SearchWrapper = styled.TouchableOpacity`
+  border-bottom-width: 1px;
+`;
+
+const VerticalLine = styled.View`
+  width: 1px;
+  height: 12px;
+  background-color: #afb2af;
+`;
+
+const SearchText = styled.Text`
+  color: #636663;
+  font-family: Pretendard-Light;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+`;
+
+const TextInputContainer = styled.View`
+  flex-direction: row;
+  position: relative;
+`;
+
+const TextInput = styled.TextInput`
+  display: flex;
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-family: Pretendard-Regular;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  color: #405347;
+  background-color: #f5f7f5;
 `;
 
 export default LoginScreen;

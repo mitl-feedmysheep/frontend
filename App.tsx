@@ -26,11 +26,13 @@ import {
   ChurchRegistrationScreen,
   ChurchRegistrationCompleteScreen,
   HomeScreen,
+  MeetingDetailsScreen,
+  MeetingCompleteScreen,
 } from "./src/screens";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 const queryClient = new QueryClient();
 
 import {
@@ -44,6 +46,7 @@ import { styled } from "styled-components/native";
 import { colorSet } from "./src/constants";
 import { Typo } from "./src/components/common";
 import SearchAddress from "./src/screens/SearchAddress";
+import { RootStackParamList } from "./src/types/common";
 
 const toastConfig = {
   successToast: ({ props }) => {
@@ -102,6 +105,14 @@ function App(): JSX.Element {
           />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="SearchAddress" component={SearchAddress} />
+          <Stack.Screen
+            name="MeetingDetails"
+            component={MeetingDetailsScreen}
+          />
+          <Stack.Screen
+            name="MeetingComplete"
+            component={MeetingCompleteScreen}
+          />
         </Stack.Navigator>
         <Toast config={toastConfig} />
       </NavigationContainer>
