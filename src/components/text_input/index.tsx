@@ -1,3 +1,4 @@
 import TextInputWithTitle from "./TextInputWithTitle";
+import CustomTextInput from "./CustomTextInput";
 
-export { TextInputWithTitle };
+export { TextInputWithTitle, CustomTextInput };

@@ -77,7 +77,8 @@ const HomeScreen: React.FC<Props> = () => {
   });
 
   useEffect(() => {
-    if (churchListData) {
+    if (churchListData?.data) {
+      console.log("churchListData>>>", churchListData.data);
       const defaultData = churchListData.data;
       setChurchName(defaultData?.churchName ?? "교회");
       setBodyName(defaultData?.bodyList[0].bodyName ?? "공동체");

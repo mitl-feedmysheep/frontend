@@ -1,13 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { styled } from "styled-components/native";
-import Toast from "react-native-toast-message";
-import { getStatusBarHeight } from "react-native-safearea-height";
 
-import { Header, EmptyArea, Typo, Shadow } from "../components/common";
+import { Header, EmptyArea } from "../components/common";
 import { TextInputWithTitle } from "../components/text_input";
 import { RoundButton, SmallRoundButton } from "../components/buttons";
-import { colorSet } from "../constants";
 import { useQuery } from "@tanstack/react-query";
 import {
   checkEmailQueryKey,
@@ -21,6 +18,7 @@ import {
   getVerificationCode,
   signUp,
 } from "../utils/apis";
+import { showToast } from "../utils/utils";
 
 type Props = {};
 
@@ -100,7 +98,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       signUp({
         memberName: name,
         sex: isMan ? "M" : "F",
-        birthdaty: birthday.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+        birthday: birthday.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
         phone: phoneNumber.substring(1, phoneNumber.length + 1),
         email,
         password,
@@ -193,14 +191,14 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
     address,
   ]);
 
-  const showToast = (text, type) => {
-    Toast.show({
-      type,
-      props: { text },
-      position: "top",
-      topOffset: getStatusBarHeight() + 41,
-    });
-  };
+  // const showToast = (text: string, type: string) => {
+  //   Toast.show({
+  //     type,
+  //     props: { text },
+  //     position: "top",
+  //     topOffset: getStatusBarHeight() + 41,
+  //   });
+  // };
 
   const navigateToSearchAddressScreen = () => {
     navigation.navigate("SearchAddress", {

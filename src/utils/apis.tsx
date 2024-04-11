@@ -15,6 +15,12 @@ import {
   GET_APP_WORDS,
   GET_USER_CHURCH_LIST,
 } from "../constants/apiPath";
+import { getData } from "./utils";
+import { ACCESS_TOKEN } from "../constants/storageKeys";
+
+const getToken = async () => {
+  return await getData(ACCESS_TOKEN);
+};
 
 type CommonResponse<T> = {
   common: {
@@ -67,14 +73,20 @@ const signUp = async (props) => {
   return result;
 };
 
-const signIn = async (props) => {
+interface SignInProps {
+  email: string;
+  password: string;
+}
+
+const signIn = async (props: SignInProps) => {
   const result = await axios.post(SIGN_IN, {
     ...props,
   });
   return result;
 };
 
-const getChurches = async (churchName, token) => {
+const getChurches = async (churchName) => {
+  const token = await getToken();
   const result = await axios.get(CHURCHES, {
     params: {
       churchName,
@@ -86,7 +98,8 @@ const getChurches = async (churchName, token) => {
   return result;
 };
 
-const getChurchBodies = async (churchId, token) => {
+const getChurchBodies = async (churchId) => {
+  const token = await getToken();
   const result = await axios.get(GET_CHURCH_BODIES(churchId), {
     params: {
       churchId,
@@ -99,7 +112,12 @@ const getChurchBodies = async (churchId, token) => {
 };
 
 const getUserChurchList = async () => {
-  const result = await axios.get(GET_USER_CHURCH_LIST);
+  const token = await getToken();
+  const result = await axios.get(GET_USER_CHURCH_LIST, {
+    headers: {
+      "fms-token": token,
+    },
+  });
   return result.data;
 };
 

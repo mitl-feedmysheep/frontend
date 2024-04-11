@@ -1,14 +1,27 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { TextInputProps } from "react-native";
 import { styled } from "styled-components/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import { EmptyArea, Header, Typo } from "../components/common";
 import { MainButton } from "../components/buttons";
+import InactiveEye from "../assets/icon/ic-eye-close-line.svg";
+import ActiveEye from "../assets/icon/ic-eye-line.svg";
 import { colorSet } from "../constants";
 import { RootStackParamList } from "../types/common";
+import { signIn } from "../utils/apis";
+import { signInQueryKey } from "../constants/apiQueryKeys";
+import { getData, showToast, storeData } from "../utils/utils";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants/storageKeys";
+import { CustomTextInput } from "../components/text_input";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
+
+interface ApiProps {
+  email: string;
+  password: string;
+}
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -17,6 +30,41 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     if (email.length > 0 && password.length > 0) return true;
     return false;
   }, [email, password]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: [signInQueryKey, email, password],
+    queryFn: () => signIn({ email, password }),
+    enabled: false,
+    gcTime: 0,
+  });
+
+  const signInMutation = useMutation({
+    mutationKey: [signInQueryKey],
+    mutationFn: (props: ApiProps) => signIn(props),
+    onSuccess: async (data) => {
+      if (data?.data?.common?.status === "success") {
+        if (data?.data?.data) {
+          const { accessToken, refreshToken } = data.data.data;
+          await storeData(ACCESS_TOKEN, accessToken);
+          await storeData(REFRESH_TOKEN, refreshToken);
+          navigation.replace("Home");
+          return;
+        }
+        showToast(
+          "로그인 정보가 잘못되었습니다. 고객센터에 문의해주세요.",
+          "errorToast"
+        );
+      }
+
+      showToast(`${data?.data?.common?.message}`, "errorToast");
+    },
+  });
+
+  const emailValidate = (value: string) => {
+    var re =
+      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@(([^<>()[\]\\.,;:\s@"]+\.)+[^<>()[\]\\.,;:\s@"]{2,})$/i;
+    return re.test(String(value).toLowerCase());
+  };
 
   return (
     <Container>
@@ -31,16 +79,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             }}
             placeholder="이메일 주소 입력"
             keyboardType="email-address"
+            validate={emailValidate}
+            validateText="이메일 형식에 맞지 않아요."
           />
           <EmptyArea height={12} />
           <CustomTextInput
+            isPassword
             value={password}
             onChangeText={(text: string) => {
               setPassword(text);
             }}
             placeholder="비밀번호 입력"
             keyboardType="email-address"
-            secureTextEntry
           />
           <EmptyArea height={12} />
           <SearchContainer>
@@ -58,13 +108,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             isActived={isAbleToLogin}
             activeType="active"
             onPress={() => {
+              // signInMutation.mutate({ email, password });
+
+              // navigation.replace("Home");
               // navigation.navigate("MeetingDetails", {
               //   passedScreenType: "infomation",
               // });
-              // navigation.navigate("MeetingDetails", {
-              //   passedScreenType: "view",
-              // });
-              navigation.replace("Home");
+              navigation.navigate("MeetingDetails", {
+                passedScreenType: "view",
+              });
             }}
           />
           <EmptyArea height={12} />
@@ -83,52 +135,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </InnnerContainer>
       </AvoidingView>
     </Container>
-  );
-};
-
-const CustomTextInput = ({
-  value,
-  onChangeText,
-  editable,
-  placeholder,
-  inputRef,
-}: TextInputProps) => {
-  const [isFocused, setIsFocused] = useState(false);
-  // const inputRef = useRef(null);
-
-  const onFocus = () => {
-    setIsFocused(true);
-  };
-
-  const onBlur = () => {
-    setIsFocused(false);
-  };
-
-  return (
-    <TextInputContainer>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        multiline
-        scrollEnabled={false}
-        editable={editable}
-        placeholder={placeholder}
-        placeholderTextColor="#A5BAAF"
-        onFocus={onFocus}
-        onBlur={onBlur}
-        ref={inputRef}
-      />
-      {/* {value && value.length > 0 && isFocused && (
-        <CloseCircleButton
-          onPress={() => {
-            if (onChangeText) onChangeText("");
-          }}
-          activeOpacity={1}
-        >
-          <CloseCircle />
-        </CloseCircleButton>
-      )} */}
-    </TextInputContainer>
   );
 };
 
@@ -202,6 +208,7 @@ const SearchContainer = styled.View`
 
 const SearchWrapper = styled.TouchableOpacity`
   border-bottom-width: 1px;
+  border-color: #636663;
 `;
 
 const VerticalLine = styled.View`
@@ -217,24 +224,6 @@ const SearchText = styled.Text`
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-`;
-
-const TextInputContainer = styled.View`
-  flex-direction: row;
-  position: relative;
-`;
-
-const TextInput = styled.TextInput`
-  display: flex;
-  flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  font-family: Pretendard-Regular;
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  color: #405347;
-  background-color: #f5f7f5;
 `;
 
 export default LoginScreen;

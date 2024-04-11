@@ -5,12 +5,17 @@ import LogoSvg from "../assets/splash/logo.svg";
 import AppNameSvg from "../assets/splash/app-name.svg";
 import { colorSet } from "../constants";
 import { RootStackParamList } from "../types/common";
+import { getData } from "../utils/utils";
+import { ACCESS_TOKEN } from "../constants/storageKeys";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
-    setTimeout(() => {
+    setTimeout(async () => {
+      const accessToken = await getData(ACCESS_TOKEN);
+      // if (accessToken) navigation.replace("Home");
+      // else navigation.replace("Login");
       navigation.replace("Login");
       // navigation.replace("MeetingDetails", { passedScreenType: "infomation" });
     }, 2000);
