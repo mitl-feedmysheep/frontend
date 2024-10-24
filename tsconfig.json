@@ -1,4 +1,22 @@
 {
-  "include": ["src", "src/custom.d.ts"],
-  "extends": "@tsconfig/react-native/tsconfig.json"
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@assets/*": ["assets/*"],
+      "@components/*": ["components/*"],
+      "@constants/*": ["constants/*"],
+      "@hooks/*": ["hooks/*"],
+      "@screens/*": ["screens/*"],
+      "@stack-types/*": ["stack-types/*"],
+      "@utils/*": ["utils/*"],
+      "@apis/*": ["apis/*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ],
+  "extends": "@react-native/typescript-config/tsconfig.json"
 }
