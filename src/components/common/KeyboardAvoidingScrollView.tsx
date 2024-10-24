@@ -1,10 +1,10 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode } from 'react';
 import {
   Platform,
   KeyboardAvoidingViewProps,
   ScrollViewProps,
-} from "react-native";
-import { styled } from "styled-components/native";
+} from 'react-native';
+import { styled } from 'styled-components/native';
 
 interface Props {
   children?: ReactNode;
@@ -19,9 +19,8 @@ const KeyboardAvoidingScrollView: React.FC<Props> = ({
 }) => {
   return (
     <Container
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      {...keyboardAvoidingProps}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      {...keyboardAvoidingProps}>
       <Scroll {...scrollProps}>{children}</Scroll>
     </Container>
   );

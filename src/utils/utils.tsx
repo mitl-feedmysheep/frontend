@@ -1,15 +1,15 @@
-import Toast from "react-native-toast-message";
-import { getStatusBarHeight } from "react-native-safearea-height";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
+import { getStatusBarHeight } from 'react-native-safearea-height';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const delay = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+  new Promise(resolve => setTimeout(resolve, ms));
 
 export const showToast = (text: string, type: string) => {
   Toast.show({
     type,
     props: { text },
-    position: "top",
+    position: 'top',
     topOffset: getStatusBarHeight() + 41,
   });
 };

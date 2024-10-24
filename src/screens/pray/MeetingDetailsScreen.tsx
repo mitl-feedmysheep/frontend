@@ -1,41 +1,41 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko'; // 한국 지역 불러오기
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   Platform,
   ScrollView,
   TouchableWithoutFeedback,
-} from "react-native";
-import { styled } from "styled-components/native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import dayjs from "dayjs";
-import "dayjs/locale/ko"; // 한국 지역 불러오기
-dayjs.locale("ko"); // 한국 지역 설정
+} from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { styled } from 'styled-components/native';
+dayjs.locale('ko'); // 한국 지역 설정
 
-import { EmptyArea, Header } from "../../components/common";
-import CalenderIcon from "../../assets/icon/ic_calendar_line.svg";
-import MapIcon from "../../assets/icon/ic_map_line.svg";
-import TimeIcon from "../../assets/icon/ic_time_line.svg";
-import StarIcon from "../../assets/icon/ic_star_line.svg";
-import DashedLine from "../../assets/lines/dashed_line.svg";
-import CloseCircle from "../../assets/icon/ic_close_circle_fill.svg";
-import EditIcon from "../../assets/icon/ic_edit_line.svg";
-import DeleteIcon from "../../assets/icon/ic_delete_bin_line.svg";
-import { MainButton } from "../../components/buttons";
-import { CellMemberCard } from "../../components/items";
-import { delay } from "../../utils/utils";
+import CalenderIcon from '../../assets/icon/ic_calendar_line.svg';
+import CloseCircle from '../../assets/icon/ic_close_circle_fill.svg';
+import DeleteIcon from '../../assets/icon/ic_delete_bin_line.svg';
+import EditIcon from '../../assets/icon/ic_edit_line.svg';
+import MapIcon from '../../assets/icon/ic_map_line.svg';
+import StarIcon from '../../assets/icon/ic_star_line.svg';
+import TimeIcon from '../../assets/icon/ic_time_line.svg';
+import DashedLine from '../../assets/lines/dashed_line.svg';
+import { MainButton } from '../../components/buttons';
+import { EmptyArea, Header } from '../../components/common';
+import { CellMemberCard } from '../../components/items';
 import {
   MeetingDetailsScreenStep,
   RootStackParamList,
-} from "../../types/common";
+} from '../../types/common';
+import { delay } from '../../utils/utils';
 
-type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
+type Props = NativeStackScreenProps<RootStackParamList, 'MeetingDetails'>;
 
 interface IconItemProps {
   icon: React.ReactElement;
   text: string;
   onPress?: () => void;
-  type?: "textinput" | "touchable";
+  type?: 'textinput' | 'touchable';
   placeholder?: string;
   setValue?: (value: string) => void;
   editable?: boolean;
@@ -54,80 +54,80 @@ interface CellMember {
 const cellMembersData: CellMember[] = [
   {
     idx: 0,
-    name: "유민영",
+    name: '유민영',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
   {
     idx: 1,
-    name: "김창수",
+    name: '김창수',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
   {
     idx: 2,
-    name: "유민영",
+    name: '유민영',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
   {
     idx: 3,
-    name: "김창수",
+    name: '김창수',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
   {
     idx: 4,
-    name: "유민영",
+    name: '유민영',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
   {
     idx: 5,
-    name: "김창수",
+    name: '김창수',
     worship: false,
     meeting: false,
-    nanum: "",
-    prayerTopics: [""],
+    nanum: '',
+    prayerTopics: [''],
   },
 ];
 
 const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [screenType, setScreenType] = useState<MeetingDetailsScreenStep>(
-    route.params?.passedScreenType ? route.params.passedScreenType : "view"
+    route.params?.passedScreenType ? route.params.passedScreenType : 'view',
   );
   const [date, setDate] = useState(new Date());
-  const [pickerMode, setPickerMode] = useState("");
-  const [meetingDate, setMeetingDate] = useState("");
-  const [meetingPlace, setMeetingPlace] = useState("");
+  const [pickerMode, setPickerMode] = useState('');
+  const [meetingDate, setMeetingDate] = useState('');
+  const [meetingPlace, setMeetingPlace] = useState('');
   const [meetingTime, setMeetingTime] = useState(
-    "오후 2시 15분 ~ 오후 3시 15분"
+    '오후 2시 15분 ~ 오후 3시 15분',
   );
-  const [meetingMemo, setMeetingMemo] = useState("");
+  const [meetingMemo, setMeetingMemo] = useState('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [cellMembers, setCellMembers] = useState<CellMember[]>(cellMembersData);
   const [readonly, setReadonly] = useState(
-    route.params?.passedScreenType === "view" ? true : false
+    route.params?.passedScreenType === 'view' ? true : false,
   );
 
   const showDatePicker = () => {
-    setPickerMode("date");
+    setPickerMode('date');
     setDatePickerVisibility(true);
   };
 
   const showTimePicker = () => {
-    setPickerMode("time");
+    setPickerMode('time');
     setDatePickerVisibility(true);
   };
 
@@ -147,17 +147,17 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const onPressCTAButton = async () => {
     switch (screenType) {
-      case "view":
+      case 'view':
         setReadonly(true);
         break;
-      case "infomation":
-        setScreenType("pray");
-        setCellMembers(cellMembers.map((item) => ({ ...item, date })));
+      case 'infomation':
+        setScreenType('pray');
+        setCellMembers(cellMembers.map(item => ({ ...item, date })));
         await delay(100);
         scrollToPosition();
         break;
-      case "pray":
-        navigation.navigate("MeetingComplete");
+      case 'pray':
+        navigation.navigate('MeetingComplete');
         break;
     }
   };
@@ -174,7 +174,7 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   useEffect(() => {
     if (date) {
-      setMeetingDate(dayjs(date).format("YYYY년 MM월 DD일 ddd요일"));
+      setMeetingDate(dayjs(date).format('YYYY년 MM월 DD일 ddd요일'));
       const hour = dayjs(date).hour();
       const minute = dayjs(date).minute();
       const formattedTime =
@@ -182,7 +182,7 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           ? `오후 ${hour - 12}시 ${minute}분`
           : `오전 ${hour}시 ${minute}분`;
 
-      const newDate = dayjs(date).add(1, "hour");
+      const newDate = dayjs(date).add(1, 'hour');
       const newHour = dayjs(newDate).hour();
       const newMinute = dayjs(newDate).minute();
       const newFormattedTime =
@@ -198,27 +198,27 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       icon: <CalenderIcon />,
       text: meetingDate,
       onPress: () => showDatePicker(),
-      type: "touchable",
+      type: 'touchable',
     },
     {
       icon: <MapIcon />,
       text: meetingPlace,
-      type: "textinput",
-      placeholder: "모임 장소",
-      setValue: (value) => setMeetingPlace(value),
+      type: 'textinput',
+      placeholder: '모임 장소',
+      setValue: value => setMeetingPlace(value),
     },
     {
       icon: <TimeIcon />,
       text: meetingTime,
       onPress: () => showTimePicker(),
-      type: "touchable",
+      type: 'touchable',
     },
     {
       icon: <StarIcon />,
       text: meetingMemo,
-      type: "textinput",
-      placeholder: "특이사항",
-      setValue: (value) => setMeetingMemo(value),
+      type: 'textinput',
+      placeholder: '특이사항',
+      setValue: value => setMeetingMemo(value),
     },
   ];
 
@@ -226,7 +226,7 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     <Container>
       <HeaderContainer>
         <Header title="모임 내용" isLeftButton />
-        {readonly && screenType === "view" && (
+        {readonly && screenType === 'view' && (
           <HeaderButtonContainer>
             <EditButton activeOpacity={1} onPress={() => setReadonly(false)}>
               <EditIcon />
@@ -237,7 +237,7 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           </HeaderButtonContainer>
         )}
       </HeaderContainer>
-      <AvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <AvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
           <InnnerContainer ref={scrollViewRef}>
             <EmptyArea height={4} />
@@ -247,13 +247,13 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                 {index < itemList.length - 1 && <DashedLine />}
               </>
             ))}
-            {(screenType === "pray" || screenType === "view") && (
+            {(screenType === 'pray' || screenType === 'view') && (
               <>
                 <EmptyArea height={20} />
                 <WrittingText>오늘의 기록</WrittingText>
                 {cellMembers?.length > 0 && (
                   <CellMemberCardListContainer>
-                    {cellMembers.map((cellMember) => (
+                    {cellMembers.map(cellMember => (
                       <CellMemberCard
                         name={cellMember.name}
                         date={cellMember.date}
@@ -261,62 +261,62 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                         meeting={cellMember.meeting}
                         setWorship={() =>
                           setCellMembers(
-                            cellMembers.map((member) =>
+                            cellMembers.map(member =>
                               member.idx === cellMember.idx
                                 ? { ...member, worship: !member.worship }
-                                : member
-                            )
+                                : member,
+                            ),
                           )
                         }
                         setMeeting={() =>
                           setCellMembers(
-                            cellMembers.map((member) =>
+                            cellMembers.map(member =>
                               member.idx === cellMember.idx
                                 ? { ...member, meeting: !member.meeting }
-                                : member
-                            )
+                                : member,
+                            ),
                           )
                         }
                         meetingText={cellMember.nanum}
                         prayerList={cellMember.prayerTopics}
-                        setMeetingText={(text) =>
+                        setMeetingText={text =>
                           setCellMembers(
-                            cellMembers.map((member) =>
+                            cellMembers.map(member =>
                               member.idx === cellMember.idx
                                 ? { ...member, nanum: text }
-                                : member
-                            )
+                                : member,
+                            ),
                           )
                         }
                         setPrayerText={(text, index) =>
                           setCellMembers(
-                            cellMembers.map((member) =>
+                            cellMembers.map(member =>
                               member.idx === cellMember.idx
                                 ? {
                                     ...member,
                                     prayerTopics: member.prayerTopics.map(
                                       (prayer, idx) =>
-                                        idx === index ? text : prayer
+                                        idx === index ? text : prayer,
                                     ),
                                   }
-                                : member
-                            )
+                                : member,
+                            ),
                           )
                         }
                         addPrayer={() =>
                           setCellMembers(
-                            cellMembers.map((member) =>
+                            cellMembers.map(member =>
                               member.idx === cellMember.idx
                                 ? {
                                     ...member,
                                     prayerTopics:
-                                      member.prayerTopics.concat(""),
+                                      member.prayerTopics.concat(''),
                                   }
-                                : member
-                            )
+                                : member,
+                            ),
                           )
                         }
-                        onSave={(props) => {
+                        onSave={props => {
                           props.callbackSuccess();
                         }}
                         readonly={readonly}
@@ -332,7 +332,7 @@ const MeetingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       {!readonly && (
         <CTAContainer>
           <MainButton
-            buttonText={screenType === "infomation" ? "다음" : "작성 완료"}
+            buttonText={screenType === 'infomation' ? '다음' : '작성 완료'}
             isActived={isButtonActived}
             activeType="active"
             onPress={onPressCTAButton}
@@ -357,7 +357,7 @@ const IconItem = ({
   icon,
   text,
   onPress,
-  type = "touchable",
+  type = 'touchable',
   placeholder,
   setValue,
   editable,
@@ -374,18 +374,17 @@ const IconItem = ({
   };
 
   const item =
-    type === "touchable" ? (
+    type === 'touchable' ? (
       <TouchableItemArea
         activeOpacity={1}
-        onPress={editable ? onPress : () => {}}
-      >
+        onPress={editable ? onPress : () => {}}>
         <ItemText>{text}</ItemText>
       </TouchableItemArea>
     ) : (
       <>
         <TextInputItemArea
           value={text}
-          onChangeText={(text) => {
+          onChangeText={text => {
             if (setValue) setValue(text);
           }}
           placeholder={placeholder}
@@ -398,9 +397,8 @@ const IconItem = ({
         <EmptyArea width={2} />
         {text.length > 0 && isFocused && (
           <CloseCircleButton
-            onPress={() => (setValue ? setValue("") : {})}
-            activeOpacity={1}
-          >
+            onPress={() => (setValue ? setValue('') : {})}
+            activeOpacity={1}>
             <CloseCircle />
           </CloseCircleButton>
         )}

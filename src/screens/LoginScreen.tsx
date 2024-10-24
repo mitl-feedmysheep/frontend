@@ -1,22 +1,22 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { TextInputProps } from "react-native";
-import { styled } from "styled-components/native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useEffect, useMemo, useState } from 'react';
+import { TextInputProps } from 'react-native';
+import { styled } from 'styled-components/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
-import { EmptyArea, Header, Typo } from "../components/common";
-import { MainButton } from "../components/buttons";
-import InactiveEye from "../assets/icon/ic-eye-close-line.svg";
-import ActiveEye from "../assets/icon/ic-eye-line.svg";
-import { colorSet } from "../constants";
-import { RootStackParamList } from "../types/common";
-import { signIn } from "../utils/apis";
-import { signInQueryKey } from "../constants/apiQueryKeys";
-import { getData, showToast, storeData } from "../utils/utils";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants/storageKeys";
-import { CustomTextInput } from "../components/text_input";
+import { EmptyArea, Header, Typo } from '../components/common';
+import { MainButton } from '../components/buttons';
+import InactiveEye from '../assets/icon/ic-eye-close-line.svg';
+import ActiveEye from '../assets/icon/ic-eye-line.svg';
+import { colorSet } from '../constants';
+import { RootStackParamList } from '../types/common';
+import { signIn } from '../utils/apis';
+import { signInQueryKey } from '../constants/apiQueryKeys';
+import { getData, showToast, storeData } from '../utils/utils';
+import { ACCESS_TOKEN, REFRESH_TOKEN } from '../constants/storageKeys';
+import { CustomTextInput } from '../components/text_input';
 
-type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
+type Props = NativeStackScreenProps<RootStackParamList, 'MeetingDetails'>;
 
 interface ApiProps {
   email: string;
@@ -24,8 +24,8 @@ interface ApiProps {
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const isAbleToLogin = useMemo(() => {
     if (email.length > 0 && password.length > 0) return true;
     return false;
@@ -41,22 +41,22 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const signInMutation = useMutation({
     mutationKey: [signInQueryKey],
     mutationFn: (props: ApiProps) => signIn(props),
-    onSuccess: async (data) => {
-      if (data?.data?.common?.status === "success") {
+    onSuccess: async data => {
+      if (data?.data?.common?.status === 'success') {
         if (data?.data?.data) {
           const { accessToken, refreshToken } = data.data.data;
           await storeData(ACCESS_TOKEN, accessToken);
           await storeData(REFRESH_TOKEN, refreshToken);
-          navigation.replace("Home");
+          navigation.replace('Home');
           return;
         }
         showToast(
-          "로그인 정보가 잘못되었습니다. 고객센터에 문의해주세요.",
-          "errorToast"
+          '로그인 정보가 잘못되었습니다. 고객센터에 문의해주세요.',
+          'errorToast',
         );
       }
 
-      showToast(`${data?.data?.common?.message}`, "errorToast");
+      showToast(`${data?.data?.common?.message}`, 'errorToast');
     },
   });
 
@@ -114,8 +114,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               // navigation.navigate("MeetingDetails", {
               //   passedScreenType: "infomation",
               // });
-              navigation.navigate("MeetingDetails", {
-                passedScreenType: "view",
+              navigation.navigate('MeetingDetails', {
+                passedScreenType: 'view',
               });
             }}
           />
@@ -125,10 +125,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <SignupButton
               activeOpacity={1}
               onPress={() => {
-                navigation.navigate("Signup");
+                navigation.navigate('Signup');
                 // navigation.navigate("ChurchRegistration");
-              }}
-            >
+              }}>
               <SignupText2>회원가입하기</SignupText2>
             </SignupButton>
           </SignupContainer>

@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { styled } from "styled-components/native";
-import LogoSvg from "../assets/home/logo.svg";
-import MyPageSvg from "../assets/home/my-page.svg";
-import ArrowDownSvg from "../assets/home/arrow-down.svg";
-import EllipseSvg from "../assets/home/ellipse.svg";
-import WhiteEllipseSvg from "../assets/home/white-ellipse.svg";
-import MyGroupElement from "../components/home/MyGroupElement";
-import EventElement from "../components/home/EventElement";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from 'react';
+import { styled } from 'styled-components/native';
+import LogoSvg from '../assets/home/logo.svg';
+import MyPageSvg from '../assets/home/my-page.svg';
+import ArrowDownSvg from '../assets/home/arrow-down.svg';
+import EllipseSvg from '../assets/home/ellipse.svg';
+import WhiteEllipseSvg from '../assets/home/white-ellipse.svg';
+import MyGroupElement from '../components/home/MyGroupElement';
+import EventElement from '../components/home/EventElement';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import {
   getAppMediaList,
   getAppText,
@@ -16,20 +16,20 @@ import {
   getUserCellList,
   getUserChurchList,
   getUserInfo,
-} from "../utils/apis";
+} from '../utils/apis';
 
 type Props = {};
 
 const HomeScreen: React.FC<Props> = () => {
-  const [churchName, setChurchName] = useState<string>("");
-  const [bodyName, setBodyName] = useState<string>("");
-  const [userImageUrl, setUserImageUrl] = useState<string>("");
-  const [bannerImageUrl, setBannerImageUrl] = useState<string>("");
-  const [bannerText, setBannerText] = useState<string>("");
-  const [bannerWords, setBannerWords] = useState<string>("");
+  const [churchName, setChurchName] = useState<string>('');
+  const [bodyName, setBodyName] = useState<string>('');
+  const [userImageUrl, setUserImageUrl] = useState<string>('');
+  const [bannerImageUrl, setBannerImageUrl] = useState<string>('');
+  const [bannerText, setBannerText] = useState<string>('');
+  const [bannerWords, setBannerWords] = useState<string>('');
   const [myGroupElements, setMyGroupElements] = useState<any[]>([]);
-  const [calendarYear, setCalendarYear] = useState<string>("");
-  const [calendarMonth, setCalendarMonth] = useState<string>("");
+  const [calendarYear, setCalendarYear] = useState<string>('');
+  const [calendarMonth, setCalendarMonth] = useState<string>('');
   const [eventElements, setEventElements] = useState<any[]>([]);
   const [eventPageCount, setEventPageCount] = useState<number>(1);
   const [currentEventPage, setCurrentEventPage] = useState<number>(0);
@@ -37,7 +37,7 @@ const HomeScreen: React.FC<Props> = () => {
   const [bodyId, setBodyId] = useState(0);
 
   const { data: churchListData } = useQuery({
-    queryKey: ["churchList"],
+    queryKey: ['churchList'],
     queryFn: () => getUserChurchList(),
   });
 
@@ -48,40 +48,40 @@ const HomeScreen: React.FC<Props> = () => {
     { data: bannerWordsData },
   ] = useQueries({
     queries: [
-      { queryKey: ["userInfo"], queryFn: () => getUserInfo() },
+      { queryKey: ['userInfo'], queryFn: () => getUserInfo() },
       {
-        queryKey: ["bannerImage"],
-        queryFn: () => getAppMediaList("home-on-top-of-cell-list"),
+        queryKey: ['bannerImage'],
+        queryFn: () => getAppMediaList('home-on-top-of-cell-list'),
       },
       {
-        queryKey: ["bannerText"],
-        queryFn: () => getAppText("home-on-top-of-cell-list"),
+        queryKey: ['bannerText'],
+        queryFn: () => getAppText('home-on-top-of-cell-list'),
       },
       {
-        queryKey: ["bannerWords"],
-        queryFn: () => getAppWords("home-on-top-of-cell-list"),
+        queryKey: ['bannerWords'],
+        queryFn: () => getAppWords('home-on-top-of-cell-list'),
       },
     ],
   });
 
   const { data: cellListData } = useQuery({
-    queryKey: ["cellList"],
+    queryKey: ['cellList'],
     queryFn: () => getUserCellList(bodyId),
     enabled: !!bodyId,
   });
 
   const { data: eventListData } = useQuery({
-    queryKey: ["eventList"],
+    queryKey: ['eventList'],
     queryFn: () => getChurchEventList(bodyId, calendarYear, calendarMonth, 0),
     enabled: !!bodyId,
   });
 
   useEffect(() => {
     if (churchListData?.data) {
-      console.log("churchListData>>>", churchListData.data);
+      console.log('churchListData>>>', churchListData.data);
       const defaultData = churchListData.data;
-      setChurchName(defaultData?.churchName ?? "교회");
-      setBodyName(defaultData?.bodyList[0].bodyName ?? "공동체");
+      setChurchName(defaultData?.churchName ?? '교회');
+      setBodyName(defaultData?.bodyList[0].bodyName ?? '공동체');
       setBodyId(defaultData?.bodyList[0].bodyId ?? 0);
     }
   }, [churchListData]);
@@ -156,13 +156,12 @@ const HomeScreen: React.FC<Props> = () => {
             <MyGroupList
               horizontal={true}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              {myGroupElements.map((x) => {
+              contentContainerStyle={{ gap: 8 }}>
+              {myGroupElements.map(x => {
                 return (
                   <MyGroupElement
                     imageUrl={
-                      x.cellLogoUrl ?? "../../assets/home/sample-group.png"
+                      x.cellLogoUrl ?? '../../assets/home/sample-group.png'
                     }
                     peopleCount={x.cellMemberCount}
                     place={x.cellPlace}
@@ -188,18 +187,16 @@ const HomeScreen: React.FC<Props> = () => {
               <EventList
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, width: "100%" }}
-              >
+                contentContainerStyle={{ gap: 8, width: '100%' }}>
                 <EventVerticalView>
-                  {eventElements.map((x) => {
+                  {eventElements.map(x => {
                     return (
                       <EventElement
                         userImageUrl={
                           x.profileImageUrl ??
-                          "../../assets/home/sample-user.png"
+                          '../../assets/home/sample-user.png'
                         }
-                        userName={x.userName}
-                      ></EventElement>
+                        userName={x.userName}></EventElement>
                     );
                   })}
                 </EventVerticalView>

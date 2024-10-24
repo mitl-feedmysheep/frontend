@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { TextInputProps } from "react-native";
-import { styled } from "styled-components/native";
+import React, { useEffect, useMemo, useState } from 'react';
+import { TextInputProps } from 'react-native';
+import { styled } from 'styled-components/native';
 
-import InactiveEye from "../../assets/icon/ic-eye-close-line.svg";
-import ActiveEye from "../../assets/icon/ic-eye-line.svg";
+import InactiveEye from '../../assets/icon/ic-eye-close-line.svg';
+import ActiveEye from '../../assets/icon/ic-eye-line.svg';
 
 interface CustomTextInputProps extends TextInputProps {
   isPassword?: boolean;
@@ -27,7 +27,7 @@ const CustomTextInput = ({
   // const inputRef = useRef(null);
 
   useEffect(() => {
-    console.log("valid>>>", valid);
+    console.log('valid>>>', valid);
   }, [valid]);
 
   const onFocus = () => {
@@ -62,8 +62,7 @@ const CustomTextInput = ({
         {isPassword && (
           <ViewPasswordButton
             activeOpacity={1}
-            onPress={() => setIsPasswordShown(!isPasswordShown)}
-          >
+            onPress={() => setIsPasswordShown(!isPasswordShown)}>
             {isPasswordShown ? <ActiveEye /> : <InactiveEye />}
           </ViewPasswordButton>
         )}
@@ -88,7 +87,7 @@ const TextInput = styled.TextInput<{ valid: boolean }>`
   flex: 1;
   padding: 16px;
   border-radius: 8px;
-  border-color: ${({ valid }) => (valid ? "transparent" : "#DB574F")};
+  border-color: ${({ valid }) => (valid ? 'transparent' : '#DB574F')};
   border-width: 1px;
   font-family: Pretendard-Regular;
   font-size: 16px;

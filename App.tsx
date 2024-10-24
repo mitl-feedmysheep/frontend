@@ -5,8 +5,8 @@
  * @format
  */
 
-import React, { useEffect } from "react";
-import type { PropsWithChildren } from "react";
+import React, { useEffect } from 'react';
+import type { PropsWithChildren } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -15,9 +15,9 @@ import {
   Text,
   useColorScheme,
   View,
-} from "react-native";
-import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+} from 'react-native';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   SplashScreen,
   LoginScreen,
@@ -28,9 +28,9 @@ import {
   HomeScreen,
   MeetingDetailsScreen,
   MeetingCompleteScreen,
-} from "./src/screens";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+} from './src/screens';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const queryClient = new QueryClient();
@@ -41,12 +41,12 @@ import {
   Header,
   LearnMoreLinks,
   ReloadInstructions,
-} from "react-native/Libraries/NewAppScreen";
-import { styled } from "styled-components/native";
-import { colorSet } from "./src/constants";
-import { Typo } from "./src/components/common";
-import SearchAddress from "./src/screens/SearchAddress";
-import { RootStackParamList } from "./src/types/common";
+} from 'react-native/Libraries/NewAppScreen';
+import { styled } from 'styled-components/native';
+import { colorSet } from './src/constants';
+import { Typo } from './src/components/common';
+import SearchAddress from './src/screens/SearchAddress';
+import { RootStackParamList } from './src/types/common';
 
 const toastConfig = {
   successToast: ({ props }) => {
@@ -82,7 +82,7 @@ const ToastContainer = styled.View`
 `;
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === "dark";
+  const isDarkMode = useColorScheme() === 'dark';
 
   return (
     <QueryClientProvider client={queryClient}>

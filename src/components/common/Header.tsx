@@ -1,8 +1,8 @@
-import React from "react";
-import { styled } from "styled-components/native";
-import { colorSet } from "../../constants";
-import LeftArrow from "../../assets/buttons/left-arrow.svg";
-import { useNavigation } from "@react-navigation/native";
+import React from 'react';
+import { styled } from 'styled-components/native';
+import { colorSet } from '../../constants';
+import LeftArrow from '../../assets/buttons/left-arrow.svg';
+import { useNavigation } from '@react-navigation/native';
 
 interface Props {
   title: string;
@@ -23,8 +23,7 @@ const Header: React.FC<Props> = ({
           activeOpacity={1}
           onPress={() => {
             navigation.goBack();
-          }}
-        >
+          }}>
           <LeftArrow />
         </LeftButton>
       )}

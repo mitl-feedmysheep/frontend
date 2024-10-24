@@ -1,7 +1,7 @@
-import React from "react";
-import { styled } from "styled-components/native";
-import { colorSet } from "../../constants";
-import { Shadow } from "../common";
+import React from 'react';
+import { styled } from 'styled-components/native';
+import { colorSet } from '../../constants';
+import { Shadow } from '../common';
 
 type Props = { buttonText: string; isActived: boolean; onPress: () => {} };
 
@@ -14,8 +14,7 @@ const RoundButton: React.FC<Props> = ({ buttonText, isActived, onPress }) => {
       <LoginButton
         onPress={onPressButton}
         activeOpacity={1}
-        isActived={isActived}
-      >
+        isActived={isActived}>
         <LoginText isActived={isActived}>{buttonText}</LoginText>
       </LoginButton>
     </Shadow>
@@ -31,7 +30,7 @@ const LoginButton = styled.TouchableOpacity`
   border: 0.75px;
   border-color: ${colorSet.neutral.N4};
   background-color: ${({ isActived }) =>
-    isActived ? colorSet.primary.P4_M : "white"};
+    isActived ? colorSet.primary.P4_M : 'white'};
 `;
 
 const LoginText = styled.Text`

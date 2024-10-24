@@ -1,4 +1,4 @@
-const baseUrl = "http://localhost:8020/";
+const baseUrl = 'http://localhost:8020/';
 
 // member
 const GET_VERIFICATION_CODE = `${baseUrl}app/member/phone/send-verification-code`;

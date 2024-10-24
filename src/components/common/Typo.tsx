@@ -1,21 +1,21 @@
-import React, { useMemo } from "react";
-import { View } from "react-native";
-import { styled } from "styled-components/native";
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
+import { styled } from 'styled-components/native';
 
 type Props = {
   children: any;
   type:
-    | "H1"
-    | "H2"
-    | "H3"
-    | "B1"
-    | "B2"
-    | "B3"
-    | "B4"
-    | "caption"
-    | "actionBar";
+    | 'H1'
+    | 'H2'
+    | 'H3'
+    | 'B1'
+    | 'B2'
+    | 'B3'
+    | 'B4'
+    | 'caption'
+    | 'actionBar';
   color: string;
-  textAlign?: "center" | "start";
+  textAlign?: 'center' | 'start';
 };
 
 const H1 = styled.Text`
@@ -131,9 +131,9 @@ const textSet = {
 
 const Typo: React.FC<Props> = ({
   children,
-  color = "#000000",
-  type = "H1",
-  textAlign = "start",
+  color = '#000000',
+  type = 'H1',
+  textAlign = 'start',
 }) => {
   const TextWrapper = useMemo(() => {
     return textSet[type];

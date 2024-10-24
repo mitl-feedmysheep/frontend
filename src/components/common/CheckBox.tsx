@@ -1,7 +1,7 @@
-import React from "react";
-import { styled } from "styled-components/native";
-import ActiveCheckBox from "../../assets/check-box/ic_checkbox_square_fill.svg";
-import InactiveCheckBox from "../../assets/check-box/ic_checkbox_square_line.svg";
+import React from 'react';
+import { styled } from 'styled-components/native';
+import ActiveCheckBox from '../../assets/check-box/ic_checkbox_square_fill.svg';
+import InactiveCheckBox from '../../assets/check-box/ic_checkbox_square_line.svg';
 
 interface Props {
   isChecked?: boolean;

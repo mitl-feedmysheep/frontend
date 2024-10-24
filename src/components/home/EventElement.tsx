@@ -1,18 +1,19 @@
-import styled from "styled-components/native";
-import CakeSvg from "../../assets/home/cake.svg";
+import styled from 'styled-components/native';
+import CakeSvg from '../../assets/home/cake.svg';
 
 type Props = { userImageUrl: string; userName: string };
 
-const EventElement: React.FC<Props> = (props) => {
+const EventElement: React.FC<Props> = props => {
   const { userImageUrl, userName } = props;
 
   return (
     <EventElementContainer>
       <EventUserContainer>
-        <EventUserImage source={require("../../assets/home/sample-user.png")}></EventUserImage>
+        <EventUserImage
+          source={require('../../assets/home/sample-user.png')}></EventUserImage>
         <EventUserName>{userName}</EventUserName>
         <EventTypeContainer>
-          <CakeSvg/>
+          <CakeSvg />
           <EventName>생일</EventName>
         </EventTypeContainer>
       </EventUserContainer>
@@ -20,8 +21,8 @@ const EventElement: React.FC<Props> = (props) => {
         <EventDate>10.05 (목)</EventDate>
       </EventDateContainer>
     </EventElementContainer>
-  )
-}
+  );
+};
 
 const EventElementContainer = styled.View`
   display: flex;
@@ -29,7 +30,7 @@ const EventElementContainer = styled.View`
   border-radius: 15px;
   justify-content: space-between;
   padding: 12px;
-  background-color: #F5F7F5;
+  background-color: #f5f7f5;
   flex-direction: row;
 `;
 
@@ -57,7 +58,7 @@ const EventTypeContainer = styled.View`
   display: flex;
   border-radius: 4px;
   padding: 4px 4px 4px 4px;
-  background-color: #EBEFD4;
+  background-color: #ebefd4;
   justify-content: center;
   flex-direction: row;
   align-items: center;

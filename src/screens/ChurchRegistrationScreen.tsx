@@ -1,33 +1,33 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { styled } from "styled-components/native";
-import Toast from "react-native-toast-message";
-import { getStatusBarHeight } from "react-native-safearea-height";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useMemo, useState } from 'react';
+import { styled } from 'styled-components/native';
+import Toast from 'react-native-toast-message';
+import { getStatusBarHeight } from 'react-native-safearea-height';
+import { useQuery } from '@tanstack/react-query';
 
-import { Header, EmptyArea, Typo, Shadow } from "../components/common";
-import { TextInputWithTitle } from "../components/text_input";
-import { RoundButton, SmallRoundButton } from "../components/buttons";
-import { colorSet } from "../constants";
-import { CheckSelectionList } from "../components/list";
-import { getChurchBodies, getChurches, signIn } from "../utils/apis";
+import { Header, EmptyArea, Typo, Shadow } from '../components/common';
+import { TextInputWithTitle } from '../components/text_input';
+import { RoundButton, SmallRoundButton } from '../components/buttons';
+import { colorSet } from '../constants';
+import { CheckSelectionList } from '../components/list';
+import { getChurchBodies, getChurches, signIn } from '../utils/apis';
 import {
   getChurchBodiesQueryKey,
   getChurchesQueryKey,
   signInQueryKey,
-} from "../constants/apiQueryKeys";
+} from '../constants/apiQueryKeys';
 
 type Props = {};
 
 type SignupFieldType =
-  | "empty"
-  | "name"
-  | "birthday"
-  | "phoneNumber"
-  | "authenticationNumber"
-  | "email"
-  | "password"
-  | "passwordCheck"
-  | "address";
+  | 'empty'
+  | 'name'
+  | 'birthday'
+  | 'phoneNumber'
+  | 'authenticationNumber'
+  | 'email'
+  | 'password'
+  | 'passwordCheck'
+  | 'address';
 
 /*
   toast, validation, api 연동, 주소찾기, 디테일, 카카오맵 확인, 지라 티켓
@@ -35,20 +35,20 @@ type SignupFieldType =
 
 const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
   const [currentFieldType, setCurrentFieldType] =
-    useState<SignupFieldType>("empty");
-  const [church, setChurch] = useState("번동제일교회");
-  const [selectedChurch, setSelectedChurch] = useState("");
-  const [department, setDepartment] = useState("");
+    useState<SignupFieldType>('empty');
+  const [church, setChurch] = useState('번동제일교회');
+  const [selectedChurch, setSelectedChurch] = useState('');
+  const [department, setDepartment] = useState('');
   const [departmentList, setDepartmentList] = useState([]);
   const [isVisibleDepartment, setIsVisibleDepartment] = useState(false);
   const [churchList, setChurchList] = useState([]);
   const [isChurchListRequested, setChurchListRequested] = useState(false);
   const [isChurchBodiesRequested, setChurchBodiesRequested] = useState(false);
-  const [accessToken, setAccessToken] = useState("");
+  const [accessToken, setAccessToken] = useState('');
 
   const { data: signInData, isPending: isSignInPending } = useQuery({
     queryKey: [signInQueryKey],
-    queryFn: () => signIn({ email: "5@5.com", password: "!mitl1991" }),
+    queryFn: () => signIn({ email: '5@5.com', password: '!mitl1991' }),
     // enabled: !!isAuthenticationRequested,
   });
 
@@ -65,7 +65,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
       queryFn: () => getChurchBodies(selectedChurch?.idx, accessToken),
       enabled: !!isChurchBodiesRequested,
       gcTime: 0,
-    }
+    },
   );
 
   useEffect(() => {
@@ -76,13 +76,13 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (churchListData?.data?.data?.length > 0 && !isChurchListPending) {
-      console.log("churchListData.data.data>>>", churchListData.data.data);
+      console.log('churchListData.data.data>>>', churchListData.data.data);
       setChurchList(
-        churchListData.data.data.map((item) => ({
+        churchListData.data.data.map(item => ({
           title: item.churchName,
           subTitle: item.churchLocation,
           idx: item.churchId,
-        }))
+        })),
       );
       setChurchListRequested(false);
     }
@@ -90,12 +90,12 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (churchBodiesData?.data?.data?.length > 0 && !isChurchBodiesPending) {
-      console.log("churchBodiesData>>>", churchBodiesData);
+      console.log('churchBodiesData>>>', churchBodiesData);
       setDepartmentList(
-        churchBodiesData?.data?.data.map((item) => ({
+        churchBodiesData?.data?.data.map(item => ({
           idx: item.bodyId,
           title: item.bodyName,
-        }))
+        })),
       );
       // setChurchList(
       //   churchListData.data.data.map((item) => ({
@@ -118,7 +118,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
     Toast.show({
       type,
       props: { text },
-      position: "top",
+      position: 'top',
       topOffset: getStatusBarHeight() + 41,
     });
   };
@@ -140,13 +140,13 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setChurch(text);
               }}
-              isActived={currentFieldType === "church"}
-              onFocus={() => setCurrentFieldType("church")}
+              isActived={currentFieldType === 'church'}
+              onFocus={() => setCurrentFieldType('church')}
             />
             <EmptyArea width={10} />
             <SmallRoundButton
               onPress={() => {
-                setCurrentFieldType("church");
+                setCurrentFieldType('church');
                 setSelectedChurch(null);
                 setChurchListRequested(true);
                 // setChurchList([
@@ -199,7 +199,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
                 // ]);
               }}
               buttonText="검색"
-              isActived={currentFieldType === "church"}
+              isActived={currentFieldType === 'church'}
               buttonType="filled"
             />
           </InputContainer>
@@ -208,10 +208,10 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
             <>
               <CheckSelectionList
                 dataList={churchList}
-                onPressSelection={(selectedChurch) => {
+                onPressSelection={selectedChurch => {
                   setChurch(selectedChurch.title);
                   setSelectedChurch(selectedChurch);
-                  setCurrentFieldType("department");
+                  setCurrentFieldType('department');
                   setDepartment(null);
                   setIsVisibleDepartment(true);
                   setChurchBodiesRequested(true);
@@ -234,15 +234,15 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
             onChangeText={(text: string) => {
               setDepartment(text);
             }}
-            isActived={currentFieldType === "department"}
-            onFocus={() => setCurrentFieldType("department")}
+            isActived={currentFieldType === 'department'}
+            onFocus={() => setCurrentFieldType('department')}
             // mask={
             //   [/\d/, /\d/, /\d/, /\d/, ".", /\d/, /\d/, ".", /\d/, /\d/]
             // }
             maxLength={8}
             onPressOut={() => {
               setIsVisibleDepartment(true);
-              setCurrentFieldType("department");
+              setCurrentFieldType('department');
             }}
             readOnly
           />
@@ -251,7 +251,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
             <>
               <CheckSelectionList
                 dataList={departmentList}
-                onPressSelection={(selectedDepartment) => {
+                onPressSelection={selectedDepartment => {
                   setDepartment(selectedDepartment?.title);
                   setIsVisibleDepartment(false);
                 }}
@@ -271,7 +271,7 @@ const ChurchRegistrationScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => {
               // showToast("토스트1", "successToast");
               // showToast("토스트2", "errorToast")
-              navigation.replace("ChurchRegistrationComplete");
+              navigation.replace('ChurchRegistrationComplete');
             }}
           />
         </InnnerContainer>

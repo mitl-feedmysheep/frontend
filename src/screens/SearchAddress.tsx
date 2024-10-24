@@ -1,7 +1,7 @@
-import React from "react";
-import { SafeAreaView } from "react-native";
-import { styled } from "styled-components/native";
-import Postcode from "@actbase/react-daum-postcode";
+import React from 'react';
+import { SafeAreaView } from 'react-native';
+import { styled } from 'styled-components/native';
+import Postcode from '@actbase/react-daum-postcode';
 
 type Props = {};
 
@@ -10,7 +10,7 @@ const SearchAddress: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView>
       <Container
         jsOptions={{ animation: true }}
-        onSelected={(data) => {
+        onSelected={data => {
           const { address, jibunAddress } = data;
           if (route.params?.onSendingAddress) {
             route.params.onSendingAddress({

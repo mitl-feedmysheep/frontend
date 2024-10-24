@@ -1,37 +1,37 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
-import { styled } from "styled-components/native";
+import React, { useEffect, useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import { styled } from 'styled-components/native';
 
-import { Header, EmptyArea } from "../components/common";
-import { TextInputWithTitle } from "../components/text_input";
-import { RoundButton, SmallRoundButton } from "../components/buttons";
-import { useQuery } from "@tanstack/react-query";
+import { Header, EmptyArea } from '../components/common';
+import { TextInputWithTitle } from '../components/text_input';
+import { RoundButton, SmallRoundButton } from '../components/buttons';
+import { useQuery } from '@tanstack/react-query';
 import {
   checkEmailQueryKey,
   checkVerificationCodeQueryKey,
   signUpQueryKey,
   verificationCodeQueryKey,
-} from "../constants/apiQueryKeys";
+} from '../constants/apiQueryKeys';
 import {
   checkEmail,
   checkVerificationCode,
   getVerificationCode,
   signUp,
-} from "../utils/apis";
-import { showToast } from "../utils/utils";
+} from '../utils/apis';
+import { showToast } from '../utils/utils';
 
 type Props = {};
 
 type SignupFieldType =
-  | "empty"
-  | "name"
-  | "birthday"
-  | "phoneNumber"
-  | "authenticationNumber"
-  | "email"
-  | "password"
-  | "passwordCheck"
-  | "address";
+  | 'empty'
+  | 'name'
+  | 'birthday'
+  | 'phoneNumber'
+  | 'authenticationNumber'
+  | 'email'
+  | 'password'
+  | 'passwordCheck'
+  | 'address';
 
 /*
   toast, validation, api 연동, 주소찾기, 디테일, 카카오맵 확인, 지라 티켓
@@ -39,19 +39,19 @@ type SignupFieldType =
 
 const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [currentFieldType, setCurrentFieldType] =
-    useState<SignupFieldType>("empty");
-  const [name, setName] = useState("");
+    useState<SignupFieldType>('empty');
+  const [name, setName] = useState('');
   const [isMan, setIsMan] = useState(false);
   const [isFemale, setIsFemale] = useState(false);
-  const [birthday, setBirthday] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [authenticationNumber, setAuthenticationNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordCheck, setPasswordCheck] = useState("");
-  const [address, setAddress] = useState("");
-  const [jibunAddress, setJibunAddress] = useState("");
-  const [addressDetail, setAddressDetail] = useState("");
+  const [birthday, setBirthday] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [authenticationNumber, setAuthenticationNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordCheck, setPasswordCheck] = useState('');
+  const [address, setAddress] = useState('');
+  const [jibunAddress, setJibunAddress] = useState('');
+  const [addressDetail, setAddressDetail] = useState('');
   const [isAuthenticationRequested, setIsAuthenticationRequested] =
     useState(false);
   const [isAuthenticationShown, setIsAuthenticationShown] = useState(false);
@@ -97,8 +97,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
     queryFn: () =>
       signUp({
         memberName: name,
-        sex: isMan ? "M" : "F",
-        birthday: birthday.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"),
+        sex: isMan ? 'M' : 'F',
+        birthday: birthday.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         phone: phoneNumber.substring(1, phoneNumber.length + 1),
         email,
         password,
@@ -112,10 +112,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       verificationCodeData?.data?.common?.status &&
       !isVerificationCodePending
     ) {
-      if (verificationCodeData.data.common.status === "success") {
+      if (verificationCodeData.data.common.status === 'success') {
         setIsAuthenticationShown(true);
       } else {
-        showToast(`${verificationCodeData.data.common.message}`, "errorToast");
+        showToast(`${verificationCodeData.data.common.message}`, 'errorToast');
       }
       setIsAuthenticationRequested(false);
     }
@@ -126,11 +126,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       checkVerificationCodeData?.data?.common?.status &&
       !isCheckVerificationCodePending
     ) {
-      if (checkVerificationCodeData.data.common.status === "success") {
+      if (checkVerificationCodeData.data.common.status === 'success') {
         setIsAuthenticationCompleted(true);
-        showToast("본인인증이 완료되었습니다", "successToast");
+        showToast('본인인증이 완료되었습니다', 'successToast');
       } else {
-        showToast(`인증번호가 틀렸습니다.`, "errorToast");
+        showToast(`인증번호가 틀렸습니다.`, 'errorToast');
       }
       setIsCheckAuthenticationRequested(false);
     }
@@ -138,10 +138,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (emailData?.data?.common?.status && !isEmailPending) {
-      if (emailData.data.common.status === "success") {
+      if (emailData.data.common.status === 'success') {
         setIsEmailChecked(true);
       } else {
-        showToast(`${emailData.data.common.message}`, "errorToast");
+        showToast(`${emailData.data.common.message}`, 'errorToast');
       }
       setIsEmailRequested(false);
     }
@@ -149,12 +149,12 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (signUpData?.data?.common?.status && !isSignUpPending) {
-      if (signUpData.data.common.status === "success") {
-        console.log("11>>>");
+      if (signUpData.data.common.status === 'success') {
+        console.log('11>>>');
         setIsSignUpRequested(true);
-        navigation.replace("SignupComplete");
+        navigation.replace('SignupComplete');
       } else {
-        console.log("22>>>");
+        console.log('22>>>');
       }
     }
   }, [isSignUpPending, signUpData, navigation]);
@@ -201,7 +201,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   // };
 
   const navigateToSearchAddressScreen = () => {
-    navigation.navigate("SearchAddress", {
+    navigation.navigate('SearchAddress', {
       onSendingAddress: ({ jibunAddress, address }) => {
         setAddress(address);
         setJibunAddress(jibunAddress);
@@ -214,9 +214,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
         <Header title="회원가입" isLeftButton />
       </HeaderContainer>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}>
         <AvoidingView>
           <InnnerContainer>
             <EmptyArea height={40} />
@@ -229,34 +228,34 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 onChangeText={(text: string) => {
                   setName(text);
                 }}
-                isActived={currentFieldType === "name"}
-                onFocus={() => setCurrentFieldType("name")}
+                isActived={currentFieldType === 'name'}
+                onFocus={() => setCurrentFieldType('name')}
               />
               <EmptyArea width={10} />
               <SmallRoundButton
                 onPress={() => {
-                  setCurrentFieldType("name");
+                  setCurrentFieldType('name');
                   if (!isMan) {
                     setIsMan(true);
                     setIsFemale(false);
                   }
                 }}
                 buttonText="남"
-                isActived={currentFieldType === "name"}
-                buttonType={isMan ? "filled" : "default"}
+                isActived={currentFieldType === 'name'}
+                buttonType={isMan ? 'filled' : 'default'}
               />
               <EmptyArea width={7} />
               <SmallRoundButton
                 onPress={() => {
-                  setCurrentFieldType("name");
+                  setCurrentFieldType('name');
                   if (!isFemale) {
                     setIsFemale(true);
                     setIsMan(false);
                   }
                 }}
                 buttonText="여"
-                isActived={currentFieldType === "name"}
-                buttonType={isFemale ? "filled" : "default"}
+                isActived={currentFieldType === 'name'}
+                buttonType={isFemale ? 'filled' : 'default'}
               />
             </InputContainer>
             <EmptyArea height={24} />
@@ -291,8 +290,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 //   setBirthday(text);
                 // }
               }}
-              isActived={currentFieldType === "birthday"}
-              onFocus={() => setCurrentFieldType("birthday")}
+              isActived={currentFieldType === 'birthday'}
+              onFocus={() => setCurrentFieldType('birthday')}
               // mask={
               //   [/\d/, /\d/, /\d/, /\d/, ".", /\d/, /\d/, ".", /\d/, /\d/]
               // }
@@ -310,8 +309,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     setPhoneNumber(text);
                   }
                 }}
-                isActived={currentFieldType === "phoneNumber"}
-                onFocus={() => setCurrentFieldType("phoneNumber")}
+                isActived={currentFieldType === 'phoneNumber'}
+                onFocus={() => setCurrentFieldType('phoneNumber')}
                 maxLength={11}
               />
               <EmptyArea width={10} />
@@ -322,19 +321,19 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                   }
                 }}
                 buttonText={
-                  isAuthenticationCompleted ? "인증완료" : "인증번호받기"
+                  isAuthenticationCompleted ? '인증완료' : '인증번호받기'
                 }
                 isActived={
                   (phoneNumber.length >= 10 && !isAuthenticationRequested) ||
                   (isAuthenticationCompleted &&
-                    currentFieldType === "phoneNumber")
+                    currentFieldType === 'phoneNumber')
                 }
                 buttonType={
                   isAuthenticationRequested
-                    ? "complete"
+                    ? 'complete'
                     : phoneNumber.length >= 10
-                    ? "filled"
-                    : "default"
+                    ? 'filled'
+                    : 'default'
                 }
               />
             </InputContainer>
@@ -350,17 +349,17 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     onChangeText={(text: string) => {
                       setAuthenticationNumber(text);
                     }}
-                    isActived={currentFieldType === "authenticationNumber"}
-                    onFocus={() => setCurrentFieldType("authenticationNumber")}
+                    isActived={currentFieldType === 'authenticationNumber'}
+                    onFocus={() => setCurrentFieldType('authenticationNumber')}
                   />
                   <EmptyArea width={10} />
                   <SmallRoundButton
                     onPress={() => {
-                      setCurrentFieldType("phoneNumber");
+                      setCurrentFieldType('phoneNumber');
                       setIsCheckAuthenticationRequested(true);
                     }}
                     buttonText="인증완료"
-                    isActived={currentFieldType === "authenticationNumber"}
+                    isActived={currentFieldType === 'authenticationNumber'}
                     buttonType="filled"
                   />
                 </InputContainer>
@@ -376,17 +375,17 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 onChangeText={(text: string) => {
                   setEmail(text);
                 }}
-                isActived={currentFieldType === "email"}
-                onFocus={() => setCurrentFieldType("email")}
+                isActived={currentFieldType === 'email'}
+                onFocus={() => setCurrentFieldType('email')}
               />
               <EmptyArea width={10} />
               <SmallRoundButton
                 onPress={() => {
                   if (!isEmailChecked) setIsEmailRequested(true);
                 }}
-                buttonText={isEmailChecked ? "사용가능" : "중복확인"}
-                isActived={currentFieldType === "email"}
-                buttonType={isEmailChecked ? "complete" : "filled"}
+                buttonText={isEmailChecked ? '사용가능' : '중복확인'}
+                isActived={currentFieldType === 'email'}
+                buttonType={isEmailChecked ? 'complete' : 'filled'}
               />
             </InputContainer>
             <EmptyArea height={24} />
@@ -399,8 +398,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setPassword(text);
               }}
-              isActived={currentFieldType === "password"}
-              onFocus={() => setCurrentFieldType("password")}
+              isActived={currentFieldType === 'password'}
+              onFocus={() => setCurrentFieldType('password')}
             />
             <EmptyArea height={24} />
             <TextInputWithTitle
@@ -412,8 +411,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setPasswordCheck(text);
               }}
-              isActived={currentFieldType === "passwordCheck"}
-              onFocus={() => setCurrentFieldType("passwordCheck")}
+              isActived={currentFieldType === 'passwordCheck'}
+              onFocus={() => setCurrentFieldType('passwordCheck')}
             />
             <EmptyArea height={24} />
             <TextInputWithTitle
@@ -424,9 +423,9 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setAddress(text);
               }}
-              isActived={currentFieldType === "address"}
+              isActived={currentFieldType === 'address'}
               onFocus={() => {
-                setCurrentFieldType("address");
+                setCurrentFieldType('address');
               }}
               onTouchStart={navigateToSearchAddressScreen}
               readOnly
@@ -439,8 +438,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setJibunAddress(text);
               }}
-              isActived={currentFieldType === "jibunAddress"}
-              onFocus={() => setCurrentFieldType("jibunAddress")}
+              isActived={currentFieldType === 'jibunAddress'}
+              onFocus={() => setCurrentFieldType('jibunAddress')}
               onTouchStart={navigateToSearchAddressScreen}
               readOnly
             />
@@ -452,8 +451,8 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text: string) => {
                 setAddressDetail(text);
               }}
-              isActived={currentFieldType === "addressDetail"}
-              onFocus={() => setCurrentFieldType("addressDetail")}
+              isActived={currentFieldType === 'addressDetail'}
+              onFocus={() => setCurrentFieldType('addressDetail')}
             />
             <EmptyArea height={24} />
             <RoundButton

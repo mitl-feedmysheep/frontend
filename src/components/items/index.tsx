@@ -1,3 +1,3 @@
-import CellMemberCard from "./CellMemberCard";
+import CellMemberCard from './CellMemberCard';
 
 export { CellMemberCard };

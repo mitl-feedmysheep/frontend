@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
-import { styled } from "styled-components/native";
-import MaskInput from "react-native-mask-input";
-import { KeyboardAccessoryView } from "react-native-keyboard-accessory";
-import { EmptyArea, Typo } from "../common";
-import EyesSvg from "../../assets/buttons/eyes.svg";
-import { colorSet } from "../../constants";
-import { InputAccessoryView, Button } from "react-native";
+import React, { useMemo, useState } from 'react';
+import { styled } from 'styled-components/native';
+import MaskInput from 'react-native-mask-input';
+import { KeyboardAccessoryView } from 'react-native-keyboard-accessory';
+import { EmptyArea, Typo } from '../common';
+import EyesSvg from '../../assets/buttons/eyes.svg';
+import { colorSet } from '../../constants';
+import { InputAccessoryView, Button } from 'react-native';
 
 type Props = {
   title?: string;
@@ -38,7 +38,7 @@ const TextInputWithTitle: React.FC<Props> = ({
   onPressOut,
   onTouchStart,
 }) => {
-  const inputAccessoryViewID = "complete";
+  const inputAccessoryViewID = 'complete';
   const [isShownPassword, setIsShownPassword] = useState(false);
   const [isNameActivated, setIsNameActivated] = useState(false);
   return (
@@ -47,8 +47,7 @@ const TextInputWithTitle: React.FC<Props> = ({
         <>
           <Typo
             type="actionBar"
-            color={isActived ? colorSet.neutral.N7 : colorSet.neutral.N4}
-          >
+            color={isActived ? colorSet.neutral.N7 : colorSet.neutral.N4}>
             {title}
           </Typo>
           <EmptyArea height={4} />
@@ -66,7 +65,7 @@ const TextInputWithTitle: React.FC<Props> = ({
           // onBlur={() => {
           //   if (setIsActived) setIsActived(false);
           // }}
-          onChangeText={(text) => {
+          onChangeText={text => {
             if (onChangeText) onChangeText(text);
           }}
           inputAccessoryViewID={inputAccessoryViewID}
@@ -75,15 +74,14 @@ const TextInputWithTitle: React.FC<Props> = ({
           secureTextEntry={secureTextEntry && !isShownPassword}
           readOnly={readOnly}
           onPressOut={onPressOut}
-          textContentType={"oneTimeCode"}
+          textContentType={'oneTimeCode'}
           isActived={isActived}
           maxLength={maxLength ? maxLength : 300}
         />
         {secureTextEntry && (
           <EyesContainer
             onPress={() => setIsShownPassword(!isShownPassword)}
-            activeOpacity={1}
-          >
+            activeOpacity={1}>
             <EyesSvg />
           </EyesContainer>
         )}
@@ -92,7 +90,7 @@ const TextInputWithTitle: React.FC<Props> = ({
         <KeyboardButtonContainer>
           <Button
             onPress={() => {
-              console.log("gg>>>");
+              console.log('gg>>>');
             }}
             title="확인"
           />

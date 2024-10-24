@@ -1,14 +1,14 @@
-import React from "react";
-import DropShadow from "react-native-drop-shadow";
+import React from 'react';
+import DropShadow from 'react-native-drop-shadow';
 
 type Props = {
   children: any;
-  type: "xs" | "sm" | "md" | "lg" | "xl" | "two_xl";
+  type: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'two_xl';
 };
 
 const shadowSet = {
   xs: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -17,7 +17,7 @@ const shadowSet = {
     shadowRadius: 3,
   },
   sm: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 6,
@@ -26,7 +26,7 @@ const shadowSet = {
     shadowRadius: 5,
   },
   md: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 7,
@@ -35,7 +35,7 @@ const shadowSet = {
     shadowRadius: 6,
   },
   lg: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 10,
@@ -44,7 +44,7 @@ const shadowSet = {
     shadowRadius: 8,
   },
   xl: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 15,
@@ -53,7 +53,7 @@ const shadowSet = {
     shadowRadius: 10,
   },
   two_xl: {
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 20,
@@ -63,7 +63,7 @@ const shadowSet = {
   },
 };
 
-const Shadow: React.FC<Props> = ({ children, type = "xs" }) => {
+const Shadow: React.FC<Props> = ({ children, type = 'xs' }) => {
   return <DropShadow style={shadowSet[type]}>{children}</DropShadow>;
 };
 

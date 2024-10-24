@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 import {
   GET_VERIFICATION_CODE,
   CHECK_VERIFICATION_CODE,
@@ -14,9 +14,9 @@ import {
   GET_APP_TEXT,
   GET_APP_WORDS,
   GET_USER_CHURCH_LIST,
-} from "../constants/apiPath";
-import { getData } from "./utils";
-import { ACCESS_TOKEN } from "../constants/storageKeys";
+} from '../constants/apiPath';
+import { getData } from './utils';
+import { ACCESS_TOKEN } from '../constants/storageKeys';
 
 const getToken = async () => {
   return await getData(ACCESS_TOKEN);
@@ -66,7 +66,7 @@ const checkEmail = async (email: string) => {
   return result;
 };
 
-const signUp = async (props) => {
+const signUp = async props => {
   const result = await axios.post(SIGN_UP, {
     ...props,
   });
@@ -85,27 +85,27 @@ const signIn = async (props: SignInProps) => {
   return result;
 };
 
-const getChurches = async (churchName) => {
+const getChurches = async churchName => {
   const token = await getToken();
   const result = await axios.get(CHURCHES, {
     params: {
       churchName,
     },
     headers: {
-      "fms-token": token,
+      'fms-token': token,
     },
   });
   return result;
 };
 
-const getChurchBodies = async (churchId) => {
+const getChurchBodies = async churchId => {
   const token = await getToken();
   const result = await axios.get(GET_CHURCH_BODIES(churchId), {
     params: {
       churchId,
     },
     headers: {
-      "fms-token": token,
+      'fms-token': token,
     },
   });
   return result;
@@ -115,7 +115,7 @@ const getUserChurchList = async () => {
   const token = await getToken();
   const result = await axios.get(GET_USER_CHURCH_LIST, {
     headers: {
-      "fms-token": token,
+      'fms-token': token,
     },
   });
   return result.data;
@@ -151,7 +151,7 @@ const getChurchEventList = async (
   year: string,
   month: string,
   offset: number,
-  limit = 20
+  limit = 20,
 ) => {
   const result = await axios.get(GET_CHURCH_EVENT_LIST(bodyId), {
     params: { year, month, offset, limit },

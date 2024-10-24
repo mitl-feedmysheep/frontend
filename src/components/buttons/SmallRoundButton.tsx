@@ -1,12 +1,12 @@
-import React, { useMemo } from "react";
-import { styled } from "styled-components/native";
-import { colorSet } from "../../constants";
-import { Shadow, Typo } from "../common";
+import React, { useMemo } from 'react';
+import { styled } from 'styled-components/native';
+import { colorSet } from '../../constants';
+import { Shadow, Typo } from '../common';
 
 type Props = {
   width?: number;
   buttonText: string;
-  buttonType: "default" | "filled" | "complete";
+  buttonType: 'default' | 'filled' | 'complete';
   isActived?: boolean;
   isDisabled?: boolean;
   onPress?: () => {};
@@ -15,23 +15,23 @@ type Props = {
 const SmallRoundButton: React.FC<Props> = ({
   width,
   buttonText,
-  buttonType = "default",
+  buttonType = 'default',
   isActived = true,
   isDisabled = false,
   onPress,
 }) => {
   const buttonColorSet = useMemo(() => {
     switch (buttonType) {
-      case "default":
+      case 'default':
         return {
           activatedBorderColor: colorSet.primary.P4_M,
           inactivatedBorderColor: colorSet.neutral.N4,
           activatedTextColor: colorSet.neutral.N7,
           inactivatedTextColor: colorSet.neutral.N4,
-          activatedBackgroundColor: "white",
-          inactivatedBackgroundColor: "white",
+          activatedBackgroundColor: 'white',
+          inactivatedBackgroundColor: 'white',
         };
-      case "filled":
+      case 'filled':
         return {
           activatedBorderColor: colorSet.primary.P4_M,
           inactivatedBorderColor: colorSet.neutral.N4,
@@ -40,7 +40,7 @@ const SmallRoundButton: React.FC<Props> = ({
           activatedBackgroundColor: colorSet.primary.P4_M,
           inactivatedBackgroundColor: colorSet.neutral.N4,
         };
-      case "complete":
+      case 'complete':
         return {
           activatedBorderColor: colorSet.primary.P2,
           inactivatedBorderColor: colorSet.neutral.N4,
@@ -63,8 +63,7 @@ const SmallRoundButton: React.FC<Props> = ({
       activeOpacity={1}
       buttonColorSet={buttonColorSet}
       isActived={isActived}
-      width={width}
-    >
+      width={width}>
       <Typo
         size="small"
         type="actionBar"
@@ -72,8 +71,7 @@ const SmallRoundButton: React.FC<Props> = ({
           isActived
             ? buttonColorSet.activatedTextColor
             : buttonColorSet.inactivatedTextColor
-        }
-      >
+        }>
         {buttonText}
       </Typo>
     </Button>

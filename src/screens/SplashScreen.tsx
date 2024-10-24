@@ -1,14 +1,14 @@
-import React, { useEffect } from "react";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { styled } from "styled-components/native";
-import LogoSvg from "../assets/splash/logo.svg";
-import AppNameSvg from "../assets/splash/app-name.svg";
-import { colorSet } from "../constants";
-import { RootStackParamList } from "../types/common";
-import { getData } from "../utils/utils";
-import { ACCESS_TOKEN } from "../constants/storageKeys";
+import React, { useEffect } from 'react';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { styled } from 'styled-components/native';
+import LogoSvg from '../assets/splash/logo.svg';
+import AppNameSvg from '../assets/splash/app-name.svg';
+import { colorSet } from '../constants';
+import { RootStackParamList } from '../types/common';
+import { getData } from '../utils/utils';
+import { ACCESS_TOKEN } from '../constants/storageKeys';
 
-type Props = NativeStackScreenProps<RootStackParamList, "MeetingDetails">;
+type Props = NativeStackScreenProps<RootStackParamList, 'MeetingDetails'>;
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
@@ -16,7 +16,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
       const accessToken = await getData(ACCESS_TOKEN);
       // if (accessToken) navigation.replace("Home");
       // else navigation.replace("Login");
-      navigation.replace("Login");
+      navigation.replace('Login');
       // navigation.replace("MeetingDetails", { passedScreenType: "infomation" });
     }, 2000);
   }, []);

@@ -10,4 +10,4 @@ export type RootStackParamList = {
   MeetingComplete: undefined;
 };
 
-export type MeetingDetailsScreenStep = "infomation" | "pray" | "view";
+export type MeetingDetailsScreenStep = 'infomation' | 'pray' | 'view';

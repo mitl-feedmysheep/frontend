@@ -1,3 +1,3 @@
-import CheckSelectionList from "./CheckSelectionList";
+import CheckSelectionList from './CheckSelectionList';
 
 export { CheckSelectionList };

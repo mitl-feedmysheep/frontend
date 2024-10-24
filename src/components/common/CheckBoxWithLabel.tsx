@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo } from "react";
-import { styled } from "styled-components/native";
-import CheckBox from "./CheckBox";
-import EmptyArea from "./EmptyArea";
+import React, { useCallback, useMemo } from 'react';
+import { styled } from 'styled-components/native';
+import CheckBox from './CheckBox';
+import EmptyArea from './EmptyArea';
 
 interface Props {
   isChecked?: boolean;
