@@ -6,6 +6,7 @@ export type RootStackParamList = {
   ChurchRegistrationComplete: undefined;
   Home: undefined;
   SearchAddress: undefined;
+  MeetingHome: undefined;
   MeetingDetails: { passedScreenType?: MeetingDetailsScreenStep };
   MeetingComplete: undefined;
 };
