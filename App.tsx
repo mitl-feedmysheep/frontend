@@ -5,46 +5,31 @@
  * @format
  */
 
-import React, { useEffect } from 'react';
-import type { PropsWithChildren } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  SplashScreen,
-  LoginScreen,
-  SignupScreen,
-  SignupCompleteScreen,
-  ChurchRegistrationScreen,
-  ChurchRegistrationCompleteScreen,
-  HomeScreen,
-  MeetingDetailsScreen,
-  MeetingCompleteScreen,
-} from './src/screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
+import { useColorScheme } from 'react-native';
+import Toast from 'react-native-toast-message';
+import {
+  ChurchRegistrationCompleteScreen,
+  ChurchRegistrationScreen,
+  HomeScreen,
+  LoginScreen,
+  MeetingCompleteScreen,
+  MeetingDetailsScreen,
+  SignupCompleteScreen,
+  SignupScreen,
+  SplashScreen,
+} from './src/screens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const queryClient = new QueryClient();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import MeetingHomeScreen from '@screens/pray/MeetingHomeScreen';
 import { styled } from 'styled-components/native';
-import { colorSet } from './src/constants';
 import { Typo } from './src/components/common';
+import { colorSet } from './src/constants';
 import SearchAddress from './src/screens/SearchAddress';
 import { RootStackParamList } from './src/types/common';
 
@@ -113,6 +98,7 @@ function App(): JSX.Element {
             name="MeetingComplete"
             component={MeetingCompleteScreen}
           />
+          <Stack.Screen name="MeetingHome" component={MeetingHomeScreen} />
         </Stack.Navigator>
         <Toast config={toastConfig} />
       </NavigationContainer>
