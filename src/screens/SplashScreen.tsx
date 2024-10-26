@@ -18,7 +18,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
       // else navigation.replace("Login");
       navigation.replace('MeetingHome');
       // navigation.replace("MeetingDetails", { passedScreenType: "infomation" });
-    }, 2000);
+    }, 0);
   }, []);
 
   return (
