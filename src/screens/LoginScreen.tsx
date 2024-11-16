@@ -1,20 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { TextInputProps } from 'react-native';
-import { styled } from 'styled-components/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+import { styled } from 'styled-components/native';
 
-import { EmptyArea, Header, Typo } from '../components/common';
 import { MainButton } from '../components/buttons';
-import InactiveEye from '../assets/icon/ic-eye-close-line.svg';
-import ActiveEye from '../assets/icon/ic-eye-line.svg';
+import { EmptyArea, Header, Typo } from '../components/common';
+import { CustomTextInput } from '../components/text_input';
 import { colorSet } from '../constants';
+import { signInQueryKey } from '../constants/apiQueryKeys';
+import { ACCESS_TOKEN, REFRESH_TOKEN } from '../constants/storageKeys';
 import { RootStackParamList } from '../types/common';
 import { signIn } from '../utils/apis';
-import { signInQueryKey } from '../constants/apiQueryKeys';
-import { getData, showToast, storeData } from '../utils/utils';
-import { ACCESS_TOKEN, REFRESH_TOKEN } from '../constants/storageKeys';
-import { CustomTextInput } from '../components/text_input';
+import { showToast, storeData } from '../utils/utils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MeetingDetails'>;
 
@@ -110,13 +107,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => {
               // signInMutation.mutate({ email, password });
 
-              // navigation.replace("Home");
+              navigation.replace('MeetingHome');
               // navigation.navigate("MeetingDetails", {
               //   passedScreenType: "infomation",
               // });
-              navigation.navigate('MeetingDetails', {
-                passedScreenType: 'view',
-              });
+              // navigation.navigate('MeetingDetails', {
+              //   passedScreenType: 'view',
+              // });
             }}
           />
           <EmptyArea height={12} />
