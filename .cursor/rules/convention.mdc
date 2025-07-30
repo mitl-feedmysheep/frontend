@@ -1,0 +1,138 @@
+---
+alwaysApply: true
+description: IntoTheHeaven Frontend Development Conventions and Architecture
+---
+
+# **🙏 IntoTheHeaven Frontend - Development Conventions**
+
+> _"A record of community's walk with God."_ - A platform for managing prayer topics and life sharing in church small groups.
+
+## **🎯 Project Philosophy**
+
+This is not just a utility — it's a **spiritual reflection tool** for church communities.
+
+- What have we prayed for as a group?
+- How has God answered over time?
+
+**Target Users:**
+- **🟦 Group Leaders**: Organize meetings, record sharing/prayer topics, track spiritual growth
+- **🟨 Regular Members**: Participate in meetings, reflect on past prayers, minimal interaction
+
+## **🧱 Tech Stack & Architecture**
+
+| Layer    | Technology                              |
+| -------- | --------------------------------------- |
+| Frontend | React WebApp (TypeScript + Vite)        |
+| Backend  | Spring Boot (Java 17+)                  |
+| Database | MySQL                                   |
+| Auth     | JWT (no refresh token)                  |
+| Styling  | Tailwind CSS                            |
+| Infra    | Vercel (FE), HomeServer/AWS (BE)        |
+
+**Architecture Principles:**
+- Mobile-first responsive design
+
+## **🏗️ Project Structure**
+
+```
+src/
+├── features/           → Domain-driven feature folders
+│   ├── auth/          → Authentication (login/logout)
+│   ├── meetings/      → Meeting management & history
+│   ├── prayers/       → Prayer topic tracking
+│   ├── members/       → Group member management
+│   └── sharing/       → Life sharing topics
+├── components/        → Reusable UI components
+├── pages/             → Route entry points
+├── routes/            → Navigation configuration
+├── lib/               → Core utilities
+│   ├── api.ts        → [api.ts](mdc:src/lib/api.ts) - API client
+│   └── utils.ts      → [utils.ts](mdc:src/lib/utils.ts) - General utilities
+├── hooks/             → Custom React hooks
+│   ├── useLocalStorage.ts → [useLocalStorage.ts](mdc:src/hooks/useLocalStorage.ts)
+│   └── useDebounce.ts     → [useDebounce.ts](mdc:src/hooks/useDebounce.ts)
+├── types/             → [types/index.ts](mdc:src/types/index.ts) - TypeScript interfaces
+└── styles/            → Global styles & Tailwind config
+```
+
+## **🔧 Coding Conventions**
+
+### Naming Conventions
+- **Components**: PascalCase (`PrayerCard.tsx`, `MeetingHistory.tsx`)
+- **Hooks**: camelCase with `use` prefix (`usePrayerTopics.ts`)
+- **API functions**: camelCase (`fetchMeetings`, `createPrayerTopic`)
+- **Types/Interfaces**: PascalCase (`PrayerTopic`, `Meeting`)
+- **Folders**: kebab-case (`prayer-topics/`, `meeting-history/`)
+
+### Component Structure
+```tsx
+// Component: PrayerTopicCard
+interface PrayerTopicCardProps {
+  prayer: PrayerTopic
+  onUpdate?: (prayer: PrayerTopic) => void
+}
+
+function PrayerTopicCard({ prayer, onUpdate }: PrayerTopicCardProps) {
+  return (
+    <div className="card">
+      <div className="card-header">
+        <span className={`badge ${prayer.category}`}>
+          {prayer.category}
+        </span>
+      </div>
+      <div className="card-content">
+        <p>{prayer.content}</p>
+        {prayer.isAnswered && (
+          <div className="answered-indicator">✓ Answered</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default PrayerTopicCard
+```
+
+## **⚡ Development Guidelines**
+
+### API Integration
+- JWT authentication with re-login on expiry
+- RESTful endpoints matching Spring Boot backend
+- Proper error handling for spiritual content
+- Offline capability for meeting records
+
+### Mobile-First Design
+- Church members primarily use phones
+- Simple, large touch targets
+- Readable fonts for all ages
+- Accessible to elderly users
+
+### State Management
+- Use React built-in hooks primarily
+- [useLocalStorage.ts](mdc:src/hooks/useLocalStorage.ts) for user preferences
+- [useDebounce.ts](mdc:src/hooks/useDebounce.ts) for search functionality
+- Context for global prayer/meeting state
+
+### Performance
+- Lazy load meeting history
+- Debounce search inputs
+- Optimize for slower mobile connections
+- Cache recent meetings offline
+
+## **✅ Best Practices**
+
+- ✅ Always provide privacy controls
+- ✅ Use reverent, respectful language
+- ✅ Design for accessibility (all ages)
+- ✅ Enable historical spiritual reflection
+- ✅ Support offline meeting recording
+- ✅ Keep UI simple and focused
+
+## **🌐 Deployment Requirements**
+
+- HTTPS mandatory (PWA requirement)
+- Environment variables for API endpoints
+- Privacy policy for spiritual content
+- Mobile browser testing (iOS/Android)
+
+---
