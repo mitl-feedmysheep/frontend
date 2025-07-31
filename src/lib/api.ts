@@ -1,8 +1,8 @@
-import type { ApiResponse } from '@/types'
+import type { ApiResponse, LoginRequest, LoginResponse } from '@/types'
 
 // Get API URL from environment variables
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
 // API error class
 export class ApiError extends Error {
@@ -31,7 +31,7 @@ export async function apiRequest<T = unknown>(
   // Add auth token if available
   const token = localStorage.getItem('authToken')
   if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`
+    defaultHeaders['Authorization'] = `${token}`
   }
 
   const config: RequestInit = {
@@ -84,4 +84,51 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
     apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
+}
+
+// Auth API functions
+export const authApi = {
+  login: async (credentials: LoginRequest): Promise<LoginResponse> => {
+    // Direct API call without ApiResponse wrapper for login
+    const url = `${API_BASE_URL}/auth/login`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: LoginResponse = await response.json()
+
+    // Store token in localStorage for future requests
+    if (data.accessToken) {
+      localStorage.setItem('authToken', data.accessToken)
+    }
+
+    return data
+  },
+
+  logout: () => {
+    localStorage.removeItem('authToken')
+  },
+
+  isAuthenticated: (): boolean => {
+    const token = localStorage.getItem('authToken')
+    return !!token
+  },
+
+  getToken: (): string | null => {
+    return localStorage.getItem('authToken')
+  },
 }
