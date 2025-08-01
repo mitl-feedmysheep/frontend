@@ -1,27 +1,37 @@
 import { authApi } from '@/lib/api'
 import { useEffect, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import Home from './components/Home'
 import Login from './components/Login'
 
+// Login Wrapper 컴포넌트
+const LoginWrapper = () => {
+  const navigate = useNavigate()
+  
+  const handleLoginSuccess = () => {
+    navigate('/', { replace: true })
+  }
+
+  return <Login onLoginSuccess={handleLoginSuccess} />
+}
+
+// Protected Route 컴포넌트
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = authApi.isAuthenticated()
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+}
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   // 앱 시작 시 로그인 상태 확인
   useEffect(() => {
     const checkAuthStatus = () => {
-      const isAuth = authApi.isAuthenticated()
-      setIsAuthenticated(isAuth)
       setIsLoading(false)
     }
 
     checkAuthStatus()
   }, [])
-
-  // 로그인 성공 콜백
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true)
-  }
 
   // 로딩 중일 때
   if (isLoading) {
@@ -32,11 +42,30 @@ function App() {
     )
   }
 
-  // 로그인 상태에 따라 화면 전환
-  return isAuthenticated ? (
-    <Home />
-  ) : (
-    <Login onLoginSuccess={handleLoginSuccess} />
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginWrapper />} />
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/group/:groupId" 
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } 
+        />
+        {/* 기본값: 루트로 리다이렉트 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

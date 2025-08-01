@@ -24,6 +24,43 @@ export interface LoginResponse {
 
 export interface User {
   id: string
+  name: string
   email: string
-  name?: string
+  sex: string
+  birthday: string
+  phone: string
+  profileUrl: string
+  role?: string // LEADER, MEMBER 등
+}
+
+// Church types
+export interface Church {
+  id: string
+  name: string
+  location: string
+  number: string
+  homepageUrl: string
+  description: string
+  createdAt: string
+}
+
+// Group types
+export interface Group {
+  id: string
+  name: string
+  description: string
+  churchId: string
+  startDate: string
+  endDate: string
+}
+
+// Gathering types
+export interface Gathering {
+  id: string
+  name: string
+  date: string
+  place: string
+  totalWorshipAttendanceCount: number
+  totalGatheringAttendanceCount: number
+  totalPrayerRequestCount: number
 }

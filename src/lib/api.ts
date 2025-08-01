@@ -1,4 +1,12 @@
-import type { ApiResponse, LoginRequest, LoginResponse } from '@/types'
+import type {
+  ApiResponse,
+  Church,
+  Gathering,
+  Group,
+  LoginRequest,
+  LoginResponse,
+  User,
+} from '@/types'
 
 // Get API URL from environment variables
 const API_BASE_URL =
@@ -130,5 +138,163 @@ export const authApi = {
 
   getToken: (): string | null => {
     return localStorage.getItem('authToken')
+  },
+}
+
+// Groups API functions
+export const groupsApi = {
+  getGroupsByChurch: async (churchId: string): Promise<Group[]> => {
+    // API call to get groups in a specific church
+    const url = `${API_BASE_URL}/churches/${churchId}/groups`
+
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: Group[] = await response.json()
+    return data
+  },
+
+  getGroupMembers: async (groupId: string): Promise<User[]> => {
+    const url = `${API_BASE_URL}/groups/${groupId}/members`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: User[] = await response.json()
+    return data
+  },
+
+  getGroupGatherings: async (groupId: string): Promise<Gathering[]> => {
+    const url = `${API_BASE_URL}/groups/${groupId}/gatherings`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: Gathering[] = await response.json()
+    return data
+  },
+}
+
+// Members API functions
+export const membersApi = {
+  getMyInfo: async (): Promise<User> => {
+    // Direct API call for /members/me
+    const url = `${API_BASE_URL}/members/me`
+
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: User = await response.json()
+    return data
+  },
+}
+
+// Churches API functions
+export const churchesApi = {
+  getMyChurches: async (): Promise<Church[]> => {
+    // Direct API call since /churches returns array directly
+    const url = `${API_BASE_URL}/churches`
+
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: Church[] = await response.json()
+    return data
   },
 }
