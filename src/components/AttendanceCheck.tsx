@@ -14,7 +14,6 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
   const [gathering, setGathering] = useState<GatheringDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
   // 컴포넌트 마운트 시 페이지 최상단으로 스크롤
   useEffect(() => {
     // 모바일에서 더 확실한 스크롤 리셋
@@ -58,6 +57,40 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
     fetchGatheringDetail()
   }, [gatheringId])
 
+  // 날짜 포맷팅 함수들
+  const formatDateToKorean = (dateString: string): string => {
+    try {
+      const date = new Date(dateString)
+      const year = date.getFullYear()
+      const month = date.getMonth() + 1
+      const day = date.getDate()
+      const weekDays = [
+        '일요일',
+        '월요일',
+        '화요일',
+        '수요일',
+        '목요일',
+        '금요일',
+        '토요일',
+      ]
+      const weekDay = weekDays[date.getDay()]
+      return `${year}년 ${month}월 ${day}일 ${weekDay}`
+    } catch {
+      return dateString
+    }
+  }
+
+  const formatTime = (dateTimeString: string): string => {
+    try {
+      const date = new Date(dateTimeString)
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${hours}:${minutes}`
+    } catch {
+      return ''
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -90,7 +123,7 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Top Navigation */}
-      <div className="flex items-center h-[42px] bg-white">
+      <div className="flex items-center h-[42px] bg-white sticky top-0 z-10">
         <button
           onClick={onBack}
           className="flex items-center gap-1 px-2 py-2 h-full"
@@ -107,27 +140,107 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
         </button>
         <div className="flex-1 text-center">
           <span className="text-[#405347] font-medium text-base leading-tight font-pretendard">
-            출석 체크
+            오늘의 기록
           </span>
         </div>
         <div className="w-[40px]"></div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 px-5 pt-4 pb-6">
-        {/* Meeting Info */}
-        <div className="mb-6">
-          <h2 className="text-[#405347] font-semibold text-lg font-pretendard mb-2">
-            {gathering.name}
-          </h2>
-          <div className="text-[#8AA594] font-normal text-sm font-pretendard">
-            {gathering.date} • {gathering.place}
+      {/* Meeting Details - 항상 최상단에 표시 */}
+      <div className="bg-white px-5 py-4 space-y-3">
+        {/* Date Field */}
+        <div className="flex items-center gap-1">
+          <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M14.25 3H13.5V1.5C13.5 1.08579 13.1642 0.75 12.75 0.75C12.3358 0.75 12 1.08579 12 1.5V3H6V1.5C6 1.08579 5.66421 0.75 5.25 0.75C4.83579 0.75 4.5 1.08579 4.5 1.5V3H3.75C2.50736 3 1.5 4.00736 1.5 5.25V14.25C1.5 15.4926 2.50736 16.5 3.75 16.5H14.25C15.4926 16.5 16.5 15.4926 16.5 14.25V5.25C16.5 4.00736 15.4926 3 14.25 3ZM15 14.25C15 14.6642 14.6642 15 14.25 15H3.75C3.33579 15 3 14.6642 3 14.25V6.75H15V14.25Z"
+                fill="#8AA594"
+              />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard p-1">
+              {formatDateToKorean(gathering.date)}
+            </div>
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+
+        {/* Place Field */}
+        <div className="flex items-center gap-1">
+          <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 1.5C6.51472 1.5 4.5 3.51472 4.5 6C4.5 9.75 9 16.5 9 16.5C9 16.5 13.5 9.75 13.5 6C13.5 3.51472 11.4853 1.5 9 1.5ZM9 8.25C7.75736 8.25 6.75 7.24264 6.75 6C6.75 4.75736 7.75736 3.75 9 3.75C10.2426 3.75 11.25 4.75736 11.25 6C11.25 7.24264 10.2426 8.25 9 8.25Z"
+                fill="#8AA594"
+              />
+            </svg>
+          </div>
+          <div className="flex-1 p-1">
+            <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+              {gathering.place}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+
+        {/* Time Field */}
+        <div className="flex items-center gap-1">
+          <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 1.5C4.85775 1.5 1.5 4.85775 1.5 9C1.5 13.1422 4.85775 16.5 9 16.5C13.1422 16.5 16.5 13.1422 16.5 9C16.5 4.85775 13.1422 1.5 9 1.5ZM9 15C5.6865 15 3 12.3135 3 9C3 5.6865 5.6865 3 9 3C12.3135 3 15 5.6865 15 9C15 12.3135 12.3135 15 9 15ZM9.75 5.25V9L12.75 10.875C13.0425 11.0625 13.125 11.4375 12.9375 11.73C12.8325 11.895 12.6525 11.985 12.465 11.985C12.36 11.985 12.2475 11.955 12.15 11.895L8.85 9.795C8.64 9.66 8.25 9.345 8.25 8.985V5.25C8.25 4.8375 8.5875 4.5 9 4.5C9.4125 4.5 9.75 4.8375 9.75 5.25Z"
+                fill="#8AA594"
+              />
+            </svg>
+          </div>
+          <div className="flex-1 flex items-center gap-2 p-1">
+            <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+              {formatTime(gathering.startedAt)}
+            </div>
+            <span className="text-[#000000] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+              ~
+            </span>
+            <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+              {formatTime(gathering.endedAt)}
+            </div>
+          </div>
+        </div>
+
+        {/* Description Field (if exists) */}
+        {gathering.description && gathering.description.trim() && (
+          <>
+            {/* Divider */}
+            <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+
+            <div className="flex items-start gap-1">
+              <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center mt-1">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M15 2.25H3C2.17157 2.25 1.5 2.92157 1.5 3.75V14.25C1.5 15.0784 2.17157 15.75 3 15.75H15C15.8284 15.75 16.5 15.0784 16.5 14.25V3.75C16.5 2.92157 15.8284 2.25 15 2.25ZM15 14.25H3V3.75H15V14.25ZM4.5 6H13.5V7.5H4.5V6ZM4.5 9H13.5V10.5H4.5V9ZM4.5 12H10.5V13.5H4.5V12Z"
+                    fill="#8AA594"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 p-1">
+                <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line">
+                  {gathering.description}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 px-5 pt-4 pb-6">
         {/* Members List */}
         <div className="space-y-3">
-          {gathering.members.map(member => (
+          {gathering.gatheringMembers.map(member => (
             <MemberItem
               key={member.memberId}
               member={member}

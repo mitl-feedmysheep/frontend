@@ -58,6 +58,7 @@ export interface Group {
 export interface Gathering {
   id: string
   name: string
+  description?: string
   date: string
   place: string
   totalWorshipAttendanceCount: number
@@ -93,7 +94,7 @@ export interface GatheringDetail {
   startedAt: string
   endedAt: string
   place: string
-  members: GatheringMember[]
+  gatheringMembers: GatheringMember[]
 }
 
 export interface GatheringMember {

@@ -500,12 +500,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
         onClick={clickHandler}
         className={`${getCardStyle()} ${hoverStyles} rounded-2xl w-full min-h-[69px] flex items-center gap-3 px-5 py-3 transition-colors`}
       >
-        {/* 왼쪽: 모임 이름 및 날짜 */}
-        <div className="w-[98px] flex flex-col">
-          <div className="text-[#40534A] font-light text-xs leading-tight tracking-[-0.02em] font-pretendard">
+        {/* 왼쪽: 모임 이름 및 날짜 - 왼쪽 정렬로 변경 */}
+        <div className="w-[98px] flex flex-col items-start">
+          <div className="text-[#40534A] font-light text-xs leading-tight tracking-[-0.02em] font-pretendard text-left">
             {gathering?.name || `${meeting.id}번째 모임`}
           </div>
-          <div className="text-[#40534A] font-medium text-xl leading-tight tracking-[-0.02em] font-pretendard">
+          <div className="text-[#40534A] font-medium text-xl leading-tight tracking-[-0.02em] font-pretendard text-left">
             {gathering
               ? formatMeetingDate(gathering.date)
               : formatMeetingDate(meeting.date)}
@@ -517,10 +517,10 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
 
         {/* 오른쪽: 모임 정보 */}
         <div className="flex-1 flex flex-col gap-2">
-          {/* 상단: 아이콘들과 숫자들 */}
-          <div className="flex gap-2">
+          {/* 상단: 아이콘들과 숫자들 - 1px 간격 */}
+          <div className="flex gap-px">
             {/* 예배참석 수 */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <div className="w-3 h-3 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   {/* 십자가 모양: 세로선이 더 길고 가로선이 위쪽에 */}
@@ -532,7 +532,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
                   />
                 </svg>
               </div>
-              <span className="text-[#4B6050] font-normal text-xs leading-none tracking-[-0.02em] font-pretendard">
+              <span className="text-[#4B6050] font-normal text-xs leading-none tracking-[-0.02em] font-pretendard w-[20px] text-left">
                 {meeting.type === 'fill' && gathering
                   ? gathering.totalWorshipAttendanceCount
                   : '0'}
@@ -540,7 +540,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
             </div>
 
             {/* 모임참석 수 */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <div className="w-3 h-3 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path
@@ -549,7 +549,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
                   />
                 </svg>
               </div>
-              <span className="text-[#4B6050] font-normal text-xs leading-none tracking-[-0.02em] font-pretendard">
+              <span className="text-[#4B6050] font-normal text-xs leading-none tracking-[-0.02em] font-pretendard w-[20px] text-left">
                 {meeting.type === 'fill' && gathering
                   ? gathering.totalGatheringAttendanceCount
                   : '0'}
@@ -557,7 +557,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
             </div>
 
             {/* 위치 */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <div className="w-3 h-3 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path
@@ -577,12 +577,15 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
             </div>
           </div>
 
-          {/* 하단: 모임 설명 */}
-          {meeting.type === 'fill' && gathering && (
-            <div className="text-[#4B6050] font-normal text-xs leading-tight tracking-[-0.02em] font-pretendard">
-              {gathering.name}
-            </div>
-          )}
+          {/* 하단: 모임 설명 - 십자가와 세로 정렬, 엔터 표시, 여러 줄 지원 */}
+          {meeting.type === 'fill' &&
+            gathering &&
+            gathering.description &&
+            gathering.description.trim() && (
+              <div className="text-[#4B6050] font-normal text-xs leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line text-left">
+                {gathering.description}
+              </div>
+            )}
 
           {meeting.type === 'empty' && (
             <div className="text-[#A5BAAF] font-normal text-xs leading-none tracking-[-0.02em] font-pretendard">

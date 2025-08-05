@@ -110,7 +110,7 @@ const CreateMeeting: React.FC<CreateMeetingProps> = ({
   const formatWeekFormat = (dateString: string): string => {
     try {
       const date = new Date(dateString)
-      const year = date.getFullYear()
+      const year = String(date.getFullYear()).slice(-2)
       const month = date.getMonth() + 1
       const week = getWeekOfMonth(dateString)
 
