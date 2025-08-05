@@ -64,3 +64,50 @@ export interface Gathering {
   totalGatheringAttendanceCount: number
   totalPrayerRequestCount: number
 }
+
+export interface CreateGatheringRequest {
+  groupId: string
+  name: string
+  description: string
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+}
+
+export interface GatheringResponse {
+  id: string
+  name: string
+  description: string
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+}
+
+export interface GatheringDetail {
+  id: string
+  name: string
+  description: string
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+  members: GatheringMember[]
+}
+
+export interface GatheringMember {
+  memberId: string
+  name: string
+  worshipAttendance: boolean
+  gatheringAttendance: boolean
+  story: string
+  prayers: Prayer[]
+}
+
+export interface Prayer {
+  id: string
+  prayerRequest: string
+  description: string
+  answered: boolean
+}

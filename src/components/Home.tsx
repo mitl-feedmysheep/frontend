@@ -1,11 +1,9 @@
 import { authApi, churchesApi, groupsApi, membersApi } from '@/lib/api'
 import type { Church, Group, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import GroupDetail from './GroupDetail'
+import { useNavigate } from 'react-router-dom'
 
 const Home: React.FC = () => {
-  const { groupId } = useParams<{ groupId?: string }>()
   const navigate = useNavigate()
   const [groups, setGroups] = useState<Group[]>([])
   const [churches, setChurches] = useState<Church[]>([])
@@ -14,11 +12,6 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // URL 파라미터에서 선택된 그룹 찾기
-  const selectedGroup = groupId
-    ? groups.find(group => group.id === groupId)
-    : null
 
   // 로컬스토리지에서 교회 ID 가져오기/저장하기
   const getChurchId = (): string | null => {
@@ -30,15 +23,32 @@ const Home: React.FC = () => {
     console.warn('💾 Saved church ID to localStorage:', churchId)
   }
 
+  // 로컬스토리지에서 그룹 ID 저장하기
+  const setGroupId = (groupId: string) => {
+    localStorage.setItem('groupId', groupId)
+    console.warn('💾 Saved group ID to localStorage:', groupId)
+  }
+
+  // 기존 잘못된 localStorage 키들 정리
+  const cleanupOldKeys = () => {
+    // 기존에 잘못 사용되었을 수 있는 키들 제거
+    localStorage.removeItem('selectedChurchId')
+    localStorage.removeItem('selectedGroupId')
+    console.warn('🧹 Cleaned up old localStorage keys')
+  }
+
   const handleLogout = () => {
     authApi.logout()
     window.location.reload()
   }
 
-  // 컴포넌트 마운트 시 페이지 최상단으로 스크롤
+  // 컴포넌트 마운트 시 페이지 최상단으로 스크롤 및 초기화
   useEffect(() => {
     window.scrollTo(0, 0)
     console.warn('📱 Page scrolled to top on Home mount')
+
+    // 기존 잘못된 localStorage 키들 정리
+    cleanupOldKeys()
   }, [])
 
   // 교회 목록 가져오기
@@ -217,11 +227,6 @@ const Home: React.FC = () => {
     }
   }, [churchIndex, churches])
 
-  // 그룹이 선택되면 GroupDetail 화면 표시
-  if (selectedGroup) {
-    return <GroupDetail group={selectedGroup} onBack={() => navigate('/')} />
-  }
-
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
@@ -364,7 +369,10 @@ const Home: React.FC = () => {
                 <div className="flex flex-col gap-2.5">
                   {/* Frame 187 - 실제 카드 */}
                   <button
-                    onClick={() => navigate(`/group/${group.id}`)}
+                    onClick={() => {
+                      setGroupId(group.id)
+                      navigate(`/group/${group.id}`)
+                    }}
                     className="bg-white border border-[#E5E7E5] shadow-sm rounded-[20px] pt-2 px-3 pb-4 w-[160px] h-[183px] flex flex-col items-center justify-center gap-3 hover:shadow-md hover:border-[#C2D0C9] transition-all cursor-pointer"
                   >
                     {/* Group Image */}

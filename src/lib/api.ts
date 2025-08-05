@@ -1,7 +1,10 @@
 import type {
   ApiResponse,
   Church,
+  CreateGatheringRequest,
   Gathering,
+  GatheringDetail,
+  GatheringResponse,
   Group,
   LoginRequest,
   LoginResponse,
@@ -129,6 +132,8 @@ export const authApi = {
 
   logout: () => {
     localStorage.removeItem('authToken')
+    localStorage.removeItem('churchId')
+    localStorage.removeItem('groupId')
   },
 
   isAuthenticated: (): boolean => {
@@ -229,6 +234,34 @@ export const groupsApi = {
     const data: Gathering[] = await response.json()
     return data
   },
+
+  getMyInfoInGroup: async (groupId: string): Promise<User> => {
+    const url = `${API_BASE_URL}/groups/${groupId}/me`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: User = await response.json()
+    return data
+  },
 }
 
 // Members API functions
@@ -295,6 +328,67 @@ export const churchesApi = {
     }
 
     const data: Church[] = await response.json()
+    return data
+  },
+}
+
+// Gathering API
+export const gatheringsApi = {
+  // 새 모임 생성
+  create: async (
+    gatheringData: CreateGatheringRequest
+  ): Promise<GatheringResponse> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/gatherings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authToken,
+      },
+      body: JSON.stringify(gatheringData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: GatheringResponse = await response.json()
+    return data
+  },
+
+  // 모임 상세 정보 조회 (멤버 리스트 포함)
+  getDetail: async (gatheringId: string): Promise<GatheringDetail> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/gatherings/${gatheringId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: authToken,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: GatheringDetail = await response.json()
     return data
   },
 }

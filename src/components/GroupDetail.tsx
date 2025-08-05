@@ -1,21 +1,106 @@
 import { groupsApi } from '@/lib/api'
 import type { Gathering, Group, User } from '@/types'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface GroupDetailProps {
-  group: Group
+  groupId: string
   onBack: () => void
 }
 
-const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
+const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
+  const navigate = useNavigate()
+  const [group, setGroup] = useState<Group | null>(null)
+  const [groupLoading, setGroupLoading] = useState(true)
+  const [groupError, setGroupError] = useState('')
   const [members, setMembers] = useState<User[]>([])
   const [membersLoading, setMembersLoading] = useState(true)
+  const [currentUserInGroup, setCurrentUserInGroup] = useState<User | null>(
+    null
+  )
   const [gatherings, setGatherings] = useState<Gathering[]>([])
   const [allGatherings, setAllGatherings] = useState<Gathering[]>([])
   const [gatheringsLoading, setGatheringsLoading] = useState(true)
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0)
   const [showMonthDropdown, setShowMonthDropdown] = useState(false)
+
   const monthDropdownRef = useRef<HTMLDivElement>(null)
+
+  // 컴포넌트 마운트 시 페이지 최상단으로 스크롤
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  // Group 정보 가져오기
+  useEffect(() => {
+    let mounted = true
+
+    const fetchGroupInfo = async () => {
+      try {
+        setGroupLoading(true)
+        setGroupError('')
+
+        const churchId = localStorage.getItem('churchId')
+        if (!churchId) {
+          console.error(
+            'churchId not found in localStorage. Redirecting to home.'
+          )
+          if (mounted) {
+            setGroupError('교회 정보가 없습니다. 홈으로 돌아갑니다.')
+            navigate('/', { replace: true })
+          }
+          return
+        }
+
+        // localStorage에서 groups 찾기
+        const savedGroups = localStorage.getItem('groups')
+        let foundGroup: Group | undefined = undefined
+
+        if (savedGroups) {
+          try {
+            const groups: Group[] = JSON.parse(savedGroups)
+            foundGroup = groups.find(g => g.id === groupId)
+          } catch (error) {
+            console.error('Failed to parse groups from localStorage:', error)
+          }
+        }
+
+        // localStorage에 없으면 API에서 가져오기
+        if (!foundGroup) {
+          console.warn(
+            `Group ${groupId} not found in localStorage, fetching all groups for church ${churchId} from API...`
+          )
+          const groups = await groupsApi.getGroupsByChurch(churchId)
+          localStorage.setItem('groups', JSON.stringify(groups))
+          foundGroup = groups.find(g => g.id === groupId)
+        }
+
+        if (mounted) {
+          if (foundGroup) {
+            setGroup(foundGroup)
+            setGroupError('')
+          } else {
+            console.error('Group not found after fetching:', groupId)
+            setGroupError('그룹을 찾을 수 없습니다.')
+            navigate('/', { replace: true })
+          }
+          setGroupLoading(false)
+        }
+      } catch (error) {
+        console.error('Error fetching group info:', error)
+        if (mounted) {
+          setGroupError('그룹 정보를 불러오는데 실패했습니다.')
+          setGroupLoading(false)
+        }
+      }
+    }
+
+    fetchGroupInfo()
+
+    return () => {
+      mounted = false
+    }
+  }, [groupId, navigate])
 
   // 오늘이 생일인지 확인하는 함수
   const isTodayBirthday = (birthday: string | null | undefined): boolean => {
@@ -65,6 +150,10 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     month: number | null
     label: string
   }[] => {
+    if (!group?.startDate) {
+      return [{ year: null, month: null, label: '전체' }]
+    }
+
     try {
       const startDate = new Date(group.startDate)
       const currentDate = new Date()
@@ -111,7 +200,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         },
       ]
     }
-  }, [group.startDate])
+  }, [group?.startDate])
 
   const monthList = useMemo(() => generateMonthList(), [generateMonthList])
   const selectedMonth = monthList[selectedMonthIndex]
@@ -126,8 +215,58 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     )
   }, [allGatherings])
 
+  // 현재 유저가 이 그룹에서 LEADER인지 확인
+  const isCurrentUserLeader = useMemo(() => {
+    if (!currentUserInGroup) {
+      return false
+    }
+
+    const isLeader = currentUserInGroup.role === 'LEADER'
+
+    console.warn(`👑 Current user leader status in group ${group.id}:`, {
+      userId: currentUserInGroup.id,
+      userName: currentUserInGroup.name,
+      role: currentUserInGroup.role,
+      isLeader,
+    })
+
+    return isLeader
+  }, [currentUserInGroup, group?.id])
+
+  // 현재 그룹에서의 유저 정보 가져오기
+  useEffect(() => {
+    if (!group?.id) return
+
+    let mounted = true
+
+    const fetchCurrentUserInGroup = async () => {
+      try {
+        console.warn(`🔄 Fetching current user info in group: ${group.id}`)
+        const userData = await groupsApi.getMyInfoInGroup(group.id)
+        console.warn('✅ Current user in group API response:', userData)
+
+        if (mounted) {
+          setCurrentUserInGroup(userData)
+        }
+      } catch (error) {
+        console.error('❌ Error fetching current user in group:', error)
+        if (mounted) {
+          setCurrentUserInGroup(null)
+        }
+      }
+    }
+
+    fetchCurrentUserInGroup()
+
+    return () => {
+      mounted = false
+    }
+  }, [group?.id])
+
   // 멤버 목록 가져오기
   useEffect(() => {
+    if (!group?.id) return
+
     let mounted = true
 
     const fetchMembers = async () => {
@@ -157,10 +296,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     return () => {
       mounted = false
     }
-  }, [group.id])
+  }, [group?.id])
 
   // 선택된 월의 모임 목록 가져오기
   useEffect(() => {
+    if (!group?.id) return
+
     let mounted = true
 
     const fetchGatherings = async () => {
@@ -244,7 +385,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     return () => {
       mounted = false
     }
-  }, [group.id, selectedYear, selectedMonthNumber])
+  }, [group?.id, selectedYear, selectedMonthNumber])
 
   // 월 드롭다운 외부 클릭 감지
   useEffect(() => {
@@ -274,7 +415,13 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     gathering?: Gathering // 실제 모임 데이터 (선택적)
   }
 
-  const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
+  const MeetingCard = ({
+    meeting,
+    onClick,
+  }: {
+    meeting: Meeting
+    onClick?: () => void
+  }) => {
     const getCardStyle = () => {
       switch (meeting.type) {
         case 'affordance':
@@ -312,8 +459,12 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
 
     if (meeting.type === 'affordance') {
       return (
-        <div
-          className={`${getCardStyle()} rounded-2xl w-full h-[69px] flex items-center justify-center px-5 py-3`}
+        <button
+          onClick={() => {
+            console.warn('Navigating to create meeting')
+            navigate(`/group/${groupId}/create`)
+          }}
+          className={`${getCardStyle()} rounded-2xl w-full h-[69px] flex items-center justify-center px-5 py-3 hover:border-[#A5BAAF] transition-colors cursor-pointer`}
         >
           <div className="flex items-center gap-2">
             <div className="w-[22px] h-[22px] flex items-center justify-center">
@@ -328,16 +479,26 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               모임 내용을 작성해주세요!
             </span>
           </div>
-        </div>
+        </button>
       )
     }
 
     // fill 또는 empty 타입인 경우
     const gathering = meeting.gathering
 
+    // fill 타입이고 onClick이 있으면 클릭 가능한 버튼으로, 아니면 일반 div로
+    const Component = meeting.type === 'fill' && onClick ? 'button' : 'div'
+    const clickHandler =
+      meeting.type === 'fill' && onClick ? onClick : undefined
+    const hoverStyles =
+      meeting.type === 'fill' && onClick
+        ? 'hover:bg-[#E8ECE8] hover:border-[#8AA594] cursor-pointer'
+        : ''
+
     return (
-      <div
-        className={`${getCardStyle()} rounded-2xl w-full min-h-[69px] flex items-center gap-3 px-5 py-3`}
+      <Component
+        onClick={clickHandler}
+        className={`${getCardStyle()} ${hoverStyles} rounded-2xl w-full min-h-[69px] flex items-center gap-3 px-5 py-3 transition-colors`}
       >
         {/* 왼쪽: 모임 이름 및 날짜 */}
         <div className="w-[98px] flex flex-col">
@@ -428,6 +589,39 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               이날은 특이사항이 없는 날이네요:)
             </div>
           )}
+        </div>
+      </Component>
+    )
+  }
+
+  // 그룹 로딩 중인 경우
+  if (groupLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[#5F7B6D] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#405347] font-pretendard">
+            그룹 정보를 불러오는 중...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // 그룹 에러가 있는 경우
+  if (groupError || !group) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-red-500 font-pretendard mb-4">
+            {groupError || '그룹을 찾을 수 없습니다.'}
+          </p>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 bg-[#5F7B6D] text-white rounded-lg font-pretendard"
+          >
+            이전으로
+          </button>
         </div>
       </div>
     )
@@ -544,7 +738,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         {/* Meetings Section */}
         <div>
           {/* Meetings Header */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2">
             <div className="relative" ref={monthDropdownRef}>
               <button
                 onClick={() => setShowMonthDropdown(!showMonthDropdown)}
@@ -588,14 +782,6 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                 </div>
               )}
             </div>
-            <button className="w-[22px] h-[22px] bg-white rounded flex items-center justify-center">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path
-                  d="M2.75 20.24L7.67 18.77L18.54 7.9C19.15 7.29 19.15 6.31 18.54 5.7L16.3 3.46C15.69 2.85 14.71 2.85 14.1 3.46L3.23 14.33L1.76 19.25C1.68 19.52 1.72 19.81 1.87 20.04C2.02 20.27 2.27 20.42 2.54 20.42C2.61 20.42 2.68 20.41 2.75 20.24ZM15.17 4.53L17.41 6.77L15.64 8.54L13.4 6.3L15.17 4.53ZM4.38 15.46L12.33 7.51L14.57 9.75L6.62 17.7L4.38 15.46Z"
-                  fill="#5F7B69"
-                />
-              </svg>
-            </button>
           </div>
 
           {/* Meetings List */}
@@ -608,16 +794,18 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               </div>
             ) : (
               <>
-                {/* 모임 추가하기 카드 (맨 위에 항상 표시) */}
-                <MeetingCard
-                  key="affordance"
-                  meeting={{
-                    id: 0,
-                    type: 'affordance',
-                    date: '',
-                    hasContent: false,
-                  }}
-                />
+                {/* 모임 추가하기 카드 (LEADER일 때만 표시) */}
+                {isCurrentUserLeader && (
+                  <MeetingCard
+                    key="affordance"
+                    meeting={{
+                      id: 0,
+                      type: 'affordance',
+                      date: '',
+                      hasContent: false,
+                    }}
+                  />
+                )}
 
                 {/* 실제 모임 데이터 */}
                 {gatherings.map((gathering, index) => (
@@ -629,6 +817,14 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                       date: gathering.date,
                       hasContent: true,
                       gathering: gathering, // 추가 정보를 위해 원본 gathering 데이터도 포함
+                    }}
+                    onClick={() => {
+                      console.warn('Navigating to gathering:', gathering.id)
+                      // 스크롤을 최상위로 리셋하고 네비게이션 (모바일에서 더 확실하게)
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+                      document.documentElement.scrollTop = 0
+                      document.body.scrollTop = 0
+                      navigate(`/group/${groupId}/gathering/${gathering.id}`)
                     }}
                   />
                 ))}
