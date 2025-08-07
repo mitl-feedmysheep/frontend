@@ -93,6 +93,13 @@ export const api = {
       body: data ? JSON.stringify(data) : undefined,
     }),
 
+  patch: <T>(endpoint: string, data?: unknown, options?: RequestInit) =>
+    apiRequest<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
   delete: <T>(endpoint: string, options?: RequestInit) =>
     apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
 }
@@ -389,6 +396,61 @@ export const gatheringsApi = {
     }
 
     const data: GatheringDetail = await response.json()
+    return data
+  },
+
+  // 멤버 정보 업데이트 (출석, 나눔, 기도제목)
+  updateMember: async (
+    gatheringId: string,
+    groupMemberId: string,
+    updateData: {
+      worshipAttendance: boolean
+      gatheringAttendance: boolean
+      story: string
+      prayers: Array<{
+        prayerRequest: string
+        description: string
+      }>
+    }
+  ): Promise<{
+    id: string
+    worshipAttendance: boolean
+    gatheringAttendance: boolean
+    story: string
+    prayers: Array<{
+      id: string
+      prayerRequest: string
+      description: string
+      answered: boolean
+    }>
+  }> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/gatherings/${gatheringId}/groupMember/${groupMemberId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authToken,
+        },
+        body: JSON.stringify(updateData),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data = await response.json()
     return data
   },
 }

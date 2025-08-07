@@ -76,6 +76,7 @@ const AttendanceCheckWrapper = () => {
   return (
     <AttendanceCheck
       gatheringId={gatheringId}
+      groupId={groupId}
       onBack={() => {
         // AttendanceCheck에서 나갈 때 스크롤을 최상위로
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' })

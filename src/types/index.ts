@@ -99,10 +99,13 @@ export interface GatheringDetail {
 
 export interface GatheringMember {
   memberId: string
+  groupMemberId: string
   name: string
+  birthday?: string
   worshipAttendance: boolean
   gatheringAttendance: boolean
   story: string
+  prayerTopics?: string
   prayers: Prayer[]
 }
 
