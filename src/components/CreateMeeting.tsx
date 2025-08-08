@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ApiError, gatheringsApi } from '../lib/api'
+import { convertKSTtoUTC } from '../lib/utils'
 import type { CreateGatheringRequest } from '../types'
 import FixedBottomButton from './FixedBottomButton'
 
@@ -197,19 +198,13 @@ const CreateMeeting: React.FC<CreateMeetingProps> = ({
     try {
       setIsLoading(true)
 
-      // 날짜와 시간을 ISO 형식으로 변환
-      const startDateTime = new Date(
-        `${formData.date}T${formData.startTime}:00`
-      )
-      const endDateTime = new Date(`${formData.date}T${formData.endTime}:00`)
-
       const gatheringData: CreateGatheringRequest = {
         groupId,
         name: formatWeekFormat(formData.date),
         description: formData.notes || '',
         date: formData.date,
-        startedAt: startDateTime.toISOString(),
-        endedAt: endDateTime.toISOString(),
+        startedAt: convertKSTtoUTC(formData.date, formData.startTime),
+        endedAt: convertKSTtoUTC(formData.date, formData.endTime),
         place: formData.place,
       }
 

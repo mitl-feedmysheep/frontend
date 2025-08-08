@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from 'clsx'
+import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 // Tailwind class merge utility
@@ -56,6 +56,13 @@ export function debounce<T extends (...args: never[]) => unknown>(
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
+}
+
+// 한국 시간을 UTC로 변환
+export function convertKSTtoUTC(dateStr: string, timeStr: string): string {
+  // 한국 시간으로 명시적으로 생성 (KST = UTC+9)
+  const kstDateTime = new Date(`${dateStr}T${timeStr}:00+09:00`)
+  return kstDateTime.toISOString()
 }
 
 // Local storage utility

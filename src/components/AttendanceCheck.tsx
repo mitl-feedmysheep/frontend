@@ -689,19 +689,39 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
         {/* Right: Attendance Checkboxes */}
         <div className="flex gap-3" onClick={e => e.stopPropagation()}>
-          <label className="flex items-center gap-1 px-1 relative">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={member.worshipAttendance}
-                disabled={worshipLoading || isReadOnly}
-                onChange={e => {
-                  if (!isReadOnly) {
-                    handleAttendanceChange('worship', e.target.checked)
-                  }
-                }}
-                className="w-6 h-6 text-[#5F7B6D] rounded border-[#A5BAAF] border-1.5 disabled:opacity-50"
-              />
+          {/* 예배 체크박스 */}
+          <div
+            className="flex items-center gap-1 pr-1 cursor-pointer"
+            onClick={e => {
+              e.stopPropagation()
+              if (!isReadOnly && !worshipLoading) {
+                handleAttendanceChange('worship', !member.worshipAttendance)
+              }
+            }}
+          >
+            <div className="relative w-6 h-6">
+              {/* 체크박스 배경 */}
+              <div
+                className={`w-6 h-6 rounded-[5px] border-[1.5px] flex items-center justify-center transition-all ${
+                  member.worshipAttendance
+                    ? 'bg-[#5F7B6D] border-[#5F7B6D]'
+                    : 'bg-transparent border-[#A5BAAF]'
+                } ${worshipLoading || isReadOnly ? 'opacity-50' : ''}`}
+              >
+                {/* 체크 아이콘 */}
+                {member.worshipAttendance && !worshipLoading && (
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+                    <path
+                      d="M2 5L5.5 8.5L12 2"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+              {/* 로딩 스피너 */}
               {worshipLoading && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-[#5F7B6D] border-t-transparent rounded-full animate-spin"></div>
@@ -711,20 +731,41 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <span className="text-[#20342F] font-medium text-base leading-tight font-pretendard">
               예배
             </span>
-          </label>
-          <label className="flex items-center gap-1 px-1 relative">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={member.gatheringAttendance}
-                disabled={gatheringLoading || isReadOnly}
-                onChange={e => {
-                  if (!isReadOnly) {
-                    handleAttendanceChange('gathering', e.target.checked)
-                  }
-                }}
-                className="w-6 h-6 text-[#5F7B6D] rounded border-[#A5BAAF] border-1.5 disabled:opacity-50"
-              />
+          </div>
+
+          {/* 모임 체크박스 */}
+          <div
+            className="flex items-center gap-1 pr-1 cursor-pointer"
+            onClick={e => {
+              e.stopPropagation()
+              if (!isReadOnly && !gatheringLoading) {
+                handleAttendanceChange('gathering', !member.gatheringAttendance)
+              }
+            }}
+          >
+            <div className="relative w-6 h-6">
+              {/* 체크박스 배경 */}
+              <div
+                className={`w-6 h-6 rounded-[5px] border-[1.5px] flex items-center justify-center transition-all ${
+                  member.gatheringAttendance
+                    ? 'bg-[#5F7B6D] border-[#5F7B6D]'
+                    : 'bg-transparent border-[#A5BAAF]'
+                } ${gatheringLoading || isReadOnly ? 'opacity-50' : ''}`}
+              >
+                {/* 체크 아이콘 */}
+                {member.gatheringAttendance && !gatheringLoading && (
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+                    <path
+                      d="M2 5L5.5 8.5L12 2"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+              {/* 로딩 스피너 */}
               {gatheringLoading && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-[#5F7B6D] border-t-transparent rounded-full animate-spin"></div>
@@ -734,7 +775,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
             <span className="text-[#20342F] font-medium text-base leading-tight font-pretendard">
               모임
             </span>
-          </label>
+          </div>
         </div>
       </div>
 
