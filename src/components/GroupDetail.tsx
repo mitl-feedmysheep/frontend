@@ -223,7 +223,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
 
     const isLeader = currentUserInGroup.role === 'LEADER'
 
-    console.warn(`👑 Current user leader status in group ${group.id}:`, {
+    console.warn(`👑 Current user leader status in group ${group?.id}:`, {
       userId: currentUserInGroup.id,
       userName: currentUserInGroup.name,
       role: currentUserInGroup.role,
