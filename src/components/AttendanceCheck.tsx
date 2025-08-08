@@ -1,6 +1,7 @@
 import { ApiError, gatheringsApi, groupsApi } from '@/lib/api'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
+import AutoGrowInput from './AutoGrowInput'
 import ToastNotification from './ToastNotification'
 
 interface AttendanceCheckProps {
@@ -352,7 +353,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
   showToast,
   isReadOnly,
 }) => {
-  const [prayerInputs, setPrayerInputs] = useState<string[]>([''])
+  type PrayerInput = { id: string; value: string }
+  const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const [prayerInputs, setPrayerInputs] = useState<PrayerInput[]>([
+    { id: makeId(), value: '' },
+  ])
   const [hasChanges, setHasChanges] = useState(false)
   const [localStory, setLocalStory] = useState(member.story ?? '')
   const [originalMember, setOriginalMember] = useState(member)
@@ -372,35 +377,61 @@ const MemberCard: React.FC<MemberCardProps> = ({
       // 초기 데이터 설정
       setLocalStory(member.story ?? '')
       if (member.prayers && member.prayers.length > 0) {
-        setPrayerInputs(member.prayers.map(prayer => prayer.prayerRequest))
+        setPrayerInputs(
+          member.prayers.map(p => ({
+            id: p.id || makeId(),
+            value: p.prayerRequest || '',
+          }))
+        )
       } else {
-        setPrayerInputs([''])
+        setPrayerInputs([{ id: 'new', value: '' }])
       }
     }
   }, [member, isInitialized])
 
   // 데이터 업데이트는 초기 설정에서만 처리하고, 이후에는 사용자 입력으로만 변경
 
-  // 텍스트 영역 자동 높이 조절 함수
+  // 텍스트 영역 자동 높이 조절 함수 (한 줄 유지하다가 줄바꿈 시에만 증가)
   const adjustTextareaHeight = (element: HTMLTextAreaElement) => {
+    if (!element) return
+    const cs = window.getComputedStyle(element)
+    const paddingTop = parseFloat(cs.paddingTop || '0')
+    const paddingBottom = parseFloat(cs.paddingBottom || '0')
+    const lineHeight = parseFloat(cs.lineHeight || '24') || 24
+
+    // 높이 초기화 후 실제 콘텐츠 높이 계산
     element.style.height = 'auto'
-    element.style.height = element.scrollHeight + 'px'
+    const contentHeight = Math.max(
+      0,
+      element.scrollHeight - paddingTop - paddingBottom
+    )
+
+    // 한 줄 기준: lineHeight. 줄바꿈 발생 전에는 정확히 한 줄 높이 유지
+    const rows =
+      contentHeight > lineHeight + 1 ? Math.ceil(contentHeight / lineHeight) : 1
+    const newHeight = rows * lineHeight + paddingTop + paddingBottom
+    element.style.height = `${newHeight}px`
   }
 
-  // 나눔 텍스트 영역 높이 조절
+  // 나눔 텍스트 영역 높이 조절 (레이아웃 완료 후 보정)
   useEffect(() => {
-    if (storyTextareaRef.current) {
-      adjustTextareaHeight(storyTextareaRef.current)
-    }
+    const el = storyTextareaRef.current
+    if (!el) return
+    // 첫 번째 프레임에 적용
+    requestAnimationFrame(() => adjustTextareaHeight(el))
+    // 레이아웃 안정화를 위해 한 번 더 적용
+    const t = setTimeout(() => adjustTextareaHeight(el), 100)
+    return () => clearTimeout(t)
   }, [localStory])
 
   // 초기화 완료 후 모든 텍스트 영역의 높이를 한 번 조절
   useEffect(() => {
     if (!isInitialized) return
 
-    // 나눔 텍스트 영역 조절
+    // 나눔 텍스트 영역 조절 (지연 적용)
     if (storyTextareaRef.current) {
-      adjustTextareaHeight(storyTextareaRef.current)
+      const el = storyTextareaRef.current
+      setTimeout(() => adjustTextareaHeight(el), 100)
     }
 
     // 기도제목 텍스트 영역들 조절 (짧은 지연 후)
@@ -426,7 +457,9 @@ const MemberCard: React.FC<MemberCardProps> = ({
     // 기도제목 변경사항 확인: 원본과 현재 입력값 비교
     const originalPrayers =
       originalMember.prayers?.map(p => p.prayerRequest) || []
-    const currentPrayers = prayerInputs.filter(input => input.trim() !== '')
+    const currentPrayers = prayerInputs
+      .filter(input => input.value.trim() !== '')
+      .map(input => input.value)
 
     // 배열 길이가 다르거나, 내용이 다른 경우 변경된 것으로 판단
     const hasPrayerChanges =
@@ -459,11 +492,26 @@ const MemberCard: React.FC<MemberCardProps> = ({
           type === 'gathering' ? value : member.gatheringAttendance,
         story: localStory,
         prayers: prayerInputs
-          .filter(input => input.trim() !== '')
-          .map((input, idx) => ({
-            prayerRequest: input,
-            description: member.prayers[idx]?.description || '',
-          })),
+          .filter(input => input.value.trim() !== '')
+          .map(input => {
+            if (input.id === 'new') {
+              // + 버튼으로 새로 추가한 기도제목 - id 필드 제외
+              return {
+                prayerRequest: input.value,
+                description: '',
+              }
+            } else {
+              // 기존 기도제목 - 서버 id 포함
+              const originalPrayer = member.prayers?.find(
+                p => p.id === input.id
+              )
+              return {
+                prayerRequest: input.value,
+                description: originalPrayer?.description || '',
+                id: input.id,
+              }
+            }
+          }),
       }
 
       await gatheringsApi.updateMember(
@@ -498,15 +546,14 @@ const MemberCard: React.FC<MemberCardProps> = ({
   }
 
   const addPrayerInput = () => {
-    setPrayerInputs([...prayerInputs, ''])
-    // 빈 텍스트 추가는 저장 버튼을 표시하지 않음
+    setPrayerInputs(prev => [...prev, { id: 'new', value: '' }])
   }
 
   const removePrayerInput = (index: number) => {
     const newPrayerInputs = prayerInputs.filter((_, i) => i !== index)
     // 최소 하나의 빈 입력란은 유지
     if (newPrayerInputs.length === 0) {
-      setPrayerInputs([''])
+      setPrayerInputs([{ id: 'new', value: '' }])
     } else {
       setPrayerInputs(newPrayerInputs)
     }
@@ -515,15 +562,15 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   const updatePrayerInput = (index: number, value: string) => {
     const newInputs = [...prayerInputs]
-    newInputs[index] = value
+    newInputs[index] = { ...newInputs[index], value }
     setPrayerInputs(newInputs)
 
     // prayers 배열 업데이트
     const updatedPrayers = newInputs
-      .filter(input => input.trim() !== '')
+      .filter(input => input.value.trim() !== '')
       .map((input, idx) => ({
-        id: member.prayers[idx]?.id || `temp-${idx}`,
-        prayerRequest: input,
+        id: member.prayers[idx]?.id || input.id || `temp-${idx}`,
+        prayerRequest: input.value,
         description: member.prayers[idx]?.description || '',
         answered: member.prayers[idx]?.answered || false,
       }))
@@ -544,11 +591,26 @@ const MemberCard: React.FC<MemberCardProps> = ({
         gatheringAttendance: member.gatheringAttendance,
         story: localStory,
         prayers: prayerInputs
-          .filter(input => input.trim() !== '')
-          .map((input, idx) => ({
-            prayerRequest: input,
-            description: member.prayers[idx]?.description || '',
-          })),
+          .filter(input => input.value.trim() !== '')
+          .map(input => {
+            if (input.id === 'new') {
+              // + 버튼으로 새로 추가한 기도제목 - id 필드 제외
+              return {
+                prayerRequest: input.value,
+                description: '',
+              }
+            } else {
+              // 기존 기도제목 - 서버 id 포함
+              const originalPrayer = member.prayers?.find(
+                p => p.id === input.id
+              )
+              return {
+                prayerRequest: input.value,
+                description: originalPrayer?.description || '',
+                id: input.id,
+              }
+            }
+          }),
       }
 
       // 즉시 저장 버튼 숨기기 및 토스트 표시
@@ -688,22 +750,18 @@ const MemberCard: React.FC<MemberCardProps> = ({
               나눔
             </div>
             <div className="bg-[#FEFFFE] rounded-lg p-2">
-              <textarea
-                ref={storyTextareaRef}
+              <AutoGrowInput
                 value={localStory}
-                onChange={e => !isReadOnly && handleStoryChange(e.target.value)}
-                onInput={e => {
-                  const target = e.target as HTMLTextAreaElement
-                  adjustTextareaHeight(target)
+                onChange={next => {
+                  if (isReadOnly) return
+                  handleStoryChange(next.replace(/\n/g, ' '))
                 }}
                 placeholder={
                   isReadOnly ? '내용이 없습니다.' : '나눔 내용을 적어주세요.'
                 }
                 readOnly={isReadOnly}
-                className={`w-full p-1 text-[#405347] placeholder:text-[#A5BAAF] font-normal text-base leading-tight font-pretendard bg-transparent border-none outline-none resize-none ${
-                  isReadOnly ? 'cursor-default' : ''
-                }`}
-                style={{ minHeight: '24px', height: '24px' }}
+                className="border-none"
+                inputClassName="rounded-lg bg-transparent"
               />
             </div>
           </div>
@@ -734,30 +792,31 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
             {/* Prayer Inputs */}
             {prayerInputs.map((input, index) => (
-              <div key={index} className="bg-[#FEFFFE] rounded-lg p-2">
+              <div
+                key={input.id === 'new' ? `new-${index}` : input.id}
+                className="bg-[#FEFFFE] rounded-lg p-2"
+              >
                 <div className="flex items-start gap-2">
-                  <textarea
-                    value={input}
-                    onChange={e =>
-                      !isReadOnly && updatePrayerInput(index, e.target.value)
-                    }
-                    onInput={e => {
-                      const target = e.target as HTMLTextAreaElement
-                      adjustTextareaHeight(target)
+                  <AutoGrowInput
+                    value={input.value}
+                    onChange={next => {
+                      if (isReadOnly) return
+                      updatePrayerInput(index, next.replace(/\n/g, ' '))
                     }}
                     placeholder={
                       isReadOnly ? '내용이 없습니다.' : '기도제목을 적어주세요.'
                     }
                     readOnly={isReadOnly}
-                    className={`flex-1 p-1 text-[#405347] placeholder:text-[#A5BAAF] font-normal text-base leading-tight font-pretendard bg-transparent border-none outline-none resize-none ${
-                      isReadOnly ? 'cursor-default' : ''
-                    }`}
-                    style={{ minHeight: '24px', height: '24px' }}
+                    className="flex-1 border-none"
+                    inputClassName="rounded-lg bg-transparent"
+                    autoFocus={
+                      index === prayerInputs.length - 1 && input.value === ''
+                    }
                   />
                   {!isReadOnly && (
                     <button
                       onClick={() => removePrayerInput(index)}
-                      className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-[#A5BAAF] hover:text-[#5F7B6D] transition-colors"
+                      className="flex-shrink-0 w-6 h-6 ml-1 mt-1 inline-flex items-center justify-center text-[#A5BAAF] hover:text-[#5F7B6D] transition-colors self-start"
                     >
                       <svg
                         width="16"
