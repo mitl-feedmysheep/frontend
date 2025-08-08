@@ -18,7 +18,9 @@ const FixedBottomButton: React.FC<FixedBottomButtonProps> = ({
   const isDisabled = disabled || loading
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 p-4 bg-white ${className}`}>
+    <div
+      className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] p-4 bg-white ${className}`}
+    >
       <button
         onClick={onClick}
         disabled={isDisabled}

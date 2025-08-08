@@ -37,19 +37,15 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
 
   return (
     <div
-      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-in-out ${
-        isVisible
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 -translate-y-2'
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-in-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       }`}
     >
-      <div className="bg-[#5F7B6D] text-white px-4 py-3 rounded-lg shadow-lg max-w-sm mx-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">😊</span>
-          <span className="font-pretendard text-sm leading-tight">
-            {message}
-          </span>
-        </div>
+      <div className="inline-flex items-center justify-center gap-2 bg-[#5F7B6D] text-white px-4 py-3 rounded-lg shadow-lg w-auto max-w-[420px] mx-4">
+        <span className="text-lg">😊</span>
+        <span className="font-pretendard text-sm leading-tight text-center break-words whitespace-pre-line">
+          {message}
+        </span>
       </div>
     </div>
   )
