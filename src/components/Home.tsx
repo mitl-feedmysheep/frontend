@@ -407,7 +407,7 @@ const Home: React.FC = () => {
                             </svg>
                           </div>
                           <span className="text-xs font-normal font-pretendard leading-none">
-                            -
+                            {group.groupMemberCount}
                           </span>
                         </div>
                         {/* Frame 138 - 위치 (gap: 2px) */}

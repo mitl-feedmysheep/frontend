@@ -294,7 +294,7 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
           {/* Title */}
           <div className="mb-4">
             <h2 className="text-[#232323] font-bold text-xl leading-tight tracking-[-0.02em] font-pretendard">
-              제목 뭘로 하지..
+              오늘의 기록
             </h2>
           </div>
 

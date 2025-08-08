@@ -52,6 +52,7 @@ export interface Group {
   churchId: string
   startDate: string
   endDate: string
+  groupMemberCount: number
 }
 
 // Gathering types
