@@ -1,5 +1,6 @@
 import { ApiError, authApi } from '@/lib/api'
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 interface LoginProps {
   onLoginSuccess: () => void
@@ -185,6 +186,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             >
               {isLoading ? '로그인 중...' : '로그인'}
             </button>
+
+            {/* Signup Entry */}
+            <div className="text-center mt-6">
+              <Link
+                to="/signup"
+                className="text-gray-600 hover:text-gray-800 font-pretendard font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+              >
+                가입할래요!
+              </Link>
+            </div>
           </form>
         </div>
       </main>

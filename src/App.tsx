@@ -13,6 +13,7 @@ import CreateMeeting from './components/CreateMeeting'
 import GroupDetail from './components/GroupDetail'
 import Home from './components/Home'
 import Login from './components/Login'
+import Signup from './components/Signup'
 
 // Login Wrapper 컴포넌트
 const LoginWrapper = () => {
@@ -119,6 +120,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginWrapper />} />
+        <Route path="/signup" element={<Signup />} />
         <Route
           path="/"
           element={
