@@ -1,27 +1,62 @@
-import React, { useMemo, useState } from 'react'
+import useLocalStorage from '@/hooks/useLocalStorage'
+import { ApiError, authApi } from '@/lib/api'
+import type { SignupRequest } from '@/types'
+import React, { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import DaumPostcodeModal from './DaumPostcodeModal'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const Signup: React.FC = () => {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [gender, setGender] = useState<'남' | '여' | ''>('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [postcode, setPostcode] = useState('')
-  const [address1, setAddress1] = useState('')
-  const [address2, setAddress2] = useState('')
+  const [name, setName] = useLocalStorage<string>('signup.name', '')
+  const [birthDate, setBirthDate] = useLocalStorage<string>(
+    'signup.birthDate',
+    ''
+  )
+  const [gender, setGender] = useLocalStorage<'남' | '여' | ''>(
+    'signup.gender',
+    ''
+  )
+  const [phone, setPhone] = useLocalStorage<string>('signup.phone', '')
+  const [email, setEmail] = useLocalStorage<string>('signup.email', '')
+  const [password, setPassword] = useLocalStorage<string>('signup.password', '')
+  const [passwordConfirm, setPasswordConfirm] = useLocalStorage<string>(
+    'signup.passwordConfirm',
+    ''
+  )
+  const [postcode, setPostcode] = useLocalStorage<string>('signup.postcode', '')
+  const [address1, setAddress1] = useLocalStorage<string>('signup.address1', '')
+  const [address2, setAddress2] = useLocalStorage<string>('signup.address2', '')
   const [isLoading, setIsLoading] = useState(false)
   const [phoneDupLoading, setPhoneDupLoading] = useState(false)
-  const [phoneChecked, setPhoneChecked] = useState(false)
-  const [phoneDuplicate, setPhoneDuplicate] = useState(false)
+  const [phoneChecked, setPhoneChecked] = useLocalStorage<boolean>(
+    'signup.phoneChecked',
+    false
+  )
+  const [phoneDuplicate, setPhoneDuplicate] = useLocalStorage<boolean>(
+    'signup.phoneDuplicate',
+    false
+  )
   const [emailVerifyLoading, setEmailVerifyLoading] = useState(false)
-  const [emailVerifySuccess, setEmailVerifySuccess] = useState(false)
+  const [emailVerifySuccess, setEmailVerifySuccess] = useLocalStorage<boolean>(
+    'signup.emailVerifySuccess',
+    false
+  )
   const [emailDupError, setEmailDupError] = useState('')
+  const [emailSendOk, setEmailSendOk] = useLocalStorage<boolean>(
+    'signup.emailSendOk',
+    false
+  )
+  const [emailSendError, setEmailSendError] = useState(false)
+  const [verificationCode, setVerificationCode] = useLocalStorage<string>(
+    'signup.verificationCode',
+    ''
+  )
+  const [codeConfirmLoading, setCodeConfirmLoading] = useState(false)
+  const [codeConfirmError, setCodeConfirmError] = useState(false)
+  const [showPostcode, setShowPostcode] = useState(false)
+  const address2Ref = useRef<HTMLInputElement>(null)
   // removed: emailDupLoading, emailDupSuccess
 
   const canProceed = useMemo(() => {
@@ -35,13 +70,11 @@ const Signup: React.FC = () => {
       password.trim() &&
       passwordConfirm.trim() &&
       postcode.trim() &&
-      address1.trim() &&
-      address2.trim()
+      address1.trim()
 
     return (
       Boolean(allFilled) &&
       emailRegex.test(email) &&
-      password.length >= 6 &&
       password === passwordConfirm &&
       phoneChecked &&
       !phoneDuplicate &&
@@ -57,7 +90,6 @@ const Signup: React.FC = () => {
     passwordConfirm,
     postcode,
     address1,
-    address2,
     phoneChecked,
     phoneDuplicate,
     emailVerifySuccess,
@@ -88,8 +120,51 @@ const Signup: React.FC = () => {
     if (!canProceed) return
     setIsLoading(true)
     try {
-      await new Promise(res => setTimeout(res, 600))
+      // birthDate: YYYY.MM.DD -> YYYY-MM-DD
+      const birthDigits = birthDate.replace(/\D/g, '')
+      const birthFormatted = `${birthDigits.slice(0, 4)}-${birthDigits.slice(4, 6)}-${birthDigits.slice(6, 8)}`
+
+      const payload: SignupRequest = {
+        password,
+        name,
+        email,
+        birthdate: birthFormatted,
+        sex: gender === '남' ? 'M' : 'F',
+        phone,
+        address: `${postcode} ${address1} ${address2}`.trim(),
+      }
+
+      await authApi.signup(payload)
+      // 회원가입 완료 시 로컬스토리지의 회원가입 관련 키들 정리
+      try {
+        const keysToClear = [
+          'signup.name',
+          'signup.birthDate',
+          'signup.gender',
+          'signup.phone',
+          'signup.email',
+          'signup.password',
+          'signup.passwordConfirm',
+          'signup.postcode',
+          'signup.address1',
+          'signup.address2',
+          'signup.emailSendOk',
+          'signup.verificationCode',
+          'signup.phoneChecked',
+          'signup.phoneDuplicate',
+          'signup.emailVerifySuccess',
+        ]
+        keysToClear.forEach(k => localStorage.removeItem(k))
+      } catch (cleanupError) {
+        console.warn(
+          'Failed to clear signup draft from localStorage',
+          cleanupError
+        )
+      }
       navigate('/login', { replace: true })
+    } catch (error) {
+      console.error('Signup failed', error)
+      // TODO: 에러 메시지 UI 필요 시 추가
     } finally {
       setIsLoading(false)
     }
@@ -116,26 +191,54 @@ const Signup: React.FC = () => {
     }
   }
 
-  // 이메일은 본인인증 버튼에서 중복 확인까지 함께 수행
-
+  // 이메일로 인증 코드 발송
   const handleEmailVerify = async () => {
     setEmailDupError('')
+    setEmailSendError(false)
+    setEmailSendOk(false)
     if (!emailRegex.test(email)) return
     setEmailVerifyLoading(true)
     setEmailVerifySuccess(false)
     try {
-      // 1) 중복 확인 (TODO: 실제 이메일 중복 API와 연결)
-      await new Promise(res => setTimeout(res, 300))
-      const isDuplicate = false
-      if (isDuplicate) {
+      // 1) 이메일 사용 가능 여부 확인
+      const apiBase = import.meta.env.VITE_API_BASE_URL
+      const dupUrl = `${apiBase}/auth/availability/email?value=${encodeURIComponent(email)}`
+      const dupRes = await fetch(dupUrl, { method: 'GET' })
+      if (!dupRes.ok) {
+        throw new Error(`HTTP ${dupRes.status}`)
+      }
+      const dupData = (await dupRes.json()) as { available: boolean }
+      if (!dupData.available) {
         setEmailDupError('이미 등록된 이메일입니다.')
         return
       }
-      // 2) 본인인증(코드 발송/검증 등)
-      await new Promise(res => setTimeout(res, 600))
-      setEmailVerifySuccess(true)
+
+      // 2) 사용 가능하면 인증 메일 발송
+      await authApi.sendEmailVerification(email)
+      setEmailSendOk(true)
+    } catch (error) {
+      setEmailSendError(true)
+      if (error instanceof ApiError && error.status === 409) {
+        setEmailDupError('이미 등록된 이메일입니다.')
+      }
     } finally {
       setEmailVerifyLoading(false)
+    }
+  }
+
+  // 인증 코드 확인
+  const handleConfirmCode = async () => {
+    if (!verificationCode.trim()) return
+    setCodeConfirmLoading(true)
+    setCodeConfirmError(false)
+    try {
+      await authApi.confirmEmailVerification(email, verificationCode.trim())
+      setEmailVerifySuccess(true)
+    } catch (_error) {
+      setEmailVerifySuccess(false)
+      setCodeConfirmError(true)
+    } finally {
+      setCodeConfirmLoading(false)
     }
   }
 
@@ -216,11 +319,7 @@ const Signup: React.FC = () => {
                 </button>
               </div>
             </div>
-            {emailDupError && (
-              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
-                {emailDupError}
-              </p>
-            )}
+            {/* 이메일 중복 오류는 이메일 입력 섹션 아래에서 표시 */}
           </div>
 
           {/* Birthdate */}
@@ -327,6 +426,11 @@ const Signup: React.FC = () => {
                   if (!e.target.value) {
                     setEmailVerifySuccess(false)
                   }
+                  setEmailSendOk(false)
+                  setEmailSendError(false)
+                  setVerificationCode('')
+                  setCodeConfirmError(false)
+                  setEmailDupError('')
                 }}
                 placeholder="이메일주소를 써주세요!"
                 className="flex-1 pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
@@ -337,7 +441,7 @@ const Signup: React.FC = () => {
                 onClick={handleEmailVerify}
                 disabled={!emailRegex.test(email) || emailVerifyLoading}
                 className={`min-w-[90px] whitespace-nowrap justify-center px-3 py-1.5 rounded-full border text-[11px] font-pretendard flex items-center ${
-                  emailVerifySuccess
+                  emailSendOk || emailVerifySuccess
                     ? 'border-[#43AE52] text-[#20342F]'
                     : 'border-[#C3CCC9] text-gray-600'
                 } ${emailVerifyLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -371,6 +475,89 @@ const Signup: React.FC = () => {
                 )}
               </button>
             </div>
+            {/* Email duplicate error */}
+            {!emailVerifyLoading && emailDupError && (
+              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
+                {emailDupError}
+              </p>
+            )}
+            {/* Email send result messages */}
+            {!emailVerifyLoading && emailSendOk && (
+              <p className="mt-1 text-xs text-[#2F9E44] font-pretendard">
+                이메일이 발송되었어요.
+              </p>
+            )}
+            {!emailVerifyLoading && emailSendError && !emailSendOk && (
+              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
+                관리자에게 문의해주세요.
+              </p>
+            )}
+
+            {/* Verification code input: show only after send success */}
+            {emailSendOk && (
+              <div className="mt-3 flex items-end gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="verificationCode"
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value)}
+                  placeholder="이메일로 받은 코드를 붙여넣기"
+                  className="flex-1 pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
+                />
+                <button
+                  type="button"
+                  onClick={handleConfirmCode}
+                  disabled={!verificationCode.trim() || codeConfirmLoading}
+                  className={`min-w-[90px] whitespace-nowrap justify-center px-3 py-1.5 rounded-full border text-[11px] font-pretendard flex items-center ${
+                    emailVerifySuccess
+                      ? 'border-[#43AE52] text-[#20342F]'
+                      : !verificationCode.trim() || codeConfirmLoading
+                        ? 'border-[#C3CCC9] text-gray-400 cursor-not-allowed opacity-70'
+                        : 'border-[#C3CCC9] text-gray-600'
+                  }`}
+                  aria-label="인증코드 확인"
+                >
+                  {codeConfirmLoading ? (
+                    <svg
+                      className="animate-spin"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    '확인'
+                  )}
+                </button>
+              </div>
+            )}
+            {/* Code confirm result messages */}
+            {!codeConfirmLoading && emailVerifySuccess && (
+              <p className="mt-1 text-xs text-[#2F9E44] font-pretendard">
+                인증에 성공했어요.
+              </p>
+            )}
+            {!codeConfirmLoading && codeConfirmError && !emailVerifySuccess && (
+              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
+                인증에 실패했어요. 다시 시도해주세요.
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -424,10 +611,13 @@ const Signup: React.FC = () => {
                   value={postcode}
                   onChange={e => setPostcode(e.target.value)}
                   placeholder="우편번호"
-                  className="w-32 pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
+                  readOnly
+                  aria-readonly
+                  className="w-32 pb-1 border-b border-[#C3CCC9] bg-gray-50 text-gray-700 placeholder-[#C3CCC9] text-[17px] outline-none font-pretendard"
                 />
                 <button
                   type="button"
+                  onClick={() => setShowPostcode(true)}
                   className="px-3 py-1.5 rounded-full border border-[#C3CCC9] text-[10px] text-gray-600 font-pretendard"
                 >
                   우편번호 찾기
@@ -438,13 +628,16 @@ const Signup: React.FC = () => {
                 value={address1}
                 onChange={e => setAddress1(e.target.value)}
                 placeholder="주소를 찾아주세요"
-                className="w-full pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
+                readOnly
+                aria-readonly
+                className="w-full pb-1 border-b border-[#C3CCC9] bg-gray-50 text-gray-700 placeholder-[#C3CCC9] text-[17px] outline-none font-pretendard"
               />
               <input
                 name="address2"
                 value={address2}
                 onChange={e => setAddress2(e.target.value)}
                 placeholder="상세주소를 입력해주세요"
+                ref={address2Ref}
                 className="w-full pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
               />
             </div>
@@ -485,6 +678,17 @@ const Signup: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Daum Postcode Modal */}
+      <DaumPostcodeModal
+        open={showPostcode}
+        onClose={() => setShowPostcode(false)}
+        onSelect={({ zonecode, address }) => {
+          setPostcode(zonecode)
+          setAddress1(address)
+          setShowPostcode(false)
+          setTimeout(() => address2Ref.current?.focus(), 0)
+        }}
+      />
     </div>
   )
 }

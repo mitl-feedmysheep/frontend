@@ -116,3 +116,19 @@ export interface Prayer {
   description: string
   answered: boolean
 }
+
+// Signup types
+export interface SignupRequest {
+  password: string
+  name: string
+  email: string
+  birthdate: string // YYYY-MM-DD
+  sex: 'M' | 'F'
+  phone: string
+  address: string
+}
+
+export interface SignupResponse {
+  memberId: string
+  message: string
+}

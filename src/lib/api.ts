@@ -8,6 +8,8 @@ import type {
   Group,
   LoginRequest,
   LoginResponse,
+  SignupRequest,
+  SignupResponse,
   User,
 } from '@/types'
 
@@ -137,6 +139,51 @@ export const authApi = {
     return data
   },
 
+  // 이메일 인증 코드 발송
+  sendEmailVerification: async (email: string): Promise<void> => {
+    const url = `${API_BASE_URL}/auth/verification/email`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+  },
+
+  // 이메일 인증 코드 확인
+  confirmEmailVerification: async (
+    email: string,
+    code: string
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/auth/verification/email/confirm`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('churchId')
@@ -150,6 +197,29 @@ export const authApi = {
 
   getToken: (): string | null => {
     return localStorage.getItem('authToken')
+  },
+
+  signup: async (payload: SignupRequest): Promise<SignupResponse> => {
+    const url = `${API_BASE_URL}/auth/signup`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: SignupResponse = await response.json()
+    return data
   },
 }
 
