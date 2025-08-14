@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { ApiError, gatheringsApi } from '../lib/api'
 import { convertKSTtoUTC } from '../lib/utils'
 import type { CreateGatheringRequest } from '../types'
+import AutoGrowInput from './AutoGrowInput'
 import FixedBottomButton from './FixedBottomButton'
 
 interface CreateMeetingProps {
@@ -384,12 +385,14 @@ const CreateMeeting: React.FC<CreateMeetingProps> = ({
             </svg>
           </div>
           <div className="flex-1 bg-white border-0 p-1 rounded">
-            <textarea
+            <AutoGrowInput
               value={formData.notes}
-              onChange={e => handleInputChange('notes', e.target.value)}
+              onChange={next =>
+                handleInputChange('notes', next.replace(/\n/g, ' '))
+              }
               placeholder="특이사항"
-              className="w-full text-[#405347] placeholder:text-[#A5BAAF] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard bg-transparent border-0 outline-none resize-none min-h-[20px]"
-              rows={1}
+              className="border-none"
+              inputClassName="rounded bg-transparent"
             />
           </div>
         </div>

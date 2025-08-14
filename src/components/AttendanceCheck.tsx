@@ -365,6 +365,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const [gatheringLoading, setGatheringLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const storyTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const [showPulseHint, setShowPulseHint] = useState(false)
 
   // 초기 로드 시에만 originalMember 설정 (가장 먼저 실행)
   useEffect(() => {
@@ -444,6 +445,13 @@ const MemberCard: React.FC<MemberCardProps> = ({
       })
     }, 50)
   }, [isInitialized, prayerInputs])
+
+  // 접힌 상태 시, 초반 2초간만 화살표에 펄스 애니메이션 제공 (모바일 시선 유도)
+  useEffect(() => {
+    setShowPulseHint(true)
+    const t = setTimeout(() => setShowPulseHint(false), 2000)
+    return () => clearTimeout(t)
+  }, [])
 
   // 변경사항 감지 (출석 상태는 제외)
   useEffect(() => {
@@ -662,11 +670,20 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   return (
     <div
-      className="bg-[#F5F7F5] rounded-2xl p-4 cursor-pointer"
+      className={`relative bg-[#F5F7F5] rounded-2xl px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#F0F4F2] active:bg-[#E6EEE9] active:scale-[0.99]`}
+      role="button"
+      aria-expanded={isExpanded}
+      tabIndex={0}
       onClick={onToggle}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onToggle()
+        }
+      }}
     >
       {/* Member Info Row */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={`flex items-center justify-between mb-4`}>
         {/* Left: Profile and Name */}
         <div className="flex items-end gap-2">
           {/* Profile Image */}
@@ -779,11 +796,26 @@ const MemberCard: React.FC<MemberCardProps> = ({
         </div>
       </div>
 
+      {/* Collapsed floating open text (no background) */}
+      {!isExpanded && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation()
+            onToggle()
+          }}
+          aria-label="카드 열기"
+          className={`absolute bottom-2 left-1/2 -translate-x-1/2 transform text-xs font-pretendard font-normal text-[#A5BAAF] ${showPulseHint ? 'animate-pulse' : ''}`}
+        >
+          +
+        </button>
+      )}
+
       {/* Expandable Content */}
       {isExpanded && (
         <div className="space-y-4" onClick={e => e.stopPropagation()}>
-          {/* Divider */}
-          <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+          {/* Divider (solid above '나눔') */}
+          <div className="h-0 border-t border-[#C2D0C7]"></div>
 
           {/* Sharing Section */}
           <div className="space-y-2">

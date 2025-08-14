@@ -373,6 +373,33 @@ export const membersApi = {
     const data: User = await response.json()
     return data
   },
+
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/members/password/change`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ currentPassword, newPassword }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+  },
 }
 
 // Churches API functions

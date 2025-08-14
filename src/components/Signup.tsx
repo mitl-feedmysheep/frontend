@@ -4,6 +4,7 @@ import type { SignupRequest } from '@/types'
 import React, { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DaumPostcodeModal from './DaumPostcodeModal'
+import { useToast } from './ToastProvider'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -58,6 +59,7 @@ const Signup: React.FC = () => {
   const [showPostcode, setShowPostcode] = useState(false)
   const address2Ref = useRef<HTMLInputElement>(null)
   // removed: emailDupLoading, emailDupSuccess
+  const { showToast } = useToast()
 
   const canProceed = useMemo(() => {
     const birthDigits = birthDate.replace(/\D/g, '')
@@ -75,6 +77,7 @@ const Signup: React.FC = () => {
     return (
       Boolean(allFilled) &&
       emailRegex.test(email) &&
+      password.length >= 8 &&
       password === passwordConfirm &&
       phoneChecked &&
       !phoneDuplicate &&
@@ -162,6 +165,10 @@ const Signup: React.FC = () => {
         )
       }
       navigate('/login', { replace: true })
+      // 라우팅 후에도 유지되는 전역 토스트
+      setTimeout(() => {
+        showToast('회원가입이 완료되었어요🙌\n로그인을 해주세요.', 3500)
+      }, 0)
     } catch (error) {
       console.error('Signup failed', error)
       // TODO: 에러 메시지 UI 필요 시 추가
@@ -573,6 +580,11 @@ const Signup: React.FC = () => {
               placeholder="비밀번호를 입력해주세요"
               className="w-full mt-1 pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
             />
+            {password && password.length < 8 && (
+              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
+                새 비밀번호는 8자 이상이어야 합니다.
+              </p>
+            )}
           </div>
 
           {/* Password Confirm */}

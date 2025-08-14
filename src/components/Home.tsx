@@ -1,4 +1,4 @@
-import { authApi, churchesApi, groupsApi, membersApi } from '@/lib/api'
+import { churchesApi, groupsApi, membersApi } from '@/lib/api'
 import type { Church, Group, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -37,9 +37,8 @@ const Home: React.FC = () => {
     console.warn('🧹 Cleaned up old localStorage keys')
   }
 
-  const handleLogout = () => {
-    authApi.logout()
-    window.location.reload()
+  const handleOpenSettings = () => {
+    navigate('/settings')
   }
 
   // 컴포넌트 마운트 시 페이지 최상단으로 스크롤 및 초기화
@@ -314,12 +313,20 @@ const Home: React.FC = () => {
           )}
         </div>
         <button
-          onClick={handleLogout}
+          onClick={handleOpenSettings}
           className="w-8 h-8 bg-[#77907D] rounded flex items-center justify-center hover:bg-[#6a8173] transition-colors"
+          aria-label="설정 열기"
         >
-          <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+          <svg
+            width="16"
+            height="20"
+            viewBox="0 0 16 20"
+            fill="none"
+            aria-hidden
+          >
+            <circle cx="8" cy="5" r="3" fill="white" />
             <path
-              d="M8 0C5.243 0 3 2.243 3 5v2H2C0.897 7 0 7.897 0 9v9c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2h-1V5c0-2.757-2.243-5-5-5zM5 5c0-1.654 1.346-3 3-3s3 1.346 3 3v2H5V5z"
+              d="M8 10c-2.4 0-4 1.6-4 4v6h8v-6c0-2.4-1.6-4-4-4z"
               fill="white"
             />
           </svg>

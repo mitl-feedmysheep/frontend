@@ -8,12 +8,16 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
+import Account from './components/Account'
 import AttendanceCheck from './components/AttendanceCheck'
+import ChangePassword from './components/ChangePassword'
 import CreateMeeting from './components/CreateMeeting'
 import GroupDetail from './components/GroupDetail'
 import Home from './components/Home'
 import Login from './components/Login'
+import Settings from './components/Settings'
 import Signup from './components/Signup'
+import { ToastProvider } from './components/ToastProvider'
 
 // Login Wrapper 컴포넌트
 const LoginWrapper = () => {
@@ -118,44 +122,70 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginWrapper />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/group/:groupId"
-          element={
-            <ProtectedRoute>
-              <GroupDetailWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/group/:groupId/create"
-          element={
-            <ProtectedRoute>
-              <CreateMeetingWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/group/:groupId/gathering/:gatheringId"
-          element={
-            <ProtectedRoute>
-              <AttendanceCheckWrapper />
-            </ProtectedRoute>
-          }
-        />
-        {/* 기본값: 루트로 리다이렉트 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group/:groupId"
+            element={
+              <ProtectedRoute>
+                <GroupDetailWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group/:groupId/create"
+            element={
+              <ProtectedRoute>
+                <CreateMeetingWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group/:groupId/gathering/:gatheringId"
+            element={
+              <ProtectedRoute>
+                <AttendanceCheckWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/account"
+            element={
+              <ProtectedRoute>
+                <Account />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          {/* 기본값: 루트로 리다이렉트 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   )
 }
