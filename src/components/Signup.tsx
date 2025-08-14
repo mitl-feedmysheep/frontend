@@ -39,6 +39,7 @@ const Signup: React.FC = () => {
     'signup.phoneDuplicate',
     false
   )
+  const [phoneCheckError, setPhoneCheckError] = useState(false)
   const [emailVerifyLoading, setEmailVerifyLoading] = useState(false)
   const [emailVerifySuccess, setEmailVerifySuccess] = useLocalStorage<boolean>(
     'signup.emailVerifySuccess',
@@ -81,7 +82,9 @@ const Signup: React.FC = () => {
       password === passwordConfirm &&
       phoneChecked &&
       !phoneDuplicate &&
-      emailVerifySuccess
+      emailVerifySuccess &&
+      !emailSendError &&
+      !phoneCheckError
     )
   }, [
     name,
@@ -95,7 +98,9 @@ const Signup: React.FC = () => {
     address1,
     phoneChecked,
     phoneDuplicate,
+    phoneCheckError,
     emailVerifySuccess,
+    emailSendError,
   ])
 
   const handleBirthDateChange = (raw: string) => {
@@ -182,6 +187,7 @@ const Signup: React.FC = () => {
     setPhoneDupLoading(true)
     setPhoneChecked(false)
     setPhoneDuplicate(false)
+    setPhoneCheckError(false)
     try {
       const apiBase = import.meta.env.VITE_API_BASE_URL
       const url = `${apiBase}/auth/availability/phone?value=${encodeURIComponent(phone)}`
@@ -193,6 +199,8 @@ const Signup: React.FC = () => {
       const isDuplicate = !data.available
       setPhoneDuplicate(isDuplicate)
       setPhoneChecked(true)
+    } catch (_e) {
+      setPhoneCheckError(true)
     } finally {
       setPhoneDupLoading(false)
     }
@@ -414,6 +422,11 @@ const Signup: React.FC = () => {
             {!phoneDupLoading && phoneChecked && !phoneDuplicate && (
               <p className="mt-1 text-xs text-[#2F9E44] font-pretendard">
                 사용할 수 있는 번호입니다.
+              </p>
+            )}
+            {!phoneDupLoading && phoneCheckError && (
+              <p className="mt-1 text-xs text-[#DB574F] font-pretendard">
+                관리자에게 문의해주세요.
               </p>
             )}
           </div>

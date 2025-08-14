@@ -1,5 +1,5 @@
 import { ApiError, authApi } from '@/lib/api'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 interface LoginProps {
@@ -13,6 +13,30 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [emailError, setEmailError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+
+  // 로그인 화면 진입 시, 회원가입/임시 캐시 정리
+  useEffect(() => {
+    try {
+      const keysToClear = [
+        'signup.name',
+        'signup.birthDate',
+        'signup.gender',
+        'signup.phone',
+        'signup.email',
+        'signup.password',
+        'signup.passwordConfirm',
+        'signup.postcode',
+        'signup.address1',
+        'signup.address2',
+        'signup.emailSendOk',
+        'signup.verificationCode',
+        'signup.phoneChecked',
+        'signup.phoneDuplicate',
+        'signup.emailVerifySuccess',
+      ]
+      keysToClear.forEach(k => localStorage.removeItem(k))
+    } catch {}
+  }, [])
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
