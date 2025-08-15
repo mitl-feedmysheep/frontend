@@ -9,6 +9,7 @@ interface AutoGrowInputProps {
   inputClassName?: string // applied to contenteditable div
   style?: React.CSSProperties
   autoFocus?: boolean
+  onClick?: (e: React.MouseEvent) => void
 }
 
 function AutoGrowInput({
@@ -20,6 +21,7 @@ function AutoGrowInput({
   inputClassName = '',
   style,
   autoFocus = false,
+  onClick,
 }: AutoGrowInputProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -58,6 +60,8 @@ function AutoGrowInput({
   }
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = e => {
+    // 상위 카드 토글 등으로 이벤트 전파되지 않도록 차단
+    e.stopPropagation()
     // Enter 차단 (한 줄 입력 유지)
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -85,6 +89,10 @@ function AutoGrowInput({
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
+        onClick={e => {
+          e.stopPropagation()
+          onClick?.(e)
+        }}
         spellCheck={false}
         className={`w-full p-1 text-[#405347] font-normal text-base leading-tight font-pretendard bg-transparent border-none outline-none whitespace-pre-wrap break-words ${
           readOnly ? 'cursor-default' : ''

@@ -1202,6 +1202,12 @@ const MemberCard: React.FC<MemberCardProps> = ({
                 readOnly={isReadOnly}
                 className="border-none"
                 inputClassName="rounded-lg bg-transparent"
+                // 상위 카드 토글 방지를 위해 클릭/키 이벤트 전파 중단
+                // Type narrowing을 위해 any 캐스팅 사용하지 않음
+                // onClick은 wrapper에서 처리되므로 여기서는 stopPropagation만
+                onClick={(e: React.MouseEvent) =>
+                  e.stopPropagation() as unknown as void
+                }
               />
             </div>
           </div>
@@ -1251,6 +1257,9 @@ const MemberCard: React.FC<MemberCardProps> = ({
                     inputClassName="rounded-lg bg-transparent"
                     autoFocus={
                       index === prayerInputs.length - 1 && input.value === ''
+                    }
+                    onClick={(e: React.MouseEvent) =>
+                      e.stopPropagation() as unknown as void
                     }
                   />
                   {!isReadOnly && (
