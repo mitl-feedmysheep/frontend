@@ -1,4 +1,5 @@
 import { ApiError, gatheringsApi, groupsApi } from '@/lib/api'
+import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import AutoGrowInput from './AutoGrowInput'
@@ -25,6 +26,24 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
     null
   )
   const [isCurrentUserLeader, setIsCurrentUserLeader] = useState(false)
+  const [isSavingMeeting, setIsSavingMeeting] = useState(false)
+  const [meetingError, setMeetingError] = useState('')
+  const [meetingForm, setMeetingForm] = useState({
+    date: '',
+    place: '',
+    startTime: '',
+    endTime: '',
+    description: '',
+    leaderComment: '',
+  })
+  const [hasMeetingEdits, setHasMeetingEdits] = useState(false)
+  const [editingMeetingField, setEditingMeetingField] = useState<
+    null | 'date' | 'place' | 'time' | 'description' | 'leaderComment'
+  >(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
+  const placeInputRef = useRef<HTMLInputElement>(null)
+  const startTimeRef = useRef<HTMLInputElement>(null)
+  const endTimeRef = useRef<HTMLInputElement>(null)
 
   // 토스트 알림 표시 함수
   const showToast = (message: string) => {
@@ -86,6 +105,27 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
         setLoading(true)
         const data = await gatheringsApi.getDetail(gatheringId)
         setGathering(data)
+        // 초기 편집 폼 값 설정
+        const toHM = (iso: string) => {
+          try {
+            const d = new Date(iso)
+            const hh = String(d.getHours()).padStart(2, '0')
+            const mm = String(d.getMinutes()).padStart(2, '0')
+            return `${hh}:${mm}`
+          } catch {
+            return '00:00'
+          }
+        }
+        setMeetingForm({
+          date: data.date,
+          place: data.place || '',
+          startTime: toHM(data.startedAt),
+          endTime: toHM(data.endedAt),
+          description: (data.description || '').trim(),
+          leaderComment: (data.leaderComment || '').trim(),
+        })
+        setHasMeetingEdits(false)
+        setMeetingError('')
       } catch (err) {
         console.error('모임 상세 정보 조회 실패:', err)
         if (err instanceof ApiError) {
@@ -105,6 +145,147 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
 
     fetchGatheringDetail()
   }, [gatheringId])
+
+  // 모임 편집 폼 변경 핸들러 및 유효성 검사
+  const timeToMinutes = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m
+  }
+
+  const validateMeetingForm = (form: typeof meetingForm): string => {
+    if (!form.date) return '날짜를 선택해주세요.'
+    if (!form.place || form.place.trim() === '') return '장소를 입력해주세요.'
+    if (!form.startTime) return '시작 시간을 선택해주세요.'
+    if (!form.endTime) return '종료 시간을 선택해주세요.'
+    if (timeToMinutes(form.startTime) >= timeToMinutes(form.endTime)) {
+      return '시작 시간은 종료 시간보다 빨라야 합니다.'
+    }
+    return ''
+  }
+
+  // formatWeekFormat 은 CreateMeeting에서 export 된 것을 사용
+
+  const handleMeetingFormChange = (
+    field: keyof typeof meetingForm,
+    value: string
+  ) => {
+    setMeetingForm(prev => {
+      const next = { ...prev, [field]: value }
+      setMeetingError(validateMeetingForm(next))
+      if (gathering) {
+        const original = {
+          date: gathering.date,
+          place: gathering.place || '',
+          startTime: (() => {
+            const d = new Date(gathering.startedAt)
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+          })(),
+          endTime: (() => {
+            const d = new Date(gathering.endedAt)
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+          })(),
+          description: (gathering.description || '').trim(),
+          leaderComment: (gathering.leaderComment || '').trim(),
+        }
+        setHasMeetingEdits(
+          original.date !== next.date ||
+            original.place !== next.place ||
+            original.startTime !== next.startTime ||
+            original.endTime !== next.endTime ||
+            original.description !== next.description ||
+            original.leaderComment !== next.leaderComment
+        )
+      }
+      return next
+    })
+  }
+
+  const handleSaveMeeting = async () => {
+    if (!gathering || !isCurrentUserLeader) return
+    const errMsg = validateMeetingForm(meetingForm)
+    if (errMsg) {
+      setMeetingError(errMsg)
+      return
+    }
+    try {
+      setIsSavingMeeting(true)
+      const payload = {
+        name: formatWeekFormat(meetingForm.date),
+        date: meetingForm.date,
+        place: meetingForm.place.trim(),
+        startedAt: convertKSTtoUTC(meetingForm.date, meetingForm.startTime),
+        endedAt: convertKSTtoUTC(meetingForm.date, meetingForm.endTime),
+        description: meetingForm.description.trim(),
+        leaderComment: meetingForm.leaderComment.trim(),
+      }
+      const response = await gatheringsApi.update(gathering.id, payload)
+      // 기존 멤버 목록 유지하면서 헤더 정보만 갱신
+      setGathering(prev =>
+        prev
+          ? {
+              ...prev,
+              name: response.name,
+              date: response.date,
+              place: response.place,
+              startedAt: response.startedAt,
+              endedAt: response.endedAt,
+              description: response.description,
+              leaderComment: response.leaderComment,
+            }
+          : prev
+      )
+      setHasMeetingEdits(false)
+      setMeetingError('')
+      showToast('모임 정보가 저장되었어요')
+    } catch (err) {
+      console.error('모임 정보 저장 실패:', err)
+      if (err instanceof ApiError) {
+        setMeetingError(err.message)
+        alert(err.message)
+      } else {
+        setMeetingError('모임 정보를 저장하는데 실패했습니다.')
+        alert('모임 정보를 저장하는데 실패했습니다.')
+      }
+    } finally {
+      setIsSavingMeeting(false)
+    }
+  }
+
+  // 편집 진입 시 즉시 포커스/피커 열기
+  useEffect(() => {
+    if (editingMeetingField === 'date') {
+      const el = dateInputRef.current
+      if (el) {
+        el.focus()
+        ;(el as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
+        setTimeout(() => {
+          try {
+            ;(
+              el as HTMLInputElement & { showPicker?: () => void }
+            ).showPicker?.()
+          } catch (_error) {
+            // ignore
+          }
+        }, 0)
+      }
+    }
+    if (editingMeetingField === 'place') {
+      const el = placeInputRef.current
+      if (el) {
+        el.focus()
+        const val = el.value
+        el.value = ''
+        el.value = val
+      }
+    }
+    if (editingMeetingField === 'time') {
+      const el = startTimeRef.current
+      if (el) {
+        el.focus()
+        ;(el as HTMLInputElement & { showPicker?: () => void }).showPicker?.()
+      }
+    }
+  }, [editingMeetingField])
 
   // 날짜 포맷팅 함수들
   const formatDateToKorean = (dateString: string): string => {
@@ -217,10 +398,32 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
                 />
               </svg>
             </div>
-            <div className="flex-1">
+            <div
+              className="flex-1 relative"
+              onClick={() => {
+                if (!isCurrentUserLeader) return
+                setEditingMeetingField('date')
+              }}
+            >
               <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard p-1">
-                {formatDateToKorean(gathering.date)}
+                {formatDateToKorean(
+                  editingMeetingField === 'date' && meetingForm.date
+                    ? meetingForm.date
+                    : gathering.date
+                )}
               </div>
+              {/* 편집 시 달력 입력 */}
+              {isCurrentUserLeader && editingMeetingField === 'date' && (
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={meetingForm.date}
+                  onChange={e =>
+                    handleMeetingFormChange('date', e.target.value)
+                  }
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              )}
             </div>
           </div>
 
@@ -237,10 +440,29 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
                 />
               </svg>
             </div>
-            <div className="flex-1 p-1">
-              <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
-                {gathering.place}
-              </div>
+            <div
+              className="flex-1 p-1"
+              onClick={() => {
+                if (!isCurrentUserLeader) return
+                setEditingMeetingField('place')
+              }}
+            >
+              {isCurrentUserLeader && editingMeetingField === 'place' ? (
+                <input
+                  ref={placeInputRef}
+                  type="text"
+                  value={meetingForm.place}
+                  onChange={e =>
+                    handleMeetingFormChange('place', e.target.value)
+                  }
+                  className="w-full text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard bg-transparent border-b border-[#C2D0C7] outline-none"
+                  placeholder="모임 장소를 입력해주세요"
+                />
+              ) : (
+                <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+                  {gathering.place}
+                </div>
+              )}
             </div>
           </div>
 
@@ -257,35 +479,180 @@ const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
                 />
               </svg>
             </div>
-            <div className="flex-1 p-1">
-              <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
-                {formatTime(gathering.startedAt)}
-              </div>
+            <div
+              className="flex-1 p-1"
+              onClick={() => {
+                if (!isCurrentUserLeader) return
+                setEditingMeetingField('time')
+              }}
+            >
+              {isCurrentUserLeader && editingMeetingField === 'time' ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={startTimeRef}
+                    type="time"
+                    value={meetingForm.startTime}
+                    onChange={e =>
+                      handleMeetingFormChange('startTime', e.target.value)
+                    }
+                    className="w-[130px] p-1 text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard bg-transparent border-b border-[#C2D0C7] outline-none"
+                  />
+                  <span className="text-[#000000] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard px-1">
+                    ~
+                  </span>
+                  <input
+                    ref={endTimeRef}
+                    type="time"
+                    value={meetingForm.endTime}
+                    onChange={e =>
+                      handleMeetingFormChange('endTime', e.target.value)
+                    }
+                    className="w-[130px] p-1 text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard bg-transparent border-b border-[#C2D0C7] outline-none"
+                  />
+                </div>
+              ) : (
+                <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard">
+                  {`${formatTime(gathering.startedAt)} ~ ${formatTime(gathering.endedAt)}`}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Description Field (if exists) */}
-          {gathering.description && gathering.description.trim() && (
-            <>
+          {/* Description Field */}
+          <>
+            {/* Divider */}
+            <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+
+            <div className="flex items-start gap-1">
+              <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center mt-1">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M15 2.25H3C2.17157 2.25 1.5 2.92157 1.5 3.75V14.25C1.5 15.0784 2.17157 15.75 3 15.75H15C15.8284 15.75 16.5 15.0784 16.5 14.25V3.75C16.5 2.92157 15.8284 2.25 15 2.25ZM15 14.25H3V3.75H15V14.25ZM4.5 6H13.5V7.5H4.5V6ZM4.5 9H13.5V10.5H4.5V9ZM4.5 12H10.5V13.5H4.5V12Z"
+                    fill="#8AA594"
+                  />
+                </svg>
+              </div>
+              <div
+                className="flex-1 p-1"
+                onClick={() => {
+                  if (!isCurrentUserLeader) return
+                  setEditingMeetingField('description')
+                }}
+              >
+                {isCurrentUserLeader &&
+                editingMeetingField === 'description' ? (
+                  <AutoGrowInput
+                    value={meetingForm.description}
+                    onChange={next =>
+                      handleMeetingFormChange(
+                        'description',
+                        next.replace(/\n/g, ' ')
+                      )
+                    }
+                    placeholder="특이사항"
+                    className="border-none"
+                    inputClassName="rounded bg-transparent"
+                    autoFocus
+                  />
+                ) : (
+                  <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line">
+                    {(gathering.description || '').trim() || ''}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Leader/Admin Comments */}
+            <div className="space-y-2 pt-1">
               {/* Divider */}
               <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
-
-              <div className="flex items-start gap-1">
-                <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center mt-1">
+              {/* Leader Comment (editable for leader only) */}
+              <div className="flex items-center gap-1">
+                <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path
-                      d="M15 2.25H3C2.17157 2.25 1.5 2.92157 1.5 3.75V14.25C1.5 15.0784 2.17157 15.75 3 15.75H15C15.8284 15.75 16.5 15.0784 16.5 14.25V3.75C16.5 2.92157 15.8284 2.25 15 2.25ZM15 14.25H3V3.75H15V14.25ZM4.5 6H13.5V7.5H4.5V6ZM4.5 9H13.5V10.5H4.5V9ZM4.5 12H10.5V13.5H4.5V12Z"
+                      d="M4 3h10a1 1 0 011 1v7.5a1 1 0 01-1 1H8l-3.5 2.5V12H4a1 1 0 01-1-1V4a1 1 0 011-1z"
                       fill="#8AA594"
                     />
                   </svg>
                 </div>
+                <div
+                  className="flex-1 p-1"
+                  onClick={() => {
+                    if (!isCurrentUserLeader) return
+                    setEditingMeetingField('leaderComment')
+                  }}
+                >
+                  {isCurrentUserLeader &&
+                  editingMeetingField === 'leaderComment' ? (
+                    <AutoGrowInput
+                      value={meetingForm.leaderComment}
+                      onChange={next =>
+                        handleMeetingFormChange(
+                          'leaderComment',
+                          next.replace(/\n/g, ' ')
+                        )
+                      }
+                      placeholder="코멘트를 작성해주세요."
+                      className="border-none"
+                      inputClassName="rounded bg-transparent"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line">
+                      {(gathering.leaderComment || '').trim() || '리더 코멘트'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
+              {/* Admin Comment (read-only) */}
+              <div className="flex items-center gap-1">
+                <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M9 1.5l2.09 3.76 4.09.56-3.09 2.96.73 4.06L9 10.77 5.18 12.84l.73-4.06L2.82 5.82l4.09-.56L9 1.5z"
+                      stroke="#8AA594"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                  </svg>
+                </div>
                 <div className="flex-1 p-1">
-                  <div className="text-[#405347] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line">
-                    {gathering.description}
+                  <div className="text-[#709180] font-normal text-base leading-tight tracking-[-0.02em] font-pretendard whitespace-pre-line">
+                    {(gathering.adminComment || '').trim() || '목회자 코멘트'}
                   </div>
                 </div>
               </div>
-            </>
+            </div>
+          </>
+
+          {/* 에러 메시지 */}
+          {meetingError && (
+            <div className="px-1 pt-1">
+              <p className="text-red-500 text-sm font-pretendard">
+                {meetingError}
+              </p>
+            </div>
+          )}
+
+          {/* Save Button for Meeting Edits - moved under description */}
+          {isCurrentUserLeader && hasMeetingEdits && (
+            <div className="pt-2">
+              <button
+                onClick={handleSaveMeeting}
+                disabled={!!meetingError || isSavingMeeting}
+                className={`w-full ${
+                  !!meetingError || isSavingMeeting
+                    ? 'bg-[#A5BAAF]'
+                    : 'bg-[#5F7B6D]'
+                } text-white py-2.5 rounded-lg font-medium text-base font-pretendard`}
+              >
+                {isSavingMeeting ? '저장 중...' : '수정'}
+              </button>
+            </div>
           )}
         </div>
 

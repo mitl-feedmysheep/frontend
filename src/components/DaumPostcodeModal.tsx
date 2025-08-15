@@ -77,8 +77,10 @@ const DaumPostcodeModal: React.FC<DaumPostcodeModalProps> = ({
         }) => {
           const address = data.roadAddress || data.jibunAddress || ''
           const zonecode = data.zonecode || ''
+          // onSelect을 먼저 호출해 부모가 같은 사용자 제스처 컨텍스트에서 포커스를 줄 수 있도록 함
           onSelect({ zonecode, address })
-          onClose()
+          // 포커스가 열릴 시간을 확보하기 위해 약간 지연 후 모달 닫기
+          setTimeout(() => onClose(), 120)
         },
         width: '100%',
         height: '100%',

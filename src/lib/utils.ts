@@ -65,6 +65,36 @@ export function convertKSTtoUTC(dateStr: string, timeStr: string): string {
   return kstDateTime.toISOString()
 }
 
+// 주차 계산: 특정 날짜의 월 내 몇 번째 주인지 계산
+export function getWeekOfMonth(dateString: string): number {
+  try {
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = date.getMonth()
+
+    const firstDay = new Date(year, month, 1)
+    const dayOfMonth = date.getDate()
+    const firstDayOfWeek = firstDay.getDay() // 0: 일요일
+
+    return Math.ceil((dayOfMonth + firstDayOfWeek) / 7)
+  } catch {
+    return 1
+  }
+}
+
+// 년/월/주차 포맷 (예: "25년 2월 3주차")
+export function formatWeekFormat(dateString: string): string {
+  try {
+    const date = new Date(dateString)
+    const year = String(date.getFullYear()).slice(-2)
+    const month = date.getMonth() + 1
+    const week = getWeekOfMonth(dateString)
+    return `${year}년 ${month}월 ${week}주차`
+  } catch {
+    return '25년 1월 1주차'
+  }
+}
+
 // Local storage utility
 export const storage = {
   get: (key: string) => {

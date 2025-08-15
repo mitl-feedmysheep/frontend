@@ -496,6 +496,46 @@ export const gatheringsApi = {
     return data
   },
 
+  // 모임 정보 업데이트 (날짜/장소/시간/설명)
+  update: async (
+    gatheringId: string,
+    payload: {
+      name: string
+      date: string
+      place: string
+      startedAt: string
+      endedAt: string
+      description: string
+      leaderComment?: string
+    }
+  ): Promise<GatheringResponse> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/gatherings/${gatheringId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authToken,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: GatheringResponse = await response.json()
+    return data
+  },
+
   // 멤버 정보 업데이트 (출석, 나눔, 기도제목)
   updateMember: async (
     gatheringId: string,

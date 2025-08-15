@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { ApiError, gatheringsApi } from '../lib/api'
-import { convertKSTtoUTC } from '../lib/utils'
+import { convertKSTtoUTC, formatWeekFormat } from '../lib/utils'
 import type { CreateGatheringRequest } from '../types'
 import AutoGrowInput from './AutoGrowInput'
 import FixedBottomButton from './FixedBottomButton'
+
+// 주차 계산 유틸은 lib/utils 로 이동하여 재사용
 
 interface CreateMeetingProps {
   onBack: () => void
@@ -83,44 +85,7 @@ const CreateMeeting: React.FC<CreateMeetingProps> = ({
     }
   }
 
-  // 날짜에서 주차 계산하는 함수
-  const getWeekOfMonth = (dateString: string): number => {
-    try {
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = date.getMonth()
-
-      // 해당 월의 첫 번째 날
-      const firstDay = new Date(year, month, 1)
-
-      // 해당 날짜까지의 일수
-      const dayOfMonth = date.getDate()
-
-      // 첫 번째 날의 요일 (0: 일요일, 6: 토요일)
-      const firstDayOfWeek = firstDay.getDay()
-
-      // 주차 계산: (날짜 + 첫째날 요일 - 1) / 7 + 1
-      const weekOfMonth = Math.ceil((dayOfMonth + firstDayOfWeek) / 7)
-
-      return weekOfMonth
-    } catch (_error) {
-      return 1 // 에러 시 1주차로 기본값
-    }
-  }
-
-  // 년월주차 포맷 생성 함수
-  const formatWeekFormat = (dateString: string): string => {
-    try {
-      const date = new Date(dateString)
-      const year = String(date.getFullYear()).slice(-2)
-      const month = date.getMonth() + 1
-      const week = getWeekOfMonth(dateString)
-
-      return `${year}년 ${month}월 ${week}주차`
-    } catch (_error) {
-      return '2025년 1월 1주차' // 에러 시 기본값
-    }
-  }
+  // getWeekOfMonth, formatWeekFormat은 상단 export 사용
 
   // 시간을 분 단위로 변환하는 함수
   const timeToMinutes = (timeString: string): number => {

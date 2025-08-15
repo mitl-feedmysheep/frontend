@@ -518,11 +518,13 @@ const Signup: React.FC = () => {
               <div className="mt-3 flex items-end gap-2">
                 <input
                   type="text"
-                  inputMode="numeric"
                   name="verificationCode"
                   value={verificationCode}
                   onChange={e => setVerificationCode(e.target.value)}
                   placeholder="이메일로 받은 코드를 붙여넣기"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   className="flex-1 pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
                 />
                 <button
@@ -663,6 +665,7 @@ const Signup: React.FC = () => {
                 onChange={e => setAddress2(e.target.value)}
                 placeholder="상세주소를 입력해주세요"
                 ref={address2Ref}
+                autoComplete="address-line2"
                 className="w-full pb-1 border-b border-[#C3CCC9] focus:border-b-2 focus:border-[#2F9E44] caret-[#2F9E44] placeholder-[#C3CCC9] text-[17px] text-gray-900 outline-none font-pretendard"
               />
             </div>
@@ -711,7 +714,20 @@ const Signup: React.FC = () => {
           setPostcode(zonecode)
           setAddress1(address)
           setShowPostcode(false)
-          setTimeout(() => address2Ref.current?.focus(), 0)
+          // 사용자 제스처 컨텍스트에서 즉시 포커스 시도
+          requestAnimationFrame(() => {
+            const el = address2Ref.current
+            if (!el) return
+            // 포커스 및 캐럿을 끝으로 이동
+            el.focus()
+            const len = el.value?.length ?? 0
+            try {
+              el.setSelectionRange(len, len)
+            } catch (_e) {
+              // ignore
+            }
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          })
         }}
       />
     </div>

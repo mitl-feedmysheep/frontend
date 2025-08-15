@@ -65,6 +65,8 @@ export interface Gathering {
   totalWorshipAttendanceCount: number
   totalGatheringAttendanceCount: number
   totalPrayerRequestCount: number
+  leaderComment?: string
+  adminComment?: string
 }
 
 export interface CreateGatheringRequest {
@@ -85,6 +87,8 @@ export interface GatheringResponse {
   startedAt: string
   endedAt: string
   place: string
+  leaderComment?: string
+  adminComment?: string
 }
 
 export interface GatheringDetail {
@@ -96,6 +100,8 @@ export interface GatheringDetail {
   endedAt: string
   place: string
   gatheringMembers: GatheringMember[]
+  leaderComment?: string
+  adminComment?: string
 }
 
 export interface GatheringMember {
