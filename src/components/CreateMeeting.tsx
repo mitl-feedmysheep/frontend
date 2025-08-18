@@ -336,8 +336,8 @@ const CreateMeeting: React.FC<CreateMeetingProps> = ({
         <div className="h-0 border-t border-dashed border-[#C2D0C7]"></div>
 
         {/* Notes Field */}
-        <div className="flex items-start gap-1">
-          <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center mt-1">
+        <div className="flex items-center gap-1">
+          <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
                 d="M9 1.5L11.09 5.26L15.18 5.82L12.09 8.78L12.82 12.84L9 10.77L5.18 12.84L5.91 8.78L2.82 5.82L6.91 5.26L9 1.5Z"
