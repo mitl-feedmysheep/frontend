@@ -175,11 +175,11 @@ const Home: React.FC = () => {
     }
   }, [churchIndex, churches])
 
-  // 선택된 교회의 전체 기도제목 개수 집계
+  // 선택된 교회의 전체 기도제목 개수 조회
   useEffect(() => {
     let mounted = true
 
-    const computeChurchPrayerCount = async () => {
+    const fetchChurchPrayerCount = async () => {
       if (churches.length === 0) {
         if (mounted) {
           setChurchPrayerCount(0)
@@ -200,45 +200,20 @@ const Home: React.FC = () => {
       try {
         setPrayerCountLoading(true)
         console.warn(
-          `🔄 Aggregating prayer counts for church: ${currentChurch.name} (${currentChurch.id})`
+          `🔄 Fetching prayer count for church: ${currentChurch.name} (${currentChurch.id})`
         )
 
-        if (groups.length === 0) {
-          if (mounted) {
-            setChurchPrayerCount(0)
-            setPrayerCountLoading(false)
-          }
-          return
-        }
-
-        // 각 그룹의 모임을 불러와 totalPrayerRequestCount 합산
-        const results = await Promise.allSettled(
-          groups.map(g => groupsApi.getGroupGatherings(g.id))
+        // 새로운 API 엔드포인트 호출
+        const response = await churchesApi.getPrayerRequestCount(
+          currentChurch.id
         )
-
-        let total = 0
-        results.forEach(result => {
-          if (result.status === 'fulfilled') {
-            const gatherings = result.value
-            const sumForGroup = gatherings.reduce((acc, ga) => {
-              const count = Number(ga.totalPrayerRequestCount || 0)
-              return acc + (isNaN(count) ? 0 : count)
-            }, 0)
-            total += sumForGroup
-          } else {
-            console.error(
-              '❌ Failed to fetch gatherings for a group:',
-              result.reason
-            )
-          }
-        })
 
         if (mounted) {
-          setChurchPrayerCount(total)
-          console.warn(`📈 Total church prayer requests aggregated: ${total}`)
+          setChurchPrayerCount(response.count)
+          console.warn(`📈 Church prayer requests count: ${response.count}`)
         }
       } catch (error) {
-        console.error('❌ Error aggregating church prayer counts:', error)
+        console.error('❌ Error fetching church prayer count:', error)
         if (mounted) {
           setChurchPrayerCount(0)
         }
@@ -249,12 +224,12 @@ const Home: React.FC = () => {
       }
     }
 
-    computeChurchPrayerCount()
+    fetchChurchPrayerCount()
 
     return () => {
       mounted = false
     }
-  }, [churchIndex, churches, groups])
+  }, [churchIndex, churches])
 
   // 사용자 정보 가져오기
   useEffect(() => {
@@ -438,16 +413,15 @@ const Home: React.FC = () => {
       </section>
 
       {/* Church Prayer Summary Section */}
-      <section className="px-4 mt-2">
-        <p className="text-[#709180] font-normal text-xs leading-tight tracking-[-0.02em] font-pretendard mb-1">
-          지금까지
-        </p>
+      <section className="px-4 mt-2 mb-2">
         <h2 className="text-[#313331] font-bold text-xl leading-tight tracking-[-0.02em] font-pretendard">
-          우리교회에 쌓인 전체 기도제목은{' '}
+          우리 교회에 쌓인 기도제목은{' '}
           <span className="text-[#70917C]">
-            {prayerCountLoading ? '-' : (churchPrayerCount ?? '-')}개
-          </span>{' '}
-          에요!
+            {prayerCountLoading
+              ? '-'
+              : (churchPrayerCount?.toLocaleString() ?? '-')}
+          </span>
+          개에요!
         </h2>
       </section>
 

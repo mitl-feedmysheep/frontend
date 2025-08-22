@@ -434,6 +434,39 @@ export const churchesApi = {
     const data: Church[] = await response.json()
     return data
   },
+
+  // 교회 전체 기도제목 개수 조회
+  getPrayerRequestCount: async (
+    churchId: string
+  ): Promise<{ count: number }> => {
+    const url = `${API_BASE_URL}/churches/${churchId}/prayer-request-count`
+
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    if (token) {
+      headers['Authorization'] = `${token}`
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: { count: number } = await response.json()
+    return data
+  },
 }
 
 // Gathering API
