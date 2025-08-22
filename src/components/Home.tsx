@@ -11,6 +11,10 @@ const Home: React.FC = () => {
   const [showChurchDropdown, setShowChurchDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
+  const [churchPrayerCount, setChurchPrayerCount] = useState<number | null>(
+    null
+  )
+  const [prayerCountLoading, setPrayerCountLoading] = useState<boolean>(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // 로컬스토리지에서 교회 ID 가져오기/저장하기
@@ -168,6 +172,62 @@ const Home: React.FC = () => {
 
         fetchGroupsForChurch()
       }
+    }
+  }, [churchIndex, churches])
+
+  // 선택된 교회의 전체 기도제목 개수 조회
+  useEffect(() => {
+    let mounted = true
+
+    const fetchChurchPrayerCount = async () => {
+      if (churches.length === 0) {
+        if (mounted) {
+          setChurchPrayerCount(0)
+          setPrayerCountLoading(false)
+        }
+        return
+      }
+
+      const currentChurch = churches[churchIndex]
+      if (!currentChurch) {
+        if (mounted) {
+          setChurchPrayerCount(0)
+          setPrayerCountLoading(false)
+        }
+        return
+      }
+
+      try {
+        setPrayerCountLoading(true)
+        console.warn(
+          `🔄 Fetching prayer count for church: ${currentChurch.name} (${currentChurch.id})`
+        )
+
+        // 새로운 API 엔드포인트 호출
+        const response = await churchesApi.getPrayerRequestCount(
+          currentChurch.id
+        )
+
+        if (mounted) {
+          setChurchPrayerCount(response.count)
+          console.warn(`📈 Church prayer requests count: ${response.count}`)
+        }
+      } catch (error) {
+        console.error('❌ Error fetching church prayer count:', error)
+        if (mounted) {
+          setChurchPrayerCount(0)
+        }
+      } finally {
+        if (mounted) {
+          setPrayerCountLoading(false)
+        }
+      }
+    }
+
+    fetchChurchPrayerCount()
+
+    return () => {
+      mounted = false
     }
   }, [churchIndex, churches])
 
@@ -350,6 +410,19 @@ const Home: React.FC = () => {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Church Prayer Summary Section */}
+      <section className="px-4 mt-2 mb-2">
+        <h2 className="text-[#313331] font-bold text-xl leading-tight tracking-[-0.02em] font-pretendard">
+          우리 교회에 쌓인 기도제목은{' '}
+          <span className="text-[#70917C]">
+            {prayerCountLoading
+              ? '-'
+              : (churchPrayerCount?.toLocaleString() ?? '-')}
+          </span>
+          개에요!
+        </h2>
       </section>
 
       {/* My Groups Section */}
