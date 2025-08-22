@@ -418,8 +418,8 @@ const Home: React.FC = () => {
           우리 교회에 쌓인 기도제목은{' '}
           <span className="text-[#70917C]">
             {prayerCountLoading
-              ? '-'
-              : (churchPrayerCount?.toLocaleString() ?? '-')}
+              ? 0
+              : (churchPrayerCount?.toLocaleString() ?? 0)}
           </span>
           개에요!
         </h2>
