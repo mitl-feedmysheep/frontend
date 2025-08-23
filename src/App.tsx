@@ -1,4 +1,5 @@
 import { authApi } from '@/lib/api'
+import { isAdminDomain } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
@@ -8,16 +9,18 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import Account from './components/Account'
-import AttendanceCheck from './components/AttendanceCheck'
-import ChangePassword from './components/ChangePassword'
-import CreateMeeting from './components/CreateMeeting'
-import GroupDetail from './components/GroupDetail'
-import Home from './components/Home'
-import Login from './components/Login'
-import Settings from './components/Settings'
-import Signup from './components/Signup'
-import { ToastProvider } from './components/ToastProvider'
+import AdminApp from './components/admin/AdminApp'
+import Account from './components/app/Account'
+import AttendanceCheck from './components/app/AttendanceCheck'
+import ChangePassword from './components/app/ChangePassword'
+import CreateMeeting from './components/app/CreateMeeting'
+import GroupDetail from './components/app/GroupDetail'
+import Home from './components/app/Home'
+import Login from './components/app/Login'
+import Settings from './components/app/Settings'
+import Signup from './components/app/Signup'
+import SplashScreen from './components/app/SplashScreen'
+import { ToastProvider } from './components/common/ToastProvider'
 
 // Login Wrapper 컴포넌트
 const LoginWrapper = () => {
@@ -101,6 +104,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [showSplash, setShowSplash] = useState<boolean>(true)
 
   // 앱 시작 시 로그인 상태 확인
   useEffect(() => {
@@ -111,6 +115,11 @@ function App() {
     checkAuthStatus()
   }, [])
 
+  // 스플래시 스크린 완료 핸들러
+  const handleSplashComplete = () => {
+    setShowSplash(false)
+  }
+
   // 로딩 중일 때
   if (isLoading) {
     return (
@@ -120,6 +129,17 @@ function App() {
     )
   }
 
+  // 어드민 도메인인 경우 어드민 앱 렌더링 (스플래시 없음)
+  if (isAdminDomain()) {
+    return <AdminApp />
+  }
+
+  // 일반 사용자 앱에서 스플래시 스크린 표시
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />
+  }
+
+  // 일반 사용자 앱 렌더링
   return (
     <BrowserRouter>
       <ToastProvider>

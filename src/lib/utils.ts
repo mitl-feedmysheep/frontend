@@ -122,3 +122,35 @@ export const storage = {
     }
   },
 }
+
+// 서브도메인 감지 함수
+export function getSubdomain(): string | null {
+  if (typeof window === 'undefined') return null
+
+  const hostname = window.location.hostname
+  const parts = hostname.split('.')
+
+  // localhost나 IP 주소인 경우
+  if (hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    return null
+  }
+
+  // 서브도메인이 있는 경우 (예: admin.intotheheaven.app)
+  if (parts.length > 2) {
+    return parts[0]
+  }
+
+  return null
+}
+
+// 어드민 도메인인지 확인
+export function isAdminDomain(): boolean {
+  // 개발 환경에서 환경변수로 어드민 모드 확인
+  if (import.meta.env.VITE_ADMIN_MODE === 'true') {
+    return true
+  }
+
+  // 프로덕션에서는 서브도메인으로 확인
+  const subdomain = getSubdomain()
+  return subdomain === 'admin'
+}

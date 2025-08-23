@@ -1,10 +1,10 @@
+import { useToast } from '@/components/common/ToastProvider'
 import useLocalStorage from '@/hooks/useLocalStorage'
 import { ApiError, authApi } from '@/lib/api'
 import type { SignupRequest } from '@/types'
 import React, { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DaumPostcodeModal from './DaumPostcodeModal'
-import { useToast } from './ToastProvider'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

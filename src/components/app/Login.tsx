@@ -108,8 +108,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       <main className="flex-1 flex flex-col items-center px-4">
         {/* Logo */}
         <div className="mt-16 mb-24">
-          <h2 className="text-4xl font-extrabold text-black font-pretendard">
-            LOGO
+          <h2 className="text-4xl font-extrabold text-[#5F7B6D] font-pretendard">
+            IntoTheHeaven
           </h2>
         </div>
 
@@ -205,7 +205,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               className={`w-full py-3 rounded-lg font-medium font-pretendard transition-colors mt-6 ${
                 isLoading
                   ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-[#5F7B6D] text-white hover:bg-[#4A6356]'
               }`}
             >
               {isLoading ? '로그인 중...' : '로그인'}

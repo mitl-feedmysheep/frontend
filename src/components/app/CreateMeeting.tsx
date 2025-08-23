@@ -1,7 +1,7 @@
+import { ApiError, gatheringsApi } from '@/lib/api'
+import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
+import type { CreateGatheringRequest } from '@/types'
 import React, { useEffect, useState } from 'react'
-import { ApiError, gatheringsApi } from '../lib/api'
-import { convertKSTtoUTC, formatWeekFormat } from '../lib/utils'
-import type { CreateGatheringRequest } from '../types'
 import AutoGrowInput from './AutoGrowInput'
 import FixedBottomButton from './FixedBottomButton'
 

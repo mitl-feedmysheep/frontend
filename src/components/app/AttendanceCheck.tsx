@@ -3,7 +3,7 @@ import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import AutoGrowInput from './AutoGrowInput'
-import ToastNotification from './ToastNotification'
+import ToastNotification from '@/components/common/ToastNotification'
 
 interface AttendanceCheckProps {
   onBack: () => void

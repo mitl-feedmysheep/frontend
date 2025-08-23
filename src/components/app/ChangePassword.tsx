@@ -1,7 +1,7 @@
 import { ApiError, authApi, membersApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useToast } from './ToastProvider'
+import { useToast } from '@/components/common/ToastProvider'
 
 const ChangePassword: React.FC = () => {
   const navigate = useNavigate()
