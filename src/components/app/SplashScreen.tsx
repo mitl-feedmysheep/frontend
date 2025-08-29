@@ -6,7 +6,10 @@ interface SplashScreenProps {
   onAuthInvalid?: () => void
 }
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({
+  onComplete,
+  onAuthInvalid,
+}) => {
   const [showVerse, setShowVerse] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
 
@@ -58,7 +61,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         // 홈에서 사용할 수 있는 교회 목록 선 로드
         const churches = await churchesApi.getMyChurches()
         sessionStorage.setItem('prefetch.churches', JSON.stringify(churches))
-      } catch (e) {
+      } catch (_err) {
         // 인증 실패 등 → 로그인으로 이동
         onComplete()
         onAuthInvalid?.()
@@ -87,7 +90,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
       clearTimeout(fadeTimer)
       clearTimeout(completeTimer)
     }
-  }, [onComplete])
+  }, [onComplete, onAuthInvalid])
 
   return (
     <div
