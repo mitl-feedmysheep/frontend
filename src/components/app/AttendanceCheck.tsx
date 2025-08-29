@@ -1,9 +1,9 @@
-import { ApiError, gatheringsApi, groupsApi } from '@/lib/api'
+import ToastNotification from '@/components/common/ToastNotification'
+import { ApiError, gatheringsApi, groupsApi, prayersApi } from '@/lib/api'
 import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import AutoGrowInput from './AutoGrowInput'
-import ToastNotification from '@/components/common/ToastNotification'
 
 interface AttendanceCheckProps {
   onBack: () => void
@@ -733,6 +733,9 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const [isInitialized, setIsInitialized] = useState(false)
   const storyTextareaRef = useRef<HTMLTextAreaElement>(null)
   const [showPulseHint, setShowPulseHint] = useState(false)
+  const [deletingPrayerIds, setDeletingPrayerIds] = useState<
+    Record<string, boolean>
+  >({})
 
   // 초기 로드 시에만 originalMember 설정 (가장 먼저 실행)
   useEffect(() => {
@@ -933,6 +936,48 @@ const MemberCard: React.FC<MemberCardProps> = ({
       setPrayerInputs(newPrayerInputs)
     }
     // 삭제 시에는 즉시 변경사항으로 감지되어 저장 버튼이 표시됨
+  }
+
+  const handleDeletePrayer = async (index: number, input: PrayerInput) => {
+    // 새로 추가한 미저장 항목은 즉시 제거 (API 호출 없음)
+    if (input.id === 'new') {
+      removePrayerInput(index)
+      return
+    }
+
+    try {
+      setDeletingPrayerIds(prev => ({ ...prev, [input.id]: true }))
+
+      // API 호출 (200 OK 시에만 UI 제거)
+      await prayersApi.delete(input.id)
+
+      // 성공 시 UI에서 항목 제거
+      setPrayerInputs(prev => {
+        const next = prev.filter((_, i) => i !== index)
+        return next.length === 0 ? [{ id: 'new', value: '' }] : next
+      })
+
+      // 상위 상태 동기화 (멤버의 prayers에서 해당 항목 제거)
+      const updatedPrayers = (member.prayers || []).filter(
+        p => p.id !== input.id
+      )
+      const updatedMember = { ...member, prayers: updatedPrayers }
+      onChange(updatedMember)
+      setOriginalMember(updatedMember)
+      setHasChanges(false)
+    } catch (err) {
+      console.error('기도제목 삭제 실패:', err)
+      if (err instanceof ApiError) {
+        alert(err.message)
+      } else {
+        alert('기도제목을 삭제하는데 실패했습니다.')
+      }
+    } finally {
+      setDeletingPrayerIds(prev => {
+        const { [input.id]: _removed, ...rest } = prev
+        return rest
+      })
+    }
   }
 
   const updatePrayerInput = (index: number, value: string) => {
@@ -1264,20 +1309,24 @@ const MemberCard: React.FC<MemberCardProps> = ({
                   />
                   {!isReadOnly && (
                     <button
-                      onClick={() => removePrayerInput(index)}
+                      onClick={() => handleDeletePrayer(index, input)}
                       className="flex-shrink-0 w-6 h-6 ml-1 mt-1 inline-flex items-center justify-center text-[#A5BAAF] hover:text-[#5F7B6D] transition-colors self-start"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                      >
-                        <path
-                          d="M6 2V1.5C6 1.22386 6.22386 1 6.5 1H9.5C9.77614 1 10 1.22386 10 1.5V2H13C13.2761 2 13.5 2.22386 13.5 2.5C13.5 2.77614 13.2761 3 13 3H12V13.5C12 14.3284 11.3284 15 10.5 15H5.5C4.67157 15 4 14.3284 4 13.5V3H3C2.72386 3 2.5 2.77614 2.5 2.5C2.5 2.22386 2.72386 2 3 2H6ZM5 3V13.5C5 13.7761 5.22386 14 5.5 14H10.5C10.7761 14 11 13.7761 11 13.5V3H5ZM7 5.5C7 5.22386 6.77614 5 6.5 5C6.22386 5 6 5.22386 6 5.5V11.5C6 11.7761 6.22386 12 6.5 12C6.77614 12 7 11.7761 7 11.5V5.5ZM10 5.5C10 5.22386 9.77614 5 9.5 5C9.22386 5 9 5.22386 9 5.5V11.5C9 11.7761 9.22386 12 9.5 12C9.77614 12 10 11.7761 10 11.5V5.5Z"
-                          fill="currentColor"
-                        />
-                      </svg>
+                      {input.id !== 'new' && deletingPrayerIds[input.id] ? (
+                        <div className="w-4 h-4 border-2 border-[#5F7B6D] border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                        >
+                          <path
+                            d="M6 2V1.5C6 1.22386 6.22386 1 6.5 1H9.5C9.77614 1 10 1.22386 10 1.5V2H13C13.2761 2 13.5 2.22386 13.5 2.5C13.5 2.77614 13.2761 3 13 3H12V13.5C12 14.3284 11.3284 15 10.5 15H5.5C4.67157 15 4 14.3284 4 13.5V3H3C2.72386 3 2.5 2.77614 2.5 2.5C2.5 2.22386 2.72386 2 3 2H6ZM5 3V13.5C5 13.7761 5.22386 14 5.5 14H10.5C10.7761 14 11 13.7761 11 13.5V3H5ZM7 5.5C7 5.22386 6.77614 5 6.5 5C6.22386 5 6 5.22386 6 5.5V11.5C6 11.7761 6.22386 12 6.5 12C6.77614 12 7 11.7761 7 11.5V5.5ZM10 5.5C10 5.22386 9.77614 5 9.5 5C9.22386 5 9 5.22386 9 5.5V11.5C9 11.7761 9.22386 12 9.5 12C9.77614 12 10 11.7761 10 11.5V5.5Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      )}
                     </button>
                   )}
                 </div>

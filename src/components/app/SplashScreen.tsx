@@ -1,7 +1,9 @@
+import { churchesApi, membersApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
 
 interface SplashScreenProps {
   onComplete: () => void
+  onAuthInvalid?: () => void
 }
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
@@ -38,6 +40,33 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   )
 
   useEffect(() => {
+    // 토큰 유효성 확인 및 홈 데이터 사전 로드
+    const precheck = async () => {
+      try {
+        const token = localStorage.getItem('authToken')
+        if (!token) {
+          // 비인증 상태 → 즉시 로그인으로
+          onComplete() // 언마운트 유도
+          onAuthInvalid?.()
+          return
+        }
+
+        // 토큰 검증 겸 사용자 정보 로드
+        const user = await membersApi.getMyInfo()
+        sessionStorage.setItem('prefetch.user', JSON.stringify(user))
+
+        // 홈에서 사용할 수 있는 교회 목록 선 로드
+        const churches = await churchesApi.getMyChurches()
+        sessionStorage.setItem('prefetch.churches', JSON.stringify(churches))
+      } catch (e) {
+        // 인증 실패 등 → 로그인으로 이동
+        onComplete()
+        onAuthInvalid?.()
+      }
+    }
+
+    precheck()
+
     // 1초 후 말씀 fade in
     const verseTimer = setTimeout(() => {
       setShowVerse(true)

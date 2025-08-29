@@ -624,3 +624,30 @@ export const gatheringsApi = {
     return data
   },
 }
+
+// Prayers API
+export const prayersApi = {
+  // 기도제목 삭제 (soft delete)
+  delete: async (prayerId: string): Promise<void> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/prayers/${prayerId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: authToken,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+  },
+}

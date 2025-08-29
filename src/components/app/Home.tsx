@@ -6,11 +6,25 @@ import { useNavigate } from 'react-router-dom'
 const Home: React.FC = () => {
   const navigate = useNavigate()
   const [groups, setGroups] = useState<Group[]>([])
-  const [churches, setChurches] = useState<Church[]>([])
+  const [churches, setChurches] = useState<Church[]>(() => {
+    const cached = sessionStorage.getItem('prefetch.churches')
+    try {
+      return cached ? (JSON.parse(cached) as Church[]) : []
+    } catch {
+      return []
+    }
+  })
   const [churchIndex, setChurchIndex] = useState(0)
   const [showChurchDropdown, setShowChurchDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const cached = sessionStorage.getItem('prefetch.user')
+    try {
+      return cached ? (JSON.parse(cached) as User) : null
+    } catch {
+      return null
+    }
+  })
   const [churchPrayerCount, setChurchPrayerCount] = useState<number | null>(
     null
   )

@@ -104,7 +104,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [showSplash, setShowSplash] = useState<boolean>(true)
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    // 환경변수 VITE_IS_SPLASH_ON 값으로 스플래시 표시 여부 제어
+    const env = import.meta.env as Record<string, string | boolean | undefined>
+    const raw = env.VITE_IS_SPLASH_ON
+    const normalized = String(raw ?? 'true').toLowerCase()
+    return (
+      normalized === 'true' ||
+      normalized === '1' ||
+      normalized === 'yes' ||
+      normalized === 'on'
+    )
+  })
 
   // 앱 시작 시 로그인 상태 확인
   useEffect(() => {
@@ -118,6 +129,11 @@ function App() {
   // 스플래시 스크린 완료 핸들러
   const handleSplashComplete = () => {
     setShowSplash(false)
+  }
+
+  const handleAuthInvalid = () => {
+    // 인증 만료/실패 시 로그인으로 이동
+    window.location.replace('/login')
   }
 
   // 로딩 중일 때
@@ -136,7 +152,12 @@ function App() {
 
   // 일반 사용자 앱에서 스플래시 스크린 표시
   if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />
+    return (
+      <SplashScreen
+        onComplete={handleSplashComplete}
+        onAuthInvalid={handleAuthInvalid}
+      />
+    )
   }
 
   // 일반 사용자 앱 렌더링
