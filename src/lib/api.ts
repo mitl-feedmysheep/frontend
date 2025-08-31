@@ -651,3 +651,6 @@ export const prayersApi = {
     }
   },
 }
+
+// Admin APIs
+// admin-api.ts로 분리됨

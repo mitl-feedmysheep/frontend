@@ -9,8 +9,8 @@ import {
 } from 'react-router-dom'
 import { ToastProvider } from '../common/ToastProvider'
 import AdminHome from './AdminHome'
+import AdminLogin from './AdminLogin'
 import AdminSplashScreen from './AdminSplashScreen'
-import AdminLogin from './Login'
 
 // AdminLogin Wrapper 컴포넌트
 const AdminLoginWrapper = () => {
