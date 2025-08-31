@@ -1,3 +1,4 @@
+import { authApi } from '@/lib/api'
 import { useEffect, useState } from 'react'
 import {
   BrowserRouter,
@@ -7,8 +8,9 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import { ToastProvider } from '../common/ToastProvider'
+import AdminHome from './AdminHome'
+import AdminLogin from './AdminLogin'
 import AdminSplashScreen from './AdminSplashScreen'
-import AdminLogin from './Login'
 
 // AdminLogin Wrapper 컴포넌트
 const AdminLoginWrapper = () => {
@@ -21,52 +23,11 @@ const AdminLoginWrapper = () => {
   return <AdminLogin onLoginSuccess={handleLoginSuccess} />
 }
 
-// 임시 어드민 대시보드 컴포넌트
-const AdminDashboard = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-red-600 font-pretendard">
-              관리자 대시보드
-            </h1>
-            <button
-              onClick={() => {
-                // TODO: 로그아웃 로직 구현
-                window.location.href = '/admin/login'
-              }}
-              className="text-gray-600 hover:text-gray-800 font-pretendard"
-            >
-              로그아웃
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-900 font-pretendard mb-2">
-                어드민 대시보드
-              </h2>
-              <p className="text-gray-600 font-pretendard">
-                관리자 기능들이 여기에 추가될 예정입니다.
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-}
+// 관리자 홈 화면은 별도 컴포넌트(AdminHome)로 분리
 
 // Protected Route for Admin
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // TODO: 어드민 인증 로직 구현
-  const isAdminAuthenticated = false // 임시로 false
-
+  const isAdminAuthenticated = authApi.isAuthenticated()
   return isAdminAuthenticated ? (
     <>{children}</>
   ) : (
@@ -76,7 +37,17 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function AdminApp() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [showSplash, setShowSplash] = useState<boolean>(true)
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    const env = import.meta.env as Record<string, string | boolean | undefined>
+    const raw = env.VITE_IS_SPLASH_ON
+    const normalized = String(raw ?? 'true').toLowerCase()
+    return (
+      normalized === 'true' ||
+      normalized === '1' ||
+      normalized === 'yes' ||
+      normalized === 'on'
+    )
+  })
 
   // 앱 시작 시 어드민 로그인 상태 확인
   useEffect(() => {
@@ -118,7 +89,7 @@ function AdminApp() {
             path="/"
             element={
               <AdminProtectedRoute>
-                <AdminDashboard />
+                <AdminHome />
               </AdminProtectedRoute>
             }
           />
