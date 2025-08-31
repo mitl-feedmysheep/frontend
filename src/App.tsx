@@ -132,8 +132,10 @@ function App() {
   }
 
   const handleAuthInvalid = () => {
-    // 인증 만료/실패 시 로그인으로 이동
-    window.location.replace('/login')
+    // 인증 만료/실패 시 SPA 내에서만 경로 변경 (전체 리로드 방지)
+    try {
+      window.history.replaceState(null, '', '/login')
+    } catch {}
   }
 
   // 로딩 중일 때

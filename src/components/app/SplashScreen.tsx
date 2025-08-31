@@ -48,8 +48,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
       try {
         const token = localStorage.getItem('authToken')
         if (!token) {
-          // 비인증 상태 → 즉시 로그인으로
-          onComplete() // 언마운트 유도
+          // 비인증 상태 → 로그인 경로로만 전환하고, 스플래시는 예정된 타이밍에 종료
           onAuthInvalid?.()
           return
         }
@@ -62,8 +61,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
         const churches = await churchesApi.getMyChurches()
         sessionStorage.setItem('prefetch.churches', JSON.stringify(churches))
       } catch (_err) {
-        // 인증 실패 등 → 로그인으로 이동
-        onComplete()
+        // 인증 실패 등 → 로그인 경로로 전환, 스플래시는 예정된 타이밍에 종료
         onAuthInvalid?.()
       }
     }
