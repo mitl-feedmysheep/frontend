@@ -3,15 +3,12 @@ import { ApiError } from '@/lib/api'
 import { formatPhoneNumber } from '@/lib/utils'
 import type { Church } from '@/types'
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import ProvisionEmail from '../app/ProvisionEmail'
 
 interface AdminLoginProps {
   onLoginSuccess: () => void
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
-  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -21,7 +18,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
   const [churches, setChurches] = useState<Church[] | null>(null)
   const [selecting, setSelecting] = useState(false)
   const [selectError, setSelectError] = useState('')
-  const [needsProvision, setNeedsProvision] = useState(false)
 
   useEffect(() => {
     try {
@@ -62,7 +58,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       if (res.isProvisioned) {
         try {
           localStorage.setItem('provisionPending', 'true')
-        } catch {}
+        } catch (_e) {
+          // ignore
+        }
         window.location.assign('/provision/email')
         return
       }
@@ -107,9 +105,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     }
   }
 
-  if (needsProvision) {
-    return <ProvisionEmail variant="admin" />
-  }
+  // 이메일 프로비저닝(최초 설정) 시에는 라우터에서 /provision/email 경로로 전환함
 
   if (churches && churches.length > 1) {
     return (
