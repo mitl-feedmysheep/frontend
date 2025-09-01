@@ -442,6 +442,40 @@ export const membersApi = {
       )
     }
   },
+
+  // 내 정보 수정
+  updateMyInfo: async (payload: {
+    id: string
+    name: string
+    sex: 'M' | 'F'
+    birthday: string // YYYY-MM-DD
+    phone: string
+  }): Promise<User> => {
+    const url = `${API_BASE_URL}/members/me`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: User = await response.json()
+    return data
+  },
 }
 
 // Churches API functions
