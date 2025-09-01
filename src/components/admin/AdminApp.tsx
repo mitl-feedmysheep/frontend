@@ -42,12 +42,15 @@ function AdminApp() {
     const env = import.meta.env as Record<string, string | boolean | undefined>
     const raw = env.VITE_IS_SPLASH_ON
     const normalized = String(raw ?? 'true').toLowerCase()
-    return (
+    const splashEnabled =
       normalized === 'true' ||
       normalized === '1' ||
       normalized === 'yes' ||
       normalized === 'on'
-    )
+    const seen = localStorage.getItem('splash.seen.admin') === 'true'
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/'
+    const isProvisionRoute = path === '/provision/email'
+    return splashEnabled && !seen && !isProvisionRoute
   })
 
   // 앱 시작 시 어드민 로그인 상태 확인
@@ -63,6 +66,9 @@ function AdminApp() {
   // 어드민 스플래시 스크린 완료 핸들러
   const handleAdminSplashComplete = () => {
     setShowSplash(false)
+    try {
+      localStorage.setItem('splash.seen.admin', 'true')
+    } catch (_e) {}
   }
 
   // 로딩 중일 때

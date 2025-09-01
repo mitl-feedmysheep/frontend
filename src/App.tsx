@@ -110,12 +110,18 @@ function App() {
     const env = import.meta.env as Record<string, string | boolean | undefined>
     const raw = env.VITE_IS_SPLASH_ON
     const normalized = String(raw ?? 'true').toLowerCase()
-    return (
+    const splashEnabled =
       normalized === 'true' ||
       normalized === '1' ||
       normalized === 'yes' ||
       normalized === 'on'
-    )
+
+    // 최초 진입에만 스플래시: 이미 본 적 있으면 비활성화
+    const seen = localStorage.getItem('splash.seen.user') === 'true'
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/'
+    // 이메일 설정 경로에서는 스플래시 비활성화
+    const isProvisionRoute = path === '/provision/email'
+    return splashEnabled && !seen && !isProvisionRoute
   })
 
   // 앱 시작 시 로그인 상태 확인
@@ -130,6 +136,9 @@ function App() {
   // 스플래시 스크린 완료 핸들러
   const handleSplashComplete = () => {
     setShowSplash(false)
+    try {
+      localStorage.setItem('splash.seen.user', 'true')
+    } catch (_e) {}
   }
 
   const handleAuthInvalid = () => {
