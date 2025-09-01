@@ -5,13 +5,13 @@ import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import AutoGrowInput from './AutoGrowInput'
 
-interface AttendanceCheckProps {
+interface SmallGatheringProps {
   onBack: () => void
   gatheringId: string
   groupId: string
 }
 
-const AttendanceCheck: React.FC<AttendanceCheckProps> = ({
+const SmallGathering: React.FC<SmallGatheringProps> = ({
   onBack,
   gatheringId,
   groupId,
@@ -727,6 +727,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
   ])
   const [hasChanges, setHasChanges] = useState(false)
   const [localStory, setLocalStory] = useState(member.story ?? '')
+  const [localGoal, setLocalGoal] = useState(member.goal ?? '')
+  const [shouldFocusNewPrayer, setShouldFocusNewPrayer] = useState(false)
   const [originalMember, setOriginalMember] = useState(member)
   const [worshipLoading, setWorshipLoading] = useState(false)
   const [gatheringLoading, setGatheringLoading] = useState(false)
@@ -747,6 +749,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       // 초기 데이터 설정
       setLocalStory(member.story ?? '')
+      setLocalGoal(member.goal ?? '')
       if (member.prayers && member.prayers.length > 0) {
         setPrayerInputs(
           member.prayers.map(p => ({
@@ -816,6 +819,13 @@ const MemberCard: React.FC<MemberCardProps> = ({
     }, 50)
   }, [isInitialized, prayerInputs])
 
+  // 새 기도제목 추가 시 1회성 포커스 후 플래그 해제
+  useEffect(() => {
+    if (!shouldFocusNewPrayer) return
+    const t = setTimeout(() => setShouldFocusNewPrayer(false), 0)
+    return () => clearTimeout(t)
+  }, [shouldFocusNewPrayer])
+
   // 접힌 상태 시, 초반 2초간만 화살표에 펄스 애니메이션 제공 (모바일 시선 유도)
   useEffect(() => {
     setShowPulseHint(true)
@@ -831,6 +841,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
     }
 
     const hasStoryChanges = localStory !== (originalMember.story ?? '')
+    const hasGoalChanges = (localGoal ?? '') !== (originalMember.goal ?? '')
 
     // 기도제목 변경사항 확인: 원본과 현재 입력값 비교
     const originalPrayers =
@@ -846,8 +857,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
         (original, index) => original !== currentPrayers[index]
       )
 
-    setHasChanges(hasStoryChanges || hasPrayerChanges)
-  }, [localStory, prayerInputs, originalMember, isInitialized])
+    setHasChanges(hasStoryChanges || hasPrayerChanges || hasGoalChanges)
+  }, [localStory, localGoal, prayerInputs, originalMember, isInitialized])
 
   // 출석 상태 업데이트 (즉시 API 호출)
   const handleAttendanceChange = async (
@@ -868,7 +879,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
           type === 'worship' ? value : member.worshipAttendance,
         gatheringAttendance:
           type === 'gathering' ? value : member.gatheringAttendance,
-        story: localStory,
+        story: localStory.trim() === '' ? null : localStory,
+        goal: (localGoal ?? '').trim() === '' ? null : localGoal,
         prayers: prayerInputs
           .filter(input => input.value.trim() !== '')
           .map(input => {
@@ -925,6 +937,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   const addPrayerInput = () => {
     setPrayerInputs(prev => [...prev, { id: 'new', value: '' }])
+    setShouldFocusNewPrayer(true)
   }
 
   const removePrayerInput = (index: number) => {
@@ -1003,13 +1016,19 @@ const MemberCard: React.FC<MemberCardProps> = ({
     onChange({ ...member, story: value })
   }
 
+  const handleGoalChange = (value: string) => {
+    setLocalGoal(value)
+    onChange({ ...member, goal: value })
+  }
+
   const handleSave = async () => {
     try {
       // API 요청 데이터 준비
       const updateData = {
         worshipAttendance: member.worshipAttendance,
         gatheringAttendance: member.gatheringAttendance,
-        story: localStory,
+        story: localStory.trim() === '' ? null : localStory,
+        goal: (localGoal ?? '').trim() === '' ? null : localGoal,
         prayers: prayerInputs
           .filter(input => input.value.trim() !== '')
           .map(input => {
@@ -1047,6 +1066,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
       const updatedMember = {
         ...member,
         story: localStory,
+        goal: response.goal ?? localGoal,
         prayers: response.prayers, // 서버에서 반환된 순서 그대로 사용
       }
 
@@ -1247,9 +1267,35 @@ const MemberCard: React.FC<MemberCardProps> = ({
                 readOnly={isReadOnly}
                 className="border-none"
                 inputClassName="rounded-lg bg-transparent"
+                autoFocus={!isReadOnly}
                 // 상위 카드 토글 방지를 위해 클릭/키 이벤트 전파 중단
                 // Type narrowing을 위해 any 캐스팅 사용하지 않음
                 // onClick은 wrapper에서 처리되므로 여기서는 stopPropagation만
+                onClick={(e: React.MouseEvent) =>
+                  e.stopPropagation() as unknown as void
+                }
+              />
+            </div>
+          </div>
+
+          {/* Weekly Goal Section */}
+          <div className="space-y-2">
+            <div className="text-[#5F7B6D] font-medium text-base leading-tight tracking-[0.025em] font-pretendard">
+              한주 목표
+            </div>
+            <div className="bg-[#FEFFFE] rounded-lg p-2">
+              <AutoGrowInput
+                value={localGoal}
+                onChange={next => {
+                  if (isReadOnly) return
+                  handleGoalChange(next.replace(/\n/g, ' '))
+                }}
+                placeholder={
+                  isReadOnly ? '내용이 없습니다.' : '이번 주 목표를 적어주세요.'
+                }
+                readOnly={isReadOnly}
+                className="border-none"
+                inputClassName="rounded-lg bg-transparent"
                 onClick={(e: React.MouseEvent) =>
                   e.stopPropagation() as unknown as void
                 }
@@ -1301,7 +1347,9 @@ const MemberCard: React.FC<MemberCardProps> = ({
                     className="flex-1 border-none"
                     inputClassName="rounded-lg bg-transparent"
                     autoFocus={
-                      index === prayerInputs.length - 1 && input.value === ''
+                      index === prayerInputs.length - 1 &&
+                      input.value === '' &&
+                      shouldFocusNewPrayer
                     }
                     onClick={(e: React.MouseEvent) =>
                       e.stopPropagation() as unknown as void
@@ -1351,4 +1399,4 @@ const MemberCard: React.FC<MemberCardProps> = ({
   )
 }
 
-export default AttendanceCheck
+export default SmallGathering

@@ -11,7 +11,6 @@ import {
 } from 'react-router-dom'
 import AdminApp from './components/admin/AdminApp'
 import Account from './components/app/Account'
-import AttendanceCheck from './components/app/AttendanceCheck'
 import ChangePassword from './components/app/ChangePassword'
 import CreateMeeting from './components/app/CreateMeeting'
 import GroupDetail from './components/app/GroupDetail'
@@ -19,6 +18,7 @@ import Home from './components/app/Home'
 import Login from './components/app/Login'
 import Settings from './components/app/Settings'
 import Signup from './components/app/Signup'
+import SmallGathering from './components/app/SmallGathering'
 import SplashScreen from './components/app/SplashScreen'
 import { ToastProvider } from './components/common/ToastProvider'
 
@@ -59,7 +59,7 @@ const CreateMeetingWrapper = () => {
       groupId={groupId}
       onBack={() => navigate(`/group/${groupId}`)}
       onNext={gatheringId => {
-        // 모임 생성 후 해당 모임의 AttendanceCheck 화면으로 이동
+        // 모임 생성 후 해당 모임의 SmallGathering 화면으로 이동
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         document.documentElement.scrollTop = 0
         document.body.scrollTop = 0
@@ -69,8 +69,8 @@ const CreateMeetingWrapper = () => {
   )
 }
 
-// AttendanceCheck Wrapper 컴포넌트
-const AttendanceCheckWrapper = () => {
+// SmallGathering Wrapper 컴포넌트
+const SmallGatheringWrapper = () => {
   const { groupId, gatheringId } = useParams<{
     groupId: string
     gatheringId: string
@@ -82,11 +82,11 @@ const AttendanceCheckWrapper = () => {
   }
 
   return (
-    <AttendanceCheck
+    <SmallGathering
       gatheringId={gatheringId}
       groupId={groupId}
       onBack={() => {
-        // AttendanceCheck에서 나갈 때 스크롤을 최상위로
+        // SmallGathering에서 나갈 때 스크롤을 최상위로
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         document.documentElement.scrollTop = 0
         document.body.scrollTop = 0
@@ -197,7 +197,7 @@ function App() {
             path="/group/:groupId/gathering/:gatheringId"
             element={
               <ProtectedRoute>
-                <AttendanceCheckWrapper />
+                <SmallGatheringWrapper />
               </ProtectedRoute>
             }
           />

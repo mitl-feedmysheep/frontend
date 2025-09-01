@@ -112,6 +112,7 @@ export interface GatheringMember {
   worshipAttendance: boolean
   gatheringAttendance: boolean
   story: string
+  goal?: string
   prayerTopics?: string
   prayers: Prayer[]
 }

@@ -576,7 +576,8 @@ export const gatheringsApi = {
     updateData: {
       worshipAttendance: boolean
       gatheringAttendance: boolean
-      story: string
+      story: string | null
+      goal?: string | null
       prayers: Array<{
         prayerRequest: string
         description: string
@@ -586,7 +587,8 @@ export const gatheringsApi = {
     id: string
     worshipAttendance: boolean
     gatheringAttendance: boolean
-    story: string
+    story: string | null
+    goal?: string | null
     prayers: Array<{
       id: string
       prayerRequest: string
