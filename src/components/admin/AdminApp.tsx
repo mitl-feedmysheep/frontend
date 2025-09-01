@@ -68,7 +68,9 @@ function AdminApp() {
     setShowSplash(false)
     try {
       localStorage.setItem('splash.seen.admin', 'true')
-    } catch (_e) {}
+    } catch (_e) {
+      // ignore
+    }
   }
 
   // 로딩 중일 때
@@ -92,7 +94,10 @@ function AdminApp() {
       <ToastProvider>
         <Routes>
           <Route path="/login" element={<AdminLoginWrapper />} />
-          <Route path="/provision/email" element={<ProvisionEmail />} />
+          <Route
+            path="/provision/email"
+            element={<ProvisionEmail variant="admin" />}
+          />
           <Route
             path="/"
             element={

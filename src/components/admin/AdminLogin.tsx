@@ -1,3 +1,4 @@
+import { useToast } from '@/components/common/ToastProvider'
 import { adminApi } from '@/lib/admin-api'
 import { ApiError } from '@/lib/api'
 import { formatPhoneNumber } from '@/lib/utils'
@@ -9,6 +10,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
+  const { showToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -23,6 +25,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     try {
       const keysToClear = ['admin.tempData', 'admin.sessionData']
       keysToClear.forEach(k => localStorage.removeItem(k))
+      // 로그인 리다이렉트 토스트 (sessionStorage)
+      const toastMsg = sessionStorage.getItem('login.toast')
+      if (toastMsg) {
+        sessionStorage.removeItem('login.toast')
+        setTimeout(() => showToast(toastMsg, 3500), 0)
+      }
     } catch (_err) {
       void 0
     }

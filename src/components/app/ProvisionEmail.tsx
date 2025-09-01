@@ -196,7 +196,7 @@ const ProvisionEmail: React.FC<ProvisionEmailProps> = ({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <main className="flex-1 flex flex-col items-center">
-        <div className="w-full max-w-sm px-6 pt-6 pb-24 space-y-5">
+        <div className="w-full max-w-sm px-6 pt-18 pb-24 space-y-5">
           <div>
             <label className="block text-[10px] text-[#C3CCC9] font-pretendard font-medium">
               이메일
