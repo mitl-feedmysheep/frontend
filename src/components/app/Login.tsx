@@ -1,18 +1,23 @@
+import { useToast } from '@/components/common/ToastProvider'
 import { ApiError, authApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ProvisionEmail from './ProvisionEmail'
 
 interface LoginProps {
   onLoginSuccess: () => void
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+  // no navigation needed inside login when provisioning inline
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [emailError, setEmailError] = useState('')
+  const [needsProvision, setNeedsProvision] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const { showToast } = useToast()
 
   // 로그인 화면 진입 시, 회원가입/임시 캐시 정리
   useEffect(() => {
@@ -35,8 +40,22 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         'signup.emailVerifySuccess',
       ]
       keysToClear.forEach(k => localStorage.removeItem(k))
-    } catch {}
-  }, [])
+      // 로그인 리다이렉트 토스트 (sessionStorage)
+      const toastMsg = sessionStorage.getItem('login.toast')
+      if (toastMsg) {
+        sessionStorage.removeItem('login.toast')
+        setTimeout(() => showToast(toastMsg, 3500), 0)
+      }
+      // 리프레시/앱 재개 시 프로비저닝 토큰이 있으면 바로 프로비저닝 화면 열기
+      const pending = localStorage.getItem('provisionPending') === 'true'
+      const provToken = localStorage.getItem('provisionToken')
+      if (pending && provToken) {
+        setNeedsProvision(true)
+      }
+    } catch (_err) {
+      // ignore
+    }
+  }, [showToast])
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -73,9 +92,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     try {
       const response = await authApi.login({ email, password })
-
-      // 로그인 성공
-      console.warn('로그인 성공:', response)
+      if (response.isProvisioned) {
+        try {
+          localStorage.setItem('provisionPending', 'true')
+        } catch {}
+        // 별도 라우트로 이동 (새로고침/앱 복원 대응)
+        window.location.assign('/provision/email')
+        return
+      }
       onLoginSuccess()
     } catch (error) {
       if (error instanceof ApiError) {
@@ -93,6 +117,10 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (needsProvision) {
+    return <ProvisionEmail />
   }
 
   return (

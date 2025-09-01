@@ -26,7 +26,17 @@ export const adminApi = {
 
     const data: LoginResponse = await response.json()
     if (data.accessToken) {
-      localStorage.setItem('authToken', data.accessToken)
+      const provisioned = (data as any).isProvisioned
+      if (provisioned === false) {
+        localStorage.setItem('authToken', data.accessToken)
+      } else if (provisioned === true) {
+        try {
+          localStorage.setItem('provisionToken', data.accessToken)
+          localStorage.setItem('provisionPending', 'true')
+        } catch {
+          // ignore
+        }
+      }
     }
     return data
   },

@@ -3,12 +3,15 @@ import { ApiError } from '@/lib/api'
 import { formatPhoneNumber } from '@/lib/utils'
 import type { Church } from '@/types'
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import ProvisionEmail from '../app/ProvisionEmail'
 
 interface AdminLoginProps {
   onLoginSuccess: () => void
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -18,6 +21,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
   const [churches, setChurches] = useState<Church[] | null>(null)
   const [selecting, setSelecting] = useState(false)
   const [selectError, setSelectError] = useState('')
+  const [needsProvision, setNeedsProvision] = useState(false)
 
   useEffect(() => {
     try {
@@ -54,7 +58,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     }
     setIsLoading(true)
     try {
-      await adminApi.login({ email, password })
+      const res = await adminApi.login({ email, password })
+      if (res.isProvisioned) {
+        try {
+          localStorage.setItem('provisionPending', 'true')
+        } catch {}
+        window.location.assign('/provision/email')
+        return
+      }
       const list = await adminApi.getAdminChurches()
       if (Array.isArray(list) && list.length === 1) {
         await adminApi.selectChurch(list[0].id)
@@ -94,6 +105,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     } finally {
       setSelecting(false)
     }
+  }
+
+  if (needsProvision) {
+    return <ProvisionEmail variant="admin" />
   }
 
   if (churches && churches.length > 1) {

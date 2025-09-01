@@ -16,6 +16,7 @@ import CreateMeeting from './components/app/CreateMeeting'
 import GroupDetail from './components/app/GroupDetail'
 import Home from './components/app/Home'
 import Login from './components/app/Login'
+import ProvisionEmail from './components/app/ProvisionEmail'
 import Settings from './components/app/Settings'
 import Signup from './components/app/Signup'
 import SmallGathering from './components/app/SmallGathering'
@@ -135,7 +136,9 @@ function App() {
     // 인증 만료/실패 시 SPA 내에서만 경로 변경 (전체 리로드 방지)
     try {
       window.history.replaceState(null, '', '/login')
-    } catch {}
+    } catch (_err) {
+      // ignore navigation error
+    }
   }
 
   // 로딩 중일 때
@@ -169,6 +172,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginWrapper />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/provision/email" element={<ProvisionEmail />} />
           <Route
             path="/"
             element={

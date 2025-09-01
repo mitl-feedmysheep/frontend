@@ -1,3 +1,4 @@
+import { isAdminDomain } from '@/lib/utils'
 import React, { useEffect, useState } from 'react'
 
 interface ToastNotificationProps {
@@ -41,7 +42,11 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       }`}
     >
-      <div className="inline-flex items-center justify-center gap-2 bg-[#5F7B6D] text-white px-5 py-3 rounded-lg shadow-lg w-auto max-w-[90vw] mx-4">
+      <div
+        className={`inline-flex items-center justify-center gap-2 ${
+          isAdminDomain() ? 'bg-blue-900' : 'bg-[#5F7B6D]'
+        } text-white px-5 py-3 rounded-lg shadow-lg w-auto max-w-[90vw] mx-4`}
+      >
         <span className="text-lg">😊</span>
         <span className="font-pretendard text-sm leading-tight text-center whitespace-nowrap">
           {message}

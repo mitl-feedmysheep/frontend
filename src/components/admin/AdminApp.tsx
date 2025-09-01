@@ -7,6 +7,7 @@ import {
   Routes,
   useNavigate,
 } from 'react-router-dom'
+import ProvisionEmail from '../app/ProvisionEmail'
 import { ToastProvider } from '../common/ToastProvider'
 import AdminHome from './AdminHome'
 import AdminLogin from './AdminLogin'
@@ -85,6 +86,7 @@ function AdminApp() {
       <ToastProvider>
         <Routes>
           <Route path="/login" element={<AdminLoginWrapper />} />
+          <Route path="/provision/email" element={<ProvisionEmail />} />
           <Route
             path="/"
             element={

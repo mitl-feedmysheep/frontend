@@ -20,6 +20,8 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string
+  // 최초 프로비저닝 필요 여부 (true면 이메일 설정 화면으로 분기)
+  isProvisioned?: boolean
 }
 
 export interface User {

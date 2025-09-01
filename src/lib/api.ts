@@ -131,9 +131,19 @@ export const authApi = {
 
     const data: LoginResponse = await response.json()
 
-    // Store token in localStorage for future requests
+    // isProvisioned가 false일 때만 정식 토큰 저장, true면 임시 토큰 보관
     if (data.accessToken) {
-      localStorage.setItem('authToken', data.accessToken)
+      const provisioned = (data as any).isProvisioned
+      if (provisioned === false) {
+        localStorage.setItem('authToken', data.accessToken)
+      } else if (provisioned === true) {
+        try {
+          localStorage.setItem('provisionToken', data.accessToken)
+          localStorage.setItem('provisionPending', 'true')
+        } catch {
+          // ignore if sessionStorage unavailable
+        }
+      }
     }
 
     return data
@@ -188,6 +198,10 @@ export const authApi = {
     localStorage.removeItem('authToken')
     localStorage.removeItem('churchId')
     localStorage.removeItem('groupId')
+    try {
+      localStorage.removeItem('provisionToken')
+      localStorage.removeItem('provisionPending')
+    } catch {}
   },
 
   isAuthenticated: (): boolean => {
@@ -389,6 +403,34 @@ export const membersApi = {
       method: 'POST',
       headers,
       body: JSON.stringify({ currentPassword, newPassword }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+  },
+
+  // 이메일 변경 (프로비저닝/최초 설정 포함)
+  changeEmail: async (
+    newEmail: string,
+    tokenOverride?: string
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/members/email/change`
+    const token = tokenOverride || localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ newEmail }),
     })
 
     if (!response.ok) {
