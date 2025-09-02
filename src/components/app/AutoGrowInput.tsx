@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 
 interface AutoGrowInputProps {
   value: string
@@ -24,6 +24,7 @@ function AutoGrowInput({
   onClick,
 }: AutoGrowInputProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const hasAutofocusedRef = useRef(false)
 
   // 내부 텍스트를 외부 value와 동기화
   useLayoutEffect(() => {
@@ -32,17 +33,21 @@ function AutoGrowInput({
       ref.current.innerText = value
     }
     autoResize()
-    if (autoFocus && !readOnly) {
-      // 포커스 및 커서를 끝으로 이동
-      ref.current.focus()
-      const sel = window.getSelection()
-      const range = document.createRange()
-      range.selectNodeContents(ref.current)
-      range.collapse(false)
-      sel?.removeAllRanges()
-      sel?.addRange(range)
-    }
-  }, [value, autoFocus, readOnly])
+  }, [value])
+
+  // autoFocus는 최초 1회만 수행 (값 변경 시마다 커서가 끝으로 가지 않도록)
+  useEffect(() => {
+    if (!ref.current) return
+    if (!autoFocus || readOnly || hasAutofocusedRef.current) return
+    hasAutofocusedRef.current = true
+    ref.current.focus()
+    const sel = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(ref.current)
+    range.collapse(false)
+    sel?.removeAllRanges()
+    sel?.addRange(range)
+  }, [autoFocus, readOnly])
 
   // 높이 자동 조절
   const autoResize = () => {
