@@ -102,23 +102,25 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
     }
   }, [groupId, navigate])
 
-  // 오늘이 생일인지 확인하는 함수
-  const isTodayBirthday = (birthday: string | null | undefined): boolean => {
-    if (!birthday) return false
-
-    const today = new Date()
-    const birthDate = new Date(birthday)
-
-    return (
-      today.getMonth() === birthDate.getMonth() &&
-      today.getDate() === birthDate.getDate()
-    )
-  }
-
   // 리더인지 확인하는 함수
   const isLeader = (role: string | null | undefined): boolean => {
     return role === 'LEADER'
   }
+
+  // 부리더인지 확인하는 함수
+  const isSubLeader = (role: string | null | undefined): boolean => {
+    return role === 'SUB_LEADER'
+  }
+
+  // 정렬 우선순위: 리더(0) → 부리더(1) → 멤버(2)
+  const getRolePriority = React.useCallback(
+    (role: string | null | undefined): number => {
+      if (role === 'LEADER') return 0
+      if (role === 'SUB_LEADER') return 1
+      return 2
+    },
+    []
+  )
 
   // 이름에서 성을 제거하고 이름만 반환하는 함수
   const getFirstName = (fullName: string): string => {
@@ -304,6 +306,31 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
       mounted = false
     }
   }, [group?.id])
+
+  // 멤버 정렬: 리더 → 서브리더 → 멤버(나이 많은 순)
+  const sortedMembers = useMemo(() => {
+    const copy = [...members]
+    copy.sort((a, b) => {
+      const pa = getRolePriority(a.role)
+      const pb = getRolePriority(b.role)
+      if (pa !== pb) return pa - pb
+
+      // 같은 그룹 내 정렬 규칙: 멤버에 한해서만 나이 많은 순(생일 빠른 순)
+      if (pa === 2) {
+        const aDate = a.birthday ? new Date(a.birthday) : null
+        const bDate = b.birthday ? new Date(b.birthday) : null
+
+        if (aDate && bDate) {
+          return aDate.getTime() - bDate.getTime()
+        }
+        if (aDate) return -1
+        if (bDate) return 1
+      }
+
+      return 0
+    })
+    return copy
+  }, [members, getRolePriority])
 
   // 선택된 월의 모임 목록 가져오기
   useEffect(() => {
@@ -705,7 +732,7 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
                 </div>
               </div>
             ) : (
-              members.map(member => (
+              sortedMembers.map(member => (
                 <div key={member.id} className="flex-shrink-0 relative">
                   <div className="w-11 h-11 bg-[#E5E7E5] rounded-lg flex items-center justify-center">
                     <span className="text-[#313331] font-medium text-sm font-pretendard">
@@ -717,19 +744,15 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
                   <div className="absolute bottom-0 right-0">
                     {/* 리더 기도하는 손 이모지 (리더인 경우) */}
                     {isLeader(member.role) && (
-                      <div className="absolute bottom-0 right-0 text-xs">
+                      <div className="absolute bottom-0 right-0 w-4 h-4 flex items-center justify-center text-[12px] leading-none">
                         🤲
                       </div>
                     )}
 
-                    {/* 생일케이크 이모지 (오늘이 생일인 경우) */}
-                    {isTodayBirthday(member.birthday) && (
-                      <div
-                        className={`absolute bottom-0 text-xs ${
-                          isLeader(member.role) ? 'right-4' : 'right-0'
-                        }`}
-                      >
-                        🎂
+                    {/* 부리더 펜 이모지 (부리더인 경우) */}
+                    {isSubLeader(member.role) && (
+                      <div className="absolute bottom-0 right-0 w-4 h-4 flex items-center justify-center text-[12px] leading-none">
+                        ✍️
                       </div>
                     )}
                   </div>
