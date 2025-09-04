@@ -20,6 +20,7 @@ import ProvisionEmail from './components/app/ProvisionEmail'
 import Settings from './components/app/Settings'
 import Signup from './components/app/Signup'
 import SmallGathering from './components/app/SmallGathering'
+import SmallGatheringManagement from './components/app/SmallGatheringManagement'
 import SplashScreen from './components/app/SplashScreen'
 import { ToastProvider } from './components/common/ToastProvider'
 
@@ -211,6 +212,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <SmallGatheringWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group/:groupId/gathering/:gatheringId/manage"
+            element={
+              <ProtectedRoute>
+                <SmallGatheringManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group/:groupId/manage"
+            element={
+              <ProtectedRoute>
+                <SmallGatheringManagement />
               </ProtectedRoute>
             }
           />

@@ -233,6 +233,13 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
     return isLeader
   }, [currentUserInGroup, group?.id])
 
+  // 현재 유저가 이 그룹에서 SUB_LEADER인지 확인
+  const isCurrentUserSubLeader = useMemo(() => {
+    if (!currentUserInGroup) return false
+    const isSub = currentUserInGroup.role === 'SUB_LEADER'
+    return isSub
+  }, [currentUserInGroup])
+
   // 현재 그룹에서의 유저 정보 가져오기
   useEffect(() => {
     if (!group?.id) return
@@ -657,7 +664,16 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
         </div>
 
         {/* Right Accessory */}
-        <div className="w-[130px] h-full"></div>
+        <div className="w-[130px] h-full flex items-center justify-end pr-2">
+          {isCurrentUserLeader && (
+            <button
+              onClick={() => navigate(`/group/${groupId}/manage`)}
+              className="px-2 py-1 text-[#5F7B6D] text-sm font-pretendard hover:underline"
+            >
+              관리
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Content */}
@@ -797,8 +813,8 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ groupId, onBack }) => {
               </div>
             ) : (
               <>
-                {/* 모임 추가하기 카드 (LEADER일 때만 표시) */}
-                {isCurrentUserLeader && (
+                {/* 모임 추가하기 카드 (LEADER, SUB_LEADER 표시) */}
+                {(isCurrentUserLeader || isCurrentUserSubLeader) && (
                   <MeetingCard
                     key="affordance"
                     meeting={{

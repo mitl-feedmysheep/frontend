@@ -3,6 +3,7 @@ import { ApiError, gatheringsApi, groupsApi, prayersApi } from '@/lib/api'
 import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
+// removed navigate usage after moving Manage button to GroupDetail
 import AutoGrowInput from './AutoGrowInput'
 
 interface SmallGatheringProps {
@@ -26,6 +27,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
     null
   )
   const [isCurrentUserLeader, setIsCurrentUserLeader] = useState(false)
+  const [isCurrentUserSubLeader, setIsCurrentUserSubLeader] = useState(false)
   const [isSavingMeeting, setIsSavingMeeting] = useState(false)
   const [meetingError, setMeetingError] = useState('')
   const [meetingForm, setMeetingForm] = useState({
@@ -44,6 +46,8 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
   const placeInputRef = useRef<HTMLInputElement>(null)
   const startTimeRef = useRef<HTMLInputElement>(null)
   const endTimeRef = useRef<HTMLInputElement>(null)
+
+  const canEditMeeting = isCurrentUserLeader || isCurrentUserSubLeader
 
   // 토스트 알림 표시 함수
   const showToast = (message: string) => {
@@ -75,12 +79,15 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
         if (mounted) {
           setCurrentUserInGroup(userData)
           setIsCurrentUserLeader(userData.role === 'LEADER')
+          setIsCurrentUserSubLeader(userData.role === 'SUB_LEADER')
+          console.warn('[SmallGathering] my group role:', userData.role)
         }
       } catch (error) {
         console.error('사용자 권한 정보 가져오기 실패:', error)
         if (mounted) {
           setCurrentUserInGroup(null)
           setIsCurrentUserLeader(false)
+          setIsCurrentUserSubLeader(false)
         }
       }
     }
@@ -201,7 +208,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
   }
 
   const handleSaveMeeting = async () => {
-    if (!gathering || !isCurrentUserLeader) return
+    if (!gathering || !canEditMeeting) return
     const errMsg = validateMeetingForm(meetingForm)
     if (errMsg) {
       setMeetingError(errMsg)
@@ -401,7 +408,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
             <div
               className="flex-1 relative"
               onClick={() => {
-                if (!isCurrentUserLeader) return
+                if (!canEditMeeting) return
                 setEditingMeetingField('date')
               }}
             >
@@ -413,7 +420,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                 )}
               </div>
               {/* 편집 시 달력 입력 */}
-              {isCurrentUserLeader && editingMeetingField === 'date' && (
+              {canEditMeeting && editingMeetingField === 'date' && (
                 <input
                   ref={dateInputRef}
                   type="date"
@@ -443,11 +450,11 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
             <div
               className="flex-1 p-1"
               onClick={() => {
-                if (!isCurrentUserLeader) return
+                if (!canEditMeeting) return
                 setEditingMeetingField('place')
               }}
             >
-              {isCurrentUserLeader && editingMeetingField === 'place' ? (
+              {canEditMeeting && editingMeetingField === 'place' ? (
                 <input
                   ref={placeInputRef}
                   type="text"
@@ -482,11 +489,11 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
             <div
               className="flex-1 p-1"
               onClick={() => {
-                if (!isCurrentUserLeader) return
+                if (!canEditMeeting) return
                 setEditingMeetingField('time')
               }}
             >
-              {isCurrentUserLeader && editingMeetingField === 'time' ? (
+              {canEditMeeting && editingMeetingField === 'time' ? (
                 <div className="flex items-center gap-2">
                   <input
                     ref={startTimeRef}
@@ -535,12 +542,11 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
               <div
                 className="flex-1 p-1"
                 onClick={() => {
-                  if (!isCurrentUserLeader) return
+                  if (!canEditMeeting) return
                   setEditingMeetingField('description')
                 }}
               >
-                {isCurrentUserLeader &&
-                editingMeetingField === 'description' ? (
+                {canEditMeeting && editingMeetingField === 'description' ? (
                   <AutoGrowInput
                     value={meetingForm.description}
                     onChange={next =>
@@ -579,12 +585,11 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                 <div
                   className="flex-1 p-1"
                   onClick={() => {
-                    if (!isCurrentUserLeader) return
+                    if (!canEditMeeting) return
                     setEditingMeetingField('leaderComment')
                   }}
                 >
-                  {isCurrentUserLeader &&
-                  editingMeetingField === 'leaderComment' ? (
+                  {canEditMeeting && editingMeetingField === 'leaderComment' ? (
                     <AutoGrowInput
                       value={meetingForm.leaderComment}
                       onChange={next =>
@@ -639,7 +644,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
           )}
 
           {/* Save Button for Meeting Edits - moved under description */}
-          {isCurrentUserLeader && hasMeetingEdits && (
+          {canEditMeeting && hasMeetingEdits && (
             <div className="pt-2">
               <button
                 onClick={handleSaveMeeting}
@@ -691,7 +696,7 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                 }}
                 gatheringId={gatheringId}
                 showToast={showToast}
-                isReadOnly={!isCurrentUserLeader}
+                isReadOnly={!canEditMeeting}
               />
             ))}
           </div>

@@ -353,6 +353,38 @@ export const groupsApi = {
     const data: User = await response.json()
     return data
   },
+
+  // 그룹 멤버 역할 변경 (Leader only)
+  changeMemberRole: async (
+    groupId: string,
+    groupMemberId: string,
+    newRole: string
+  ): Promise<User> => {
+    const url = `${API_BASE_URL}/groups/${groupId}/groupMembers/${groupMemberId}/role`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ newRole }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+
+    const data: User = await response.json()
+    return data
+  },
 }
 
 // Members API functions
