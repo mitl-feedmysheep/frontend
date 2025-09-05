@@ -22,7 +22,10 @@ import Signup from './components/app/Signup'
 import SmallGathering from './components/app/SmallGathering'
 import SmallGatheringManagement from './components/app/SmallGatheringManagement'
 import SplashScreen from './components/app/SplashScreen'
+import InstallPrompt from './components/common/InstallPrompt'
+import OfflineIndicator from './components/common/OfflineIndicator'
 import { ToastProvider } from './components/common/ToastProvider'
+import UpdatePrompt from './components/common/UpdatePrompt'
 
 // Login Wrapper 컴포넌트
 const LoginWrapper = () => {
@@ -179,6 +182,9 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+        <UpdatePrompt />
+        <OfflineIndicator />
+        <InstallPrompt />
         <Routes>
           <Route path="/login" element={<LoginWrapper />} />
           <Route path="/signup" element={<Signup />} />
