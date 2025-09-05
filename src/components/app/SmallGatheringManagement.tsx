@@ -100,6 +100,22 @@ const SmallGatheringManagement: React.FC = () => {
     }
   }
 
+  const sortedMembers = useMemo(() => {
+    const toTimestamp = (value: unknown) => {
+      if (!value || typeof value !== 'string') return Number.POSITIVE_INFINITY
+      const t = new Date(value).getTime()
+      return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t
+    }
+    return members
+      .filter(m => m.role !== 'LEADER')
+      .slice()
+      .sort(
+        (a, b) =>
+          toTimestamp(a.birthday as unknown) -
+          toTimestamp(b.birthday as unknown)
+      )
+  }, [members])
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <ToastNotification
@@ -152,66 +168,61 @@ const SmallGatheringManagement: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {members
-              .filter(m => m.role !== 'LEADER')
-              .map(m => (
-                <div
-                  key={m.id}
-                  className={`w-full p-3 rounded-xl border transition-colors border-[#E5E7E5] bg-[#FEFFFE] hover:bg-[#F7F9F8]`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-[#E5E7E5] rounded-md" />
-                      <div>
-                        <div className="text-[#20342F] font-medium text-base font-pretendard">
-                          {m.name}
-                        </div>
-                        <div className="text-[#709180] text-xs font-pretendard">
-                          {(() => {
-                            try {
-                              if (!m.birthday) return '-'
-                              const d = new Date(m.birthday)
-                              const y = d.getFullYear()
-                              const mm = String(d.getMonth() + 1).padStart(
-                                2,
-                                '0'
-                              )
-                              const dd = String(d.getDate()).padStart(2, '0')
-                              return `${y}.${mm}.${dd}`
-                            } catch {
-                              return m.birthday || '-'
-                            }
-                          })()}
-                        </div>
+            {sortedMembers.map(m => (
+              <div
+                key={m.id}
+                className={`w-full p-3 rounded-xl border transition-colors border-[#E5E7E5] bg-[#FEFFFE] hover:bg-[#F7F9F8]`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-[#E5E7E5] rounded-md" />
+                    <div>
+                      <div className="text-[#20342F] font-medium text-base font-pretendard">
+                        {m.name}
+                      </div>
+                      <div className="text-[#709180] text-xs font-pretendard">
+                        {(() => {
+                          try {
+                            if (!m.birthday) return '-'
+                            const d = new Date(m.birthday)
+                            const y = d.getFullYear()
+                            const mm = String(d.getMonth() + 1).padStart(2, '0')
+                            const dd = String(d.getDate()).padStart(2, '0')
+                            return `${y}.${mm}.${dd}`
+                          } catch {
+                            return m.birthday || '-'
+                          }
+                        })()}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleSetRole(m, 'MEMBER')}
-                        disabled={!!savingIds[m.id] || m.role === 'MEMBER'}
-                        className={`min-w-[84px] inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-pretendard border transition-colors ${
-                          m.role === 'MEMBER'
-                            ? 'bg-[#EAF2ED] text-[#2E6B4E] border-[#5F7B6D]'
-                            : 'bg-white text-[#6B7C72] border-[#C2D0C7]'
-                        } ${savingIds[m.id] ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
-                      >
-                        멤버
-                      </button>
-                      <button
-                        onClick={() => handleSetRole(m, 'SUB_LEADER')}
-                        disabled={!!savingIds[m.id] || m.role === 'SUB_LEADER'}
-                        className={`min-w-[110px] inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-pretendard border transition-colors ${
-                          m.role === 'SUB_LEADER'
-                            ? 'bg-[#EAF2ED] text-[#2E6B4E] border-[#5F7B6D]'
-                            : 'bg-white text-[#6B7C72] border-[#C2D0C7]'
-                        } ${savingIds[m.id] ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
-                      >
-                        서브리더
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSetRole(m, 'MEMBER')}
+                      disabled={!!savingIds[m.id] || m.role === 'MEMBER'}
+                      className={`min-w-[84px] inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-pretendard border transition-colors ${
+                        m.role === 'MEMBER'
+                          ? 'bg-[#EAF2ED] text-[#2E6B4E] border-[#5F7B6D]'
+                          : 'bg-white text-[#6B7C72] border-[#C2D0C7]'
+                      } ${savingIds[m.id] ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+                    >
+                      멤버
+                    </button>
+                    <button
+                      onClick={() => handleSetRole(m, 'SUB_LEADER')}
+                      disabled={!!savingIds[m.id] || m.role === 'SUB_LEADER'}
+                      className={`min-w-[84px] inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-pretendard border transition-colors ${
+                        m.role === 'SUB_LEADER'
+                          ? 'bg-[#EAF2ED] text-[#2E6B4E] border-[#5F7B6D]'
+                          : 'bg-white text-[#6B7C72] border-[#C2D0C7]'
+                      } ${savingIds[m.id] ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+                    >
+                      서브리더
+                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         )}
       </div>
