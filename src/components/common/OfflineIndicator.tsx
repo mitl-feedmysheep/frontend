@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react'
 
 const OfflineIndicator: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [showOfflineMessage, setShowOfflineMessage] = useState(false)
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      setShowOfflineMessage(false)
     }
 
     const handleOffline = () => {
       setIsOnline(false)
-      setShowOfflineMessage(true)
     }
 
     window.addEventListener('online', handleOnline)
