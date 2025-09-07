@@ -1,6 +1,5 @@
 import { ApiError, authApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 
 interface LoginProps {
   onLoginSuccess: () => void
@@ -213,12 +212,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
             {/* Signup Entry */}
             <div className="text-center mt-6">
-              <Link
+              {/* <Link
                 to="/signup"
                 className="text-gray-600 hover:text-gray-800 font-pretendard font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
               >
                 가입할래요!
-              </Link>
+              </Link> */}
             </div>
           </form>
         </div>
