@@ -1,7 +1,6 @@
 import { useToast } from '@/components/common/ToastProvider'
 import { ApiError, authApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import ProvisionEmail from './ProvisionEmail'
 
 interface LoginProps {
@@ -241,12 +240,27 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
             {/* Signup Entry */}
             <div className="text-center mt-6">
-              <Link
+              {/* <Link
                 to="/signup"
                 className="text-gray-600 hover:text-gray-800 font-pretendard font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
               >
                 가입할래요!
-              </Link>
+              </Link> */}
+              <div className="mt-4 text-center text-gray-500 text-sm font-pretendard">
+                이름, 생년, 성별 정보만을 활용하여
+                <br />
+                계정이 생성되어 있으며, 셀에 가입되어 있습니다.
+                <br />
+                <br />
+                이메일 형식은 '한글이름@intotheheaven.app' 형식입니다.
+                <br />
+                예시) rlackdtn@intotheheaven.app
+                <br />
+                <br />
+                <span className="text-[#F1998E] font-semibold">
+                  로그인 후 이메일, 기본정보, 비밀번호를 꼭 변경해주세요.
+                </span>
+              </div>
             </div>
           </form>
         </div>
