@@ -55,6 +55,7 @@ export interface Group {
   startDate: string
   endDate: string
   groupMemberCount: number
+  imageUrl?: string
 }
 
 // Gathering types

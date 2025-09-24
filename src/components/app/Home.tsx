@@ -471,9 +471,32 @@ const Home: React.FC = () => {
                   >
                     {/* Group Image */}
                     <div className="w-[143px] h-[107px]">
-                      <div className="w-full h-full bg-[#E5E7E5] rounded-2xl flex items-center justify-center">
-                        <div className="text-[#98A7A4] text-sm font-medium font-pretendard">
-                          이미지
+                      <div className="w-full h-full rounded-2xl overflow-hidden">
+                        {group.imageUrl ? (
+                          <img
+                            src={group.imageUrl}
+                            alt={`${group.name} 대표사진`}
+                            className="w-full h-full object-cover"
+                            onError={e => {
+                              // 이미지 로드 실패시 fallback 표시
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              if (target.nextElementSibling) {
+                                ;(
+                                  target.nextElementSibling as HTMLElement
+                                ).style.display = 'flex'
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-full h-full bg-[#E5E7E5] rounded-2xl flex items-center justify-center ${
+                            group.imageUrl ? 'hidden' : 'flex'
+                          }`}
+                        >
+                          <div className="text-[#98A7A4] text-sm font-medium font-pretendard">
+                            이미지
+                          </div>
                         </div>
                       </div>
                     </div>
