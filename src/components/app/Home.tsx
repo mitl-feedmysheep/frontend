@@ -486,6 +486,8 @@ const Home: React.FC = () => {
                             src={`${group.imageUrl}?v=${APP_VERSION}`}
                             alt={`${group.name} 대표사진`}
                             className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
                             onError={e => {
                               // 이미지 로드 실패시 fallback 표시
                               const target = e.target as HTMLImageElement
