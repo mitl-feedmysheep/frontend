@@ -3,6 +3,9 @@ import type { Church, Group, User } from '@/types'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+// 앱 버전 가져오기
+const APP_VERSION = __APP_VERSION__
+
 const Home: React.FC = () => {
   const navigate = useNavigate()
   const [groups, setGroups] = useState<Group[]>([])
@@ -386,25 +389,31 @@ const Home: React.FC = () => {
             </div>
           )}
         </div>
-        <button
-          onClick={handleOpenSettings}
-          className="w-8 h-8 bg-[#77907D] rounded flex items-center justify-center hover:bg-[#6a8173] transition-colors"
-          aria-label="설정 열기"
-        >
-          <svg
-            width="16"
-            height="20"
-            viewBox="0 0 16 20"
-            fill="none"
-            aria-hidden
+        <div className="relative">
+          <button
+            onClick={handleOpenSettings}
+            className="w-8 h-8 bg-[#77907D] rounded flex items-center justify-center hover:bg-[#6a8173] transition-colors"
+            aria-label="설정 열기"
           >
-            <circle cx="8" cy="5" r="3" fill="white" />
-            <path
-              d="M8 10c-2.4 0-4 1.6-4 4v6h8v-6c0-2.4-1.6-4-4-4z"
-              fill="white"
-            />
-          </svg>
-        </button>
+            <svg
+              width="16"
+              height="20"
+              viewBox="0 0 16 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="5" r="3" fill="white" />
+              <path
+                d="M8 10c-2.4 0-4 1.6-4 4v6h8v-6c0-2.4-1.6-4-4-4z"
+                fill="white"
+              />
+            </svg>
+          </button>
+          {/* 앱 버전 표시 - 버튼 밑에 절대 위치 */}
+          <span className="absolute -bottom-3 right-0 text-[#98A7A4] text-[8px] font-pretendard font-light">
+            v{APP_VERSION}
+          </span>
+        </div>
       </header>
 
       {/* Welcome Section */}
@@ -474,7 +483,7 @@ const Home: React.FC = () => {
                       <div className="w-full h-full rounded-2xl overflow-hidden">
                         {group.imageUrl ? (
                           <img
-                            src={group.imageUrl}
+                            src={`${group.imageUrl}?v=${APP_VERSION}`}
                             alt={`${group.name} 대표사진`}
                             className="w-full h-full object-cover"
                             onError={e => {
