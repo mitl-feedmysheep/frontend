@@ -1,4 +1,5 @@
 import { authApi } from '@/lib/api'
+import { setGlobalNavigate, setGlobalToast } from '@/lib/auth-handler'
 import { isAdminDomain } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 import {
@@ -24,7 +25,7 @@ import SmallGatheringManagement from './components/app/SmallGatheringManagement'
 import SplashScreen from './components/app/SplashScreen'
 import InstallPrompt from './components/common/InstallPrompt'
 import OfflineIndicator from './components/common/OfflineIndicator'
-import { ToastProvider } from './components/common/ToastProvider'
+import { ToastProvider, useToast } from './components/common/ToastProvider'
 import UpdatePrompt from './components/common/UpdatePrompt'
 
 // Login Wrapper 컴포넌트
@@ -107,6 +108,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
+// 글로벌 핸들러 설정 컴포넌트
+const GlobalHandlerSetup = ({ children }: { children: React.ReactNode }) => {
+  const { showToast } = useToast()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // 글로벌 토스트 함수 등록
+    setGlobalToast(showToast)
+
+    // 글로벌 네비게이션 함수 등록
+    setGlobalNavigate((path: string, replace?: boolean) => {
+      navigate(path, { replace })
+    })
+  }, [showToast, navigate])
+
+  return <>{children}</>
+}
+
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [showSplash, setShowSplash] = useState<boolean>(() => {
@@ -182,88 +201,90 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <UpdatePrompt />
-        <OfflineIndicator />
-        <InstallPrompt />
-        <Routes>
-          <Route path="/login" element={<LoginWrapper />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/provision/email" element={<ProvisionEmail />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/group/:groupId"
-            element={
-              <ProtectedRoute>
-                <GroupDetailWrapper />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/group/:groupId/create"
-            element={
-              <ProtectedRoute>
-                <CreateMeetingWrapper />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/group/:groupId/gathering/:gatheringId"
-            element={
-              <ProtectedRoute>
-                <SmallGatheringWrapper />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/group/:groupId/gathering/:gatheringId/manage"
-            element={
-              <ProtectedRoute>
-                <SmallGatheringManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/group/:groupId/manage"
-            element={
-              <ProtectedRoute>
-                <SmallGatheringManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/account"
-            element={
-              <ProtectedRoute>
-                <Account />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/password"
-            element={
-              <ProtectedRoute>
-                <ChangePassword />
-              </ProtectedRoute>
-            }
-          />
-          {/* 기본값: 루트로 리다이렉트 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <GlobalHandlerSetup>
+          <UpdatePrompt />
+          <OfflineIndicator />
+          <InstallPrompt />
+          <Routes>
+            <Route path="/login" element={<LoginWrapper />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/provision/email" element={<ProvisionEmail />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId"
+              element={
+                <ProtectedRoute>
+                  <GroupDetailWrapper />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId/create"
+              element={
+                <ProtectedRoute>
+                  <CreateMeetingWrapper />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId/gathering/:gatheringId"
+              element={
+                <ProtectedRoute>
+                  <SmallGatheringWrapper />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId/gathering/:gatheringId/manage"
+              element={
+                <ProtectedRoute>
+                  <SmallGatheringManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId/manage"
+              element={
+                <ProtectedRoute>
+                  <SmallGatheringManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/account"
+              element={
+                <ProtectedRoute>
+                  <Account />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/password"
+              element={
+                <ProtectedRoute>
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            {/* 기본값: 루트로 리다이렉트 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </GlobalHandlerSetup>
       </ToastProvider>
     </BrowserRouter>
   )

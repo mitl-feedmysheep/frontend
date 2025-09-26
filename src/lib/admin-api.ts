@@ -1,5 +1,6 @@
 import { ApiError } from '@/lib/api'
 import type { Church, LoginRequest, LoginResponse } from '@/types'
+import { checkAndHandleJwtExpired } from './auth-handler'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
@@ -17,11 +18,16 @@ export const adminApi = {
       const errorData: { message?: string } = await response
         .json()
         .catch(() => ({}) as { message?: string })
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: LoginResponse = await response.json()
@@ -54,11 +60,16 @@ export const adminApi = {
       const errorData: { message?: string } = await response
         .json()
         .catch(() => ({}) as { message?: string })
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
     const data: Church[] = await response.json()
     return data
@@ -81,11 +92,16 @@ export const adminApi = {
       const errorData: { message?: string } = await response
         .json()
         .catch(() => ({}) as { message?: string })
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
     const data: LoginResponse = await response.json()
     if (data.accessToken) {

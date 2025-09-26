@@ -12,6 +12,7 @@ import type {
   SignupResponse,
   User,
 } from '@/types'
+import { checkAndHandleJwtExpired } from './auth-handler'
 
 // Get API URL from environment variables
 const API_BASE_URL =
@@ -60,15 +61,27 @@ export async function apiRequest<T = unknown>(
     const data = await response.json()
 
     if (!response.ok) {
-      throw new ApiError(
+      const apiError = new ApiError(
         data.message || `HTTP ${response.status}`,
         response.status,
         data
       )
+
+      // JWT 만료 처리
+      if (checkAndHandleJwtExpired(apiError)) {
+        return Promise.reject(apiError)
+      }
+
+      throw apiError
     }
 
     return data
   } catch (error) {
+    // JWT 만료 처리
+    if (checkAndHandleJwtExpired(error)) {
+      return Promise.reject(error)
+    }
+
     if (error instanceof ApiError) {
       throw error
     }
@@ -122,11 +135,16 @@ export const authApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리 (로그인 실패 시에도 확인)
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: LoginResponse = await response.json()
@@ -162,11 +180,16 @@ export const authApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
   },
 
@@ -186,11 +209,16 @@ export const authApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
   },
 
@@ -201,7 +229,9 @@ export const authApi = {
     try {
       localStorage.removeItem('provisionToken')
       localStorage.removeItem('provisionPending')
-    } catch {}
+    } catch {
+      // ignore localStorage errors
+    }
   },
 
   isAuthenticated: (): boolean => {
@@ -225,11 +255,16 @@ export const authApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: SignupResponse = await response.json()
@@ -259,11 +294,16 @@ export const groupsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: Group[] = await response.json()
@@ -287,11 +327,16 @@ export const groupsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: User[] = await response.json()
@@ -315,11 +360,16 @@ export const groupsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: Gathering[] = await response.json()
@@ -343,11 +393,16 @@ export const groupsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: User = await response.json()
@@ -375,11 +430,16 @@ export const groupsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: User = await response.json()
@@ -409,11 +469,16 @@ export const membersApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: User = await response.json()
@@ -439,11 +504,16 @@ export const membersApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
   },
 
@@ -467,11 +537,16 @@ export const membersApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
   },
 
@@ -498,11 +573,16 @@ export const membersApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: User = await response.json()
@@ -532,11 +612,16 @@ export const churchesApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: Church[] = await response.json()
@@ -565,11 +650,16 @@ export const churchesApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: { count: number } = await response.json()
@@ -599,11 +689,16 @@ export const gatheringsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: GatheringResponse = await response.json()
@@ -626,11 +721,16 @@ export const gatheringsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: GatheringDetail = await response.json()
@@ -666,11 +766,16 @@ export const gatheringsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data: GatheringResponse = await response.json()
@@ -723,11 +828,16 @@ export const gatheringsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
 
     const data = await response.json()
@@ -753,11 +863,16 @@ export const prayersApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         (errorData as any).message || `HTTP ${response.status}`,
         response.status,
         errorData
       )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
     }
   },
 }
