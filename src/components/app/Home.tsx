@@ -484,6 +484,20 @@ const Home: React.FC = () => {
                         {group.imageUrl ? (
                           <img
                             src={`${group.imageUrl}?v=${APP_VERSION}`}
+                            onLoad={() => {
+                              // 🔍 Home 화면 이미지 URL 디버깅
+                              console.warn('🏠 [HOME] Group Image URL:', {
+                                groupId: group.id,
+                                groupName: group.name,
+                                originalUrl: group.imageUrl,
+                                finalUrl: `${group.imageUrl}?v=${APP_VERSION}`,
+                                urlContains: {
+                                  thumbnail:
+                                    group.imageUrl?.includes('thumbnail'),
+                                  medium: group.imageUrl?.includes('medium'),
+                                },
+                              })
+                            }}
                             alt={`${group.name} 대표사진`}
                             className="w-full h-full object-cover"
                             crossOrigin="anonymous"

@@ -154,3 +154,92 @@ export function isAdminDomain(): boolean {
   const subdomain = getSubdomain()
   return subdomain === 'admin'
 }
+
+// 이미지 리사이징 함수
+export function resizeImage(
+  file: File,
+  targetWidth: number,
+  targetHeight: number,
+  quality: number = 0.9
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    // 파일을 이미지로 로드
+    const objectUrl = URL.createObjectURL(file)
+    img.src = objectUrl
+
+    // 메모리 정리 함수
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+
+    // 로드 완료 후 정리
+    img.onload = () => {
+      cleanup()
+      // Canvas 크기 설정
+      canvas.width = targetWidth
+      canvas.height = targetHeight
+
+      if (!ctx) {
+        reject(new Error('Canvas context not available'))
+        return
+      }
+
+      // 이미지 비율 계산 (cover 방식 - 전체 영역을 채우면서 비율 유지)
+      const imgAspect = img.width / img.height
+      const targetAspect = targetWidth / targetHeight
+
+      let sourceX = 0,
+        sourceY = 0,
+        sourceWidth = img.width,
+        sourceHeight = img.height
+
+      if (imgAspect > targetAspect) {
+        // 이미지가 더 넓음 - 세로 기준으로 맞추고 가로 자르기
+        sourceWidth = img.height * targetAspect
+        sourceX = (img.width - sourceWidth) / 2
+      } else {
+        // 이미지가 더 높음 - 가로 기준으로 맞추고 세로 자르기
+        sourceHeight = img.width / targetAspect
+        sourceY = (img.height - sourceHeight) / 2
+      }
+
+      // 이미지 그리기 (crop + resize)
+      ctx.drawImage(
+        img,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight, // 원본에서 자를 영역
+        0,
+        0,
+        targetWidth,
+        targetHeight // Canvas에 그릴 영역
+      )
+
+      // Blob으로 변환
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            console.warn(
+              `✅ Image resized to ${targetWidth}x${targetHeight}, size: ${(blob.size / 1024).toFixed(1)}KB`
+            )
+            resolve(blob)
+          } else {
+            reject(new Error('Failed to create blob from canvas'))
+          }
+        },
+        file.type,
+        quality
+      )
+    }
+
+    img.onerror = () => {
+      cleanup()
+      reject(new Error('Failed to load image'))
+    }
+  })
+}

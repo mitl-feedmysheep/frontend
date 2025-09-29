@@ -877,5 +877,209 @@ export const prayersApi = {
   },
 }
 
+// Media API functions
+export const mediaApi = {
+  // Presigned URL 생성 (이미지 업로드용) - 2개 버전 (THUMBNAIL, MEDIUM)
+  getPresignedUrls: async (
+    entityType: string,
+    entityId: string,
+    fileName: string,
+    contentType: string,
+    fileSize: number
+  ): Promise<{
+    uploads: Array<{
+      mediaType: 'THUMBNAIL' | 'MEDIUM'
+      uploadUrl: string
+      publicUrl: string
+    }>
+  }> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/media/presigned-urls`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        entityType,
+        entityId,
+        fileName,
+        contentType,
+        fileSize,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      checkAndHandleJwtExpired(apiError)
+      throw apiError
+    }
+
+    const data = await response.json()
+    return {
+      uploads: data.uploads, // 전체 uploads 배열 반환 (THUMBNAIL, MEDIUM 포함)
+    }
+  },
+
+  // 실제 파일을 presigned URL로 업로드
+  uploadFile: async (uploadUrl: string, file: File): Promise<void> => {
+    // XMLHttpRequest를 사용하여 CORS 문제 우회 시도
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.open('PUT', uploadUrl, true)
+
+      // CORS 관련 설정
+      xhr.withCredentials = false
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.warn('✅ XMLHttpRequest upload success:', xhr.status)
+          resolve()
+        } else {
+          console.error(
+            '❌ XMLHttpRequest upload failed:',
+            xhr.status,
+            xhr.statusText
+          )
+          reject(
+            new ApiError(
+              `Upload failed: ${xhr.status} ${xhr.statusText}`,
+              xhr.status
+            )
+          )
+        }
+      }
+
+      xhr.onerror = function () {
+        console.error('❌ XMLHttpRequest network error')
+        reject(new ApiError('Network error during upload', 0))
+      }
+
+      xhr.onabort = function () {
+        console.error('❌ XMLHttpRequest upload aborted')
+        reject(new ApiError('Upload aborted', 0))
+      }
+
+      // 파일 전송
+      xhr.send(file)
+    })
+  },
+
+  // 업로드 완료 처리
+  completeUpload: async (
+    entityType: string,
+    entityId: string,
+    uploads: Array<{
+      mediaType: string
+      publicUrl: string
+    }>
+  ): Promise<{
+    medias: Array<{
+      mediaId: string
+      mediaType: string
+      publicUrl: string
+      createdAt: string
+    }>
+    totalCount: number
+    completedAt: string
+  }> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/media/complete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        entityType,
+        entityId,
+        uploads,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      checkAndHandleJwtExpired(apiError)
+      throw apiError
+    }
+
+    return await response.json()
+  },
+
+  // 미디어 삭제
+  deleteMediaById: async (mediaId: string): Promise<void> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/media/${mediaId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: authToken,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      checkAndHandleJwtExpired(apiError)
+      throw apiError
+    }
+  },
+
+  deleteMediaByEntityId: async (entityId: string): Promise<void> => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      throw new ApiError('Not authenticated', 401)
+    }
+
+    const response = await fetch(`${API_BASE_URL}/media/entity/${entityId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: authToken,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      checkAndHandleJwtExpired(apiError)
+      throw apiError
+    }
+  },
+}
+
 // Admin APIs
 // admin-api.ts로 분리됨
