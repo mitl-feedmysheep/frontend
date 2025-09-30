@@ -184,7 +184,13 @@ function App() {
 
   // 어드민 도메인인 경우 어드민 앱 렌더링 (스플래시 없음)
   if (isAdminDomain()) {
-    return <AdminApp />
+    return (
+      <BrowserRouter>
+        <ToastProvider>
+          <AdminApp />
+        </ToastProvider>
+      </BrowserRouter>
+    )
   }
 
   // 일반 사용자 앱에서 스플래시 스크린 표시

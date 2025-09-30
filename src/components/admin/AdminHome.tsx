@@ -1,43 +1,34 @@
-import { authApi } from '@/lib/api'
-import { useNavigate } from 'react-router-dom'
-
 function AdminHome() {
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    // 토큰 및 churchId, groupId 제거 후 로그인으로 이동
-    authApi.logout()
-    navigate('/login', { replace: true })
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-blue-900 font-pretendard">
-              관리자 홈
-            </h1>
-            <button
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-gray-800 font-pretendard"
-            >
-              로그아웃
-            </button>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <main className="max-w-screen-sm mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-gray-900 font-pretendard mb-2">
+              관리자 대시보드
+            </h2>
+            <p className="text-gray-600 font-pretendard text-sm">
+              교회 관리 시스템에 오신 것을 환영합니다.
+            </p>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-900 font-pretendard mb-2">
-                어드민 홈
-              </h2>
-              <p className="text-gray-600 font-pretendard">
-                로그인 성공 시 이 화면으로 이동합니다.
-              </p>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="text-gray-500 text-xs font-pretendard mb-1">
+              전체 교인
+            </div>
+            <div className="text-2xl font-bold text-gray-900 font-pretendard">
+              -
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="text-gray-500 text-xs font-pretendard mb-1">
+              소모임 수
+            </div>
+            <div className="text-2xl font-bold text-gray-900 font-pretendard">
+              -
             </div>
           </div>
         </div>

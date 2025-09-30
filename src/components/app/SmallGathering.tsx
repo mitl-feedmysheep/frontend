@@ -969,24 +969,31 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                     crossOrigin="anonymous"
                     referrerPolicy="no-referrer"
                   />
-                  {/* 삭제 버튼 */}
-                  <button
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleImageDelete(image.id)
-                    }}
-                    className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M12 4L4 12M4 4L12 12"
-                        stroke="#9CA3AF"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                  {/* 삭제 버튼 - 리더만 */}
+                  {isCurrentUserLeader && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleImageDelete(image.id)
+                      }}
+                      className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="M12 4L4 12M4 4L12 12"
+                          stroke="#9CA3AF"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               ))}
 

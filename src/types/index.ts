@@ -151,3 +151,20 @@ export interface SignupResponse {
   memberId: string
   message: string
 }
+
+// Admin Member Search types
+export interface MemberSearchResponse {
+  memberId: string
+  name: string
+  email: string
+  phone: string
+  sex: 'M' | 'F'
+  birthday: string // "2025-09-30"
+  address: string
+  description: string
+  groups: {
+    groupId: string
+    groupName: string
+    role: 'LEADER' | 'SUB_LEADER' | 'MEMBER'
+  }[]
+}

@@ -1,17 +1,20 @@
 import { authApi } from '@/lib/api'
 import { useEffect, useState } from 'react'
 import {
-  BrowserRouter,
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from 'react-router-dom'
 import ProvisionEmail from '../app/ProvisionEmail'
-import { ToastProvider } from '../common/ToastProvider'
+import AdminBottomNav from './AdminBottomNav'
+import AdminGroups from './AdminGroups'
 import AdminHome from './AdminHome'
 import AdminLogin from './AdminLogin'
+import AdminMembers from './AdminMembers'
 import AdminSplashScreen from './AdminSplashScreen'
+import AdminVisit from './AdminVisit'
 
 // AdminLogin Wrapper 컴포넌트
 const AdminLoginWrapper = () => {
@@ -37,6 +40,13 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 function AdminApp() {
+  // 브라우저 스크롤 복원 비활성화
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [showSplash, setShowSplash] = useState<boolean>(() => {
     const env = import.meta.env as Record<string, string | boolean | undefined>
@@ -89,28 +99,67 @@ function AdminApp() {
     return <AdminSplashScreen onComplete={handleAdminSplashComplete} />
   }
 
+  return <RoutesWithScrollReset />
+}
+
+// Routes를 별도 컴포넌트로 분리하여 location을 사용
+function RoutesWithScrollReset() {
+  const location = useLocation()
+
+  useEffect(() => {
+    // 페이지 전환 시 스크롤 최상단으로
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [location.pathname])
+
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        <Routes>
-          <Route path="/login" element={<AdminLoginWrapper />} />
-          <Route
-            path="/provision/email"
-            element={<ProvisionEmail variant="admin" />}
-          />
-          <Route
-            path="/"
-            element={
-              <AdminProtectedRoute>
-                <AdminHome />
-              </AdminProtectedRoute>
-            }
-          />
-          {/* 기본값: 어드민 로그인으로 리다이렉트 */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </ToastProvider>
-    </BrowserRouter>
+    <>
+      <Routes>
+        <Route path="/login" element={<AdminLoginWrapper />} />
+        <Route
+          path="/provision/email"
+          element={<ProvisionEmail variant="admin" />}
+        />
+        <Route
+          path="/"
+          element={
+            <AdminProtectedRoute>
+              <AdminHome />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <AdminProtectedRoute>
+              <AdminMembers />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/visit"
+          element={
+            <AdminProtectedRoute>
+              <AdminVisit />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <AdminProtectedRoute>
+              <AdminGroups />
+            </AdminProtectedRoute>
+          }
+        />
+        {/* 기본값: 어드민 로그인으로 리다이렉트 */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+      <AdminProtectedRoute>
+        <AdminBottomNav />
+      </AdminProtectedRoute>
+    </>
   )
 }
 

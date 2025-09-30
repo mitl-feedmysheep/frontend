@@ -1,5 +1,10 @@
 import { ApiError } from '@/lib/api'
-import type { Church, LoginRequest, LoginResponse } from '@/types'
+import type {
+  Church,
+  LoginRequest,
+  LoginResponse,
+  MemberSearchResponse,
+} from '@/types'
 import { checkAndHandleJwtExpired } from './auth-handler'
 
 const API_BASE_URL =
@@ -107,6 +112,36 @@ export const adminApi = {
     if (data.accessToken) {
       localStorage.setItem('authToken', data.accessToken)
     }
+    return data
+  },
+
+  searchMembers: async (
+    searchText: string
+  ): Promise<MemberSearchResponse[]> => {
+    const url = `${API_BASE_URL}/churches/admin/members?searchText=${encodeURIComponent(searchText)}`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, { method: 'GET', headers })
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+    const data: MemberSearchResponse[] = await response.json()
     return data
   },
 }
