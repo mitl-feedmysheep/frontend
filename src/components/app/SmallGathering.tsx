@@ -941,9 +941,9 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 px-4 pt-4 pb-6">
+        <div className="flex-1 px-4 pb-6">
           {/* 이미지 갤러리 섹션 */}
-          <div className="mb-6">
+          <div className="mb-2">
             {/* 숨겨진 파일 입력 */}
             <input
               ref={gatheringFileInputRef}
