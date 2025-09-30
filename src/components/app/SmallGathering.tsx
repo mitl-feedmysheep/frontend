@@ -966,6 +966,8 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                     alt={image.name}
                     className="w-full h-full object-cover cursor-pointer"
                     onClick={() => openImageModal(index)}
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
                   />
                   {/* 삭제 버튼 */}
                   <button
@@ -1119,6 +1121,8 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
                 src={gatheringImages[selectedImageIndex].url}
                 alt={gatheringImages[selectedImageIndex].name}
                 className="max-w-full max-h-full object-contain rounded-lg"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
               />
 
               {/* 닫기 버튼 */}
