@@ -88,30 +88,27 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
     {}
   ) // 파일별 진행률
 
-  // 기존 이미지 로딩 (localStorage 기반 임시 방편)
+  // gathering.medias를 gatheringImages로 매핑
   useEffect(() => {
-    if (!gatheringId) return
-
-    const storageKey = `gathering_images_${gatheringId}`
-    try {
-      const savedImages = localStorage.getItem(storageKey)
-      if (savedImages) {
-        const images = JSON.parse(savedImages)
-        console.warn(
-          `📁 [Loading] Found ${images.length} existing images for gathering ${gatheringId}`
-        )
-        setGatheringImages(images)
-      } else {
-        console.warn(
-          `📁 [Loading] No existing images found for gathering ${gatheringId}`
-        )
-        setGatheringImages([])
-      }
-    } catch (error) {
-      console.error('Error loading existing images:', error)
+    if (!gathering?.medias) {
       setGatheringImages([])
+      return
     }
-  }, [gatheringId])
+
+    // MEDIUM 타입 이미지만 필터링
+    const images = gathering.medias
+      .filter(media => media.mediaType === 'MEDIUM')
+      .map(media => ({
+        id: media.id,
+        url: media.accessURL || media.url,
+        name: `image_${media.id}`,
+      }))
+
+    console.warn(
+      `📁 [Loading] Found ${images.length} images from gathering.medias`
+    )
+    setGatheringImages(images)
+  }, [gathering?.medias])
 
   // 이미지 갤러리 핸들러 함수들
   const handleImageSelect = () => {
@@ -203,27 +200,21 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
               completeResult.medias[0]
             )
 
-            // 5. 상태 업데이트
-            const uploadedMedia = completeResult.medias[0]
-            const newImage = {
-              id: uploadedMedia.mediaId,
-              url: uploadedMedia.publicUrl,
-              name: file.name,
+            // 5. 업로드 성공 - gathering 다시 fetch하여 최신 medias 가져오기
+            console.warn(`✅ [${file.name}] Successfully uploaded to gallery`)
+
+            // gathering 다시 조회하여 medias 업데이트
+            try {
+              const updatedGathering =
+                await gatheringsApi.getDetail(gatheringId)
+              setGathering(updatedGathering)
+              console.warn(
+                `✅ [${file.name}] Gathering refreshed with new medias`
+              )
+            } catch (error) {
+              console.error('Failed to refresh gathering:', error)
+              // 실패해도 업로드는 성공했으므로 계속 진행
             }
-
-            setGatheringImages(prev => [...prev, newImage])
-
-            // localStorage에도 저장 (임시 방편)
-            const storageKey = `gathering_images_${gatheringId}`
-            const existingImages = JSON.parse(
-              localStorage.getItem(storageKey) || '[]'
-            )
-            localStorage.setItem(
-              storageKey,
-              JSON.stringify([...existingImages, newImage])
-            )
-
-            console.warn(`✅ [${file.name}] Successfully added to gallery`)
           } catch (error) {
             console.error(`❌ [${file.name}] Upload failed:`, error)
             const errorMessage =
@@ -265,25 +256,16 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
 
         console.warn(`✅ [Delete] Successfully deleted image: ${imageId}`)
 
-        // 상태에서 제거
-        setGatheringImages(prev => {
-          const imageToDelete = prev.find(img => img.id === imageId)
-          if (imageToDelete && imageToDelete.url.startsWith('blob:')) {
-            // 혹시 blob URL이 있다면 메모리 해제
-            URL.revokeObjectURL(imageToDelete.url)
-          }
-          return prev.filter(img => img.id !== imageId)
-        })
-
-        // localStorage에서도 제거 (임시 방편)
-        const storageKey = `gathering_images_${gatheringId}`
-        const existingImages = JSON.parse(
-          localStorage.getItem(storageKey) || '[]'
-        )
-        const updatedImages = existingImages.filter(
-          (img: { id: string; url: string; name: string }) => img.id !== imageId
-        )
-        localStorage.setItem(storageKey, JSON.stringify(updatedImages))
+        // gathering 다시 조회하여 medias 업데이트
+        try {
+          const updatedGathering = await gatheringsApi.getDetail(gatheringId)
+          setGathering(updatedGathering)
+          console.warn(`✅ [Delete] Gathering refreshed after deletion`)
+        } catch (error) {
+          console.error('Failed to refresh gathering:', error)
+          // 실패하면 로컬 상태만 업데이트
+          setGatheringImages(prev => prev.filter(img => img.id !== imageId))
+        }
 
         showToast('이미지가 삭제되었습니다.')
       } catch (error) {

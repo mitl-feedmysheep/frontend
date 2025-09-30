@@ -105,6 +105,15 @@ export interface GatheringDetail {
   gatheringMembers: GatheringMember[]
   leaderComment?: string
   adminComment?: string
+  medias?: Array<{
+    id: string
+    mediaType: 'THUMBNAIL' | 'MEDIUM'
+    entityType: string
+    entityId: string
+    url: string
+    accessURL: string
+    createdAt: string
+  }>
 }
 
 export interface GatheringMember {
