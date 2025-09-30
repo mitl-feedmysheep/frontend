@@ -188,36 +188,40 @@ export function resizeImage(
         return
       }
 
-      // 이미지 비율 계산 (cover 방식 - 전체 영역을 채우면서 비율 유지)
+      // 배경 색상 채우기 (#F5F7F5 - 갤러리 배경과 동일)
+      ctx.fillStyle = '#F5F7F5'
+      ctx.fillRect(0, 0, targetWidth, targetHeight)
+
+      // 이미지 비율 계산 (contain 방식 - 전체 이미지를 보여주면서 비율 유지)
       const imgAspect = img.width / img.height
       const targetAspect = targetWidth / targetHeight
 
-      let sourceX = 0,
-        sourceY = 0,
-        sourceWidth = img.width,
-        sourceHeight = img.height
+      let drawWidth = targetWidth
+      let drawHeight = targetHeight
+      let drawX = 0
+      let drawY = 0
 
       if (imgAspect > targetAspect) {
-        // 이미지가 더 넓음 - 세로 기준으로 맞추고 가로 자르기
-        sourceWidth = img.height * targetAspect
-        sourceX = (img.width - sourceWidth) / 2
+        // 이미지가 더 넓음 - 가로를 꽉 채우고 세로는 중앙 정렬
+        drawHeight = targetWidth / imgAspect
+        drawY = (targetHeight - drawHeight) / 2
       } else {
-        // 이미지가 더 높음 - 가로 기준으로 맞추고 세로 자르기
-        sourceHeight = img.width / targetAspect
-        sourceY = (img.height - sourceHeight) / 2
+        // 이미지가 더 높음 - 세로를 꽉 채우고 가로는 중앙 정렬
+        drawWidth = targetHeight * imgAspect
+        drawX = (targetWidth - drawWidth) / 2
       }
 
-      // 이미지 그리기 (crop + resize)
+      // 이미지 그리기 (전체 이미지를 비율 유지하며 그림)
       ctx.drawImage(
         img,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight, // 원본에서 자를 영역
         0,
         0,
-        targetWidth,
-        targetHeight // Canvas에 그릴 영역
+        img.width,
+        img.height, // 원본 전체 사용
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight // Canvas에 그릴 영역 (중앙 정렬)
       )
 
       // Blob으로 변환

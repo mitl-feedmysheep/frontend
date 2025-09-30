@@ -1,8 +1,14 @@
 import ToastNotification from '@/components/common/ToastNotification'
-import { ApiError, gatheringsApi, groupsApi, prayersApi } from '@/lib/api'
-import { convertKSTtoUTC, formatWeekFormat } from '@/lib/utils'
+import {
+  ApiError,
+  gatheringsApi,
+  groupsApi,
+  mediaApi,
+  prayersApi,
+} from '@/lib/api'
+import { convertKSTtoUTC, formatWeekFormat, resizeImage } from '@/lib/utils'
 import type { GatheringDetail, GatheringMember, User } from '@/types'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 // removed navigate usage after moving Manage button to GroupDetail
 import AutoGrowInput from './AutoGrowInput'
 
@@ -50,10 +56,10 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
   const canEditMeeting = isCurrentUserLeader || isCurrentUserSubLeader
 
   // 토스트 알림 표시 함수
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToastMessage(message)
     setIsToastVisible(true)
-  }
+  }, [])
 
   const hideToast = () => {
     setIsToastVisible(false)
@@ -65,6 +71,297 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
   }, [])
+
+  // 이미지 갤러리 상태 및 핸들러 (SmallGathering 컴포넌트 레벨)
+  const [gatheringImages, setGatheringImages] = useState<
+    Array<{
+      id: string
+      url: string
+      name: string
+    }>
+  >([])
+  const gatheringFileInputRef = useRef<HTMLInputElement>(null)
+
+  // 업로드 상태 관리
+  const [isUploading, setIsUploading] = useState(false)
+  const [_uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {}
+  ) // 파일별 진행률
+
+  // 기존 이미지 로딩 (localStorage 기반 임시 방편)
+  useEffect(() => {
+    if (!gatheringId) return
+
+    const storageKey = `gathering_images_${gatheringId}`
+    try {
+      const savedImages = localStorage.getItem(storageKey)
+      if (savedImages) {
+        const images = JSON.parse(savedImages)
+        console.warn(
+          `📁 [Loading] Found ${images.length} existing images for gathering ${gatheringId}`
+        )
+        setGatheringImages(images)
+      } else {
+        console.warn(
+          `📁 [Loading] No existing images found for gathering ${gatheringId}`
+        )
+        setGatheringImages([])
+      }
+    } catch (error) {
+      console.error('Error loading existing images:', error)
+      setGatheringImages([])
+    }
+  }, [gatheringId])
+
+  // 이미지 갤러리 핸들러 함수들
+  const handleImageSelect = () => {
+    gatheringFileInputRef.current?.click()
+  }
+
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files
+      if (!files) return
+
+      if (isUploading) {
+        showToast('이미 업로드 중입니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
+
+      setIsUploading(true)
+
+      try {
+        // 각 파일을 개별적으로 업로드
+        for (const file of Array.from(files)) {
+          const fileId = `file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+          try {
+            // 파일 검증
+            if (!file.type.startsWith('image/')) {
+              showToast(`${file.name}: 이미지 파일만 업로드 가능합니다.`)
+              continue
+            }
+
+            const maxSize = 20 * 1024 * 1024 // 20MB
+            if (file.size > maxSize) {
+              showToast(`${file.name}: 파일 크기는 20MB 이하로 선택해주세요.`)
+              continue
+            }
+
+            // 진행률 초기화
+            setUploadProgress(prev => ({ ...prev, [fileId]: 10 }))
+
+            console.warn(`🔄 [${file.name}] Starting upload...`)
+
+            // 1. 이미지 리사이징 (MEDIUM 크기만 - 500x500, 95% 품질)
+            const resizedBlob = await resizeImage(file, 500, 500, 0.95)
+            setUploadProgress(prev => ({ ...prev, [fileId]: 30 }))
+            console.warn(
+              `✅ [${file.name}] Resized to MEDIUM (${(resizedBlob.size / 1024).toFixed(1)}KB)`
+            )
+
+            // 2. Presigned URL 생성
+            const presignedData = await mediaApi.getPresignedUrls(
+              'GATHERING',
+              gatheringId,
+              file.name,
+              file.type,
+              file.size
+            )
+            setUploadProgress(prev => ({ ...prev, [fileId]: 50 }))
+            console.warn(`✅ [${file.name}] Got presigned URLs`)
+
+            // 3. MEDIUM 크기 파일 업로드
+            const mediumUpload = presignedData.uploads.find(
+              upload => upload.mediaType === 'MEDIUM'
+            )
+            if (!mediumUpload) {
+              throw new Error('MEDIUM upload URL not found')
+            }
+
+            await mediaApi.uploadFile(
+              mediumUpload.uploadUrl,
+              new File([resizedBlob], file.name, { type: file.type })
+            )
+            setUploadProgress(prev => ({ ...prev, [fileId]: 80 }))
+            console.warn(`✅ [${file.name}] Uploaded to storage`)
+
+            // 4. Complete 호출
+            const completeResult = await mediaApi.completeUpload(
+              'GATHERING',
+              gatheringId,
+              [
+                {
+                  mediaType: mediumUpload.mediaType,
+                  publicUrl: mediumUpload.publicUrl,
+                },
+              ]
+            )
+            setUploadProgress(prev => ({ ...prev, [fileId]: 100 }))
+            console.warn(
+              `✅ [${file.name}] Upload completed:`,
+              completeResult.medias[0]
+            )
+
+            // 5. 상태 업데이트
+            const uploadedMedia = completeResult.medias[0]
+            const newImage = {
+              id: uploadedMedia.mediaId,
+              url: uploadedMedia.publicUrl,
+              name: file.name,
+            }
+
+            setGatheringImages(prev => [...prev, newImage])
+
+            // localStorage에도 저장 (임시 방편)
+            const storageKey = `gathering_images_${gatheringId}`
+            const existingImages = JSON.parse(
+              localStorage.getItem(storageKey) || '[]'
+            )
+            localStorage.setItem(
+              storageKey,
+              JSON.stringify([...existingImages, newImage])
+            )
+
+            console.warn(`✅ [${file.name}] Successfully added to gallery`)
+          } catch (error) {
+            console.error(`❌ [${file.name}] Upload failed:`, error)
+            const errorMessage =
+              error instanceof ApiError
+                ? error.message
+                : `${file.name} 업로드에 실패했습니다.`
+            showToast(errorMessage)
+          } finally {
+            // 개별 파일 진행률 제거
+            setUploadProgress(prev => {
+              const { [fileId]: _, ...rest } = prev
+              return rest
+            })
+          }
+        }
+      } finally {
+        setIsUploading(false)
+        // 파일 입력 초기화
+        if (gatheringFileInputRef.current) {
+          gatheringFileInputRef.current.value = ''
+        }
+      }
+    },
+    [gatheringId, isUploading, showToast]
+  )
+
+  const handleImageDelete = useCallback(
+    async (imageId: string) => {
+      if (isUploading) {
+        showToast('업로드 중입니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
+
+      try {
+        console.warn(`🔄 [Delete] Deleting image: ${imageId}`)
+
+        // API로 이미지 삭제
+        await mediaApi.deleteMediaById(imageId)
+
+        console.warn(`✅ [Delete] Successfully deleted image: ${imageId}`)
+
+        // 상태에서 제거
+        setGatheringImages(prev => {
+          const imageToDelete = prev.find(img => img.id === imageId)
+          if (imageToDelete && imageToDelete.url.startsWith('blob:')) {
+            // 혹시 blob URL이 있다면 메모리 해제
+            URL.revokeObjectURL(imageToDelete.url)
+          }
+          return prev.filter(img => img.id !== imageId)
+        })
+
+        // localStorage에서도 제거 (임시 방편)
+        const storageKey = `gathering_images_${gatheringId}`
+        const existingImages = JSON.parse(
+          localStorage.getItem(storageKey) || '[]'
+        )
+        const updatedImages = existingImages.filter(
+          (img: { id: string; url: string; name: string }) => img.id !== imageId
+        )
+        localStorage.setItem(storageKey, JSON.stringify(updatedImages))
+
+        showToast('이미지가 삭제되었습니다.')
+      } catch (error) {
+        console.error(`❌ [Delete] Failed to delete image:`, error)
+        const errorMessage =
+          error instanceof ApiError
+            ? error.message
+            : '이미지 삭제에 실패했습니다.'
+        showToast(errorMessage)
+      }
+    },
+    [gatheringId, isUploading, showToast]
+  )
+
+  // 이미지 모달 상태
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null
+  )
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // 이미지 모달 핸들러
+  const openImageModal = (index: number) => {
+    setSelectedImageIndex(index)
+    setIsModalOpen(true)
+  }
+
+  const closeImageModal = () => {
+    setIsModalOpen(false)
+    setSelectedImageIndex(null)
+  }
+
+  const goToPrevImage = useCallback(() => {
+    if (selectedImageIndex !== null && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1)
+    } else if (selectedImageIndex !== null && gatheringImages.length > 0) {
+      setSelectedImageIndex(gatheringImages.length - 1) // 마지막 이미지로
+    }
+  }, [selectedImageIndex, gatheringImages.length])
+
+  const goToNextImage = useCallback(() => {
+    if (
+      selectedImageIndex !== null &&
+      selectedImageIndex < gatheringImages.length - 1
+    ) {
+      setSelectedImageIndex(selectedImageIndex + 1)
+    } else if (selectedImageIndex !== null && gatheringImages.length > 0) {
+      setSelectedImageIndex(0) // 첫 번째 이미지로
+    }
+  }, [selectedImageIndex, gatheringImages.length])
+
+  // 키보드 이벤트 핸들러
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!isModalOpen) return
+
+      if (e.key === 'Escape') {
+        closeImageModal()
+      } else if (e.key === 'ArrowLeft') {
+        goToPrevImage()
+      } else if (e.key === 'ArrowRight') {
+        goToNextImage()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [isModalOpen, goToPrevImage, goToNextImage])
+
+  // 컴포넌트 언마운트 시 임시 이미지 URL 정리
+  useEffect(() => {
+    return () => {
+      gatheringImages.forEach(image => {
+        if (image.url.startsWith('blob:')) {
+          URL.revokeObjectURL(image.url)
+        }
+      })
+    }
+  }, [gatheringImages])
 
   // 현재 사용자의 그룹 내 권한 정보 가져오기
   useEffect(() => {
@@ -663,6 +960,129 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
 
         {/* Content */}
         <div className="flex-1 px-4 pt-4 pb-6">
+          {/* 이미지 갤러리 섹션 */}
+          <div className="mb-6">
+            {/* 숨겨진 파일 입력 */}
+            <input
+              ref={gatheringFileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {/* 이미지 갤러리 */}
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {gatheringImages.map((image, index) => (
+                <div
+                  key={image.id}
+                  className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-[#F5F7F5]"
+                >
+                  <img
+                    src={image.url}
+                    alt={image.name}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => openImageModal(index)}
+                  />
+                  {/* 삭제 버튼 */}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleImageDelete(image.id)
+                    }}
+                    className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M12 4L4 12M4 4L12 12"
+                        stroke="#9CA3AF"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+
+              {/* 이미지 추가 버튼 - 사진 유무에 따라 다른 스타일 */}
+              {gatheringImages.length === 0 ? (
+                /* 사진이 없을 때: 텍스트가 포함된 친근한 버튼 */
+                <button
+                  onClick={handleImageSelect}
+                  disabled={isUploading}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors gap-0.5 px-1 ${
+                    isUploading
+                      ? 'border-[#E5E7E5] bg-[#F9F9F9] cursor-not-allowed'
+                      : 'border-[#C2D0C7] bg-[#F5F7F5] hover:border-[#5F7B6D] hover:bg-[#F0F4F2]'
+                  }`}
+                >
+                  {isUploading ? (
+                    /* 업로드 중일 때: 스피너 */
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className="w-4 h-4 border-2 border-[#709180] border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-[#98A7A4] text-[9px] font-pretendard leading-tight text-center">
+                        업로드 중...
+                      </span>
+                    </div>
+                  ) : (
+                    /* 일반 상태: 텍스트 + 아이콘 */
+                    <>
+                      <span className="text-[#709180] text-[10px] font-pretendard leading-tight text-center">
+                        오늘의 모임을
+                      </span>
+                      <span className="text-[#709180] text-[10px] font-pretendard leading-tight text-center">
+                        추억해보세요!
+                      </span>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                      >
+                        <path
+                          d="M6 2V10M2 6H10"
+                          stroke="#5F7B6D"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              ) : (
+                /* 사진이 있을 때: 간단한 + 버튼 */
+                <button
+                  onClick={handleImageSelect}
+                  disabled={isUploading}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors ${
+                    isUploading
+                      ? 'border-[#E5E7E5] bg-[#F9F9F9] cursor-not-allowed'
+                      : 'border-[#C2D0C7] bg-[#F5F7F5] hover:border-[#5F7B6D] hover:bg-[#F0F4F2]'
+                  }`}
+                >
+                  {isUploading ? (
+                    /* 업로드 중일 때: 스피너 */
+                    <div className="w-6 h-6 border-2 border-[#709180] border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    /* 일반 상태: + 아이콘 */
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 5V19M5 12H19"
+                        stroke="#5F7B6D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Title */}
           <div className="mb-4">
             <h2 className="text-[#232323] font-bold text-xl leading-tight tracking-[-0.02em] font-pretendard">
@@ -702,6 +1122,85 @@ const SmallGathering: React.FC<SmallGatheringProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 이미지 모달 */}
+      {isModalOpen &&
+        selectedImageIndex !== null &&
+        gatheringImages[selectedImageIndex] && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+            {/* 모달 배경 클릭으로 닫기 */}
+            <div className="absolute inset-0" onClick={closeImageModal} />
+
+            {/* 모달 콘텐츠 */}
+            <div className="relative max-w-screen-sm max-h-screen-sm mx-4">
+              <img
+                src={gatheringImages[selectedImageIndex].url}
+                alt={gatheringImages[selectedImageIndex].name}
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+
+              {/* 닫기 버튼 */}
+              <button
+                onClick={closeImageModal}
+                className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {/* 이전/다음 버튼 (이미지가 2개 이상일 때만) */}
+              {gatheringImages.length > 1 && (
+                <>
+                  {/* 이전 버튼 */}
+                  <button
+                    onClick={goToPrevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M12.5 15L7.5 10L12.5 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* 다음 버튼 */}
+                  <button
+                    onClick={goToNextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M7.5 5L12.5 10L7.5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              {/* 이미지 인덱스 표시 */}
+              {gatheringImages.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                  {selectedImageIndex + 1} / {gatheringImages.length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
     </>
   )
 }
