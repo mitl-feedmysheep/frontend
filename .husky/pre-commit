@@ -1,1 +1,10 @@
+#!/usr/bin/env sh
+
+# PATH 설정 (nvm 사용 시)
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# nvm 사용하는 경우
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
 npm run verify
