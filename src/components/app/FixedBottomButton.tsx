@@ -20,6 +20,7 @@ const FixedBottomButton: React.FC<FixedBottomButtonProps> = ({
   return (
     <div
       className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] p-4 bg-white ${className}`}
+      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
       <button
         onClick={onClick}

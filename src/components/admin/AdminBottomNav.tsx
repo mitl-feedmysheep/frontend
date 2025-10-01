@@ -168,6 +168,7 @@ const AdminBottomNav = () => {
         isolation: 'isolate',
         pointerEvents: 'auto',
         touchAction: 'manipulation',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       <div className="flex items-center justify-around h-16">
