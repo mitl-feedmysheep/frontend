@@ -9,10 +9,12 @@ import {
 } from 'react-router-dom'
 import ProvisionEmail from '../app/ProvisionEmail'
 import AdminBottomNav from './AdminBottomNav'
+import AdminChangePassword from './AdminChangePassword'
 import AdminGroups from './AdminGroups'
 import AdminHome from './AdminHome'
 import AdminLogin from './AdminLogin'
 import AdminMembers from './AdminMembers'
+import AdminSettings from './AdminSettings'
 import AdminSplashScreen from './AdminSplashScreen'
 import AdminVisit from './AdminVisit'
 
@@ -150,6 +152,22 @@ function RoutesWithScrollReset() {
           element={
             <AdminProtectedRoute>
               <AdminGroups />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <AdminProtectedRoute>
+              <AdminSettings />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/password"
+          element={
+            <AdminProtectedRoute>
+              <AdminChangePassword />
             </AdminProtectedRoute>
           }
         />

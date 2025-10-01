@@ -144,4 +144,41 @@ export const adminApi = {
     const data: MemberSearchResponse[] = await response.json()
     return data
   },
+
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/members/password/change`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+  },
 }
