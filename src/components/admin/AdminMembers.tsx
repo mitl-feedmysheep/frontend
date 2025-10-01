@@ -274,8 +274,19 @@ function AdminMembers() {
                       <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0"></div>
                       {/* 기본 정보 */}
                       <div>
-                        <div className="font-semibold text-gray-900 font-pretendard">
-                          {member.name}
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 font-pretendard">
+                            {member.name}
+                          </span>
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              member.gender === '남'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-pink-100 text-pink-700'
+                            }`}
+                          >
+                            {member.gender}
+                          </span>
                         </div>
                         <div className="text-sm text-gray-500 font-pretendard">
                           {birthYear}또래 · 🎂 {month}월 {day}일
