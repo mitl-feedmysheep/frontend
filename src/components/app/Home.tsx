@@ -167,6 +167,9 @@ const Home: React.FC = () => {
     if (churches.length > 0 && churchIndex >= 0) {
       const currentChurch = churches[churchIndex]
       if (currentChurch) {
+        // 🔄 교회 변경 시 기존 그룹 데이터를 먼저 초기화 (이전 교회 이미지가 잠깐 보이는 것 방지)
+        setGroups([])
+
         const fetchGroupsForChurch = async () => {
           try {
             console.warn(
