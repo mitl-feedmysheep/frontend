@@ -1,6 +1,7 @@
 import { useToast } from '@/components/common/ToastProvider'
 import { ApiError, authApi } from '@/lib/api'
 import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import ProvisionEmail from './ProvisionEmail'
 
 interface LoginProps {
@@ -9,6 +10,7 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   // no navigation needed inside login when provisioning inline
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -225,11 +227,22 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
             )}
 
+            {/* Password Reset Link */}
+            <div className="text-right mr-1">
+              <button
+                type="button"
+                onClick={() => navigate('/reset-password')}
+                className="text-gray-600 hover:text-gray-800 font-pretendard text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
+              >
+                비밀번호 찾기
+              </button>
+            </div>
+
             {/* Login Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 rounded-lg font-medium font-pretendard transition-colors mt-6 ${
+              className={`w-full py-3 rounded-lg font-medium font-pretendard transition-colors ${
                 isLoading
                   ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                   : 'bg-[#5F7B6D] text-white hover:bg-[#4A6356]'
@@ -240,13 +253,13 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
             {/* Signup Entry */}
             <div className="text-center mt-6">
-              {/* <Link
+              <Link
                 to="/signup"
                 className="text-gray-600 hover:text-gray-800 font-pretendard font-medium focus:outline-none focus:ring-2 focus:ring-gray-300 rounded px-1"
               >
                 가입할래요!
-              </Link> */}
-              <div className="mt-4 text-center text-gray-500 text-sm font-pretendard">
+              </Link>
+              {/* <div className="mt-4 text-center text-gray-500 text-sm font-pretendard">
                 이름, 생년, 성별 정보만을 활용하여
                 <br />
                 계정이 생성되어 있으며, 셀에 가입되어 있습니다.
@@ -260,7 +273,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <span className="text-[#F1998E] font-semibold">
                   로그인 후 이메일, 기본정보, 비밀번호를 꼭 변경해주세요.
                 </span>
-              </div>
+              </div> */}
             </div>
           </form>
         </div>

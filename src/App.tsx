@@ -18,6 +18,7 @@ import GroupDetail from './components/app/GroupDetail'
 import Home from './components/app/Home'
 import Login from './components/app/Login'
 import ProvisionEmail from './components/app/ProvisionEmail'
+import ResetPassword from './components/app/ResetPassword'
 import Settings from './components/app/Settings'
 import Signup from './components/app/Signup'
 import SmallGathering from './components/app/SmallGathering'
@@ -213,6 +214,7 @@ function App() {
           <InstallPrompt />
           <Routes>
             <Route path="/login" element={<LoginWrapper />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/provision/email" element={<ProvisionEmail />} />
             <Route

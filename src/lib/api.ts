@@ -175,7 +175,7 @@ export const authApi = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, type: 'SIGNUP' }),
     })
 
     if (!response.ok) {
@@ -204,7 +204,88 @@ export const authApi = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify({ email, code, type: 'SIGNUP' }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+  },
+
+  // 비밀번호 찾기 - 인증 코드 발송
+  sendPasswordResetCode: async (email: string): Promise<void> => {
+    const url = `${API_BASE_URL}/auth/verification/email`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, type: 'PASSWORD_RESET' }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+  },
+
+  // 비밀번호 찾기 - 인증 코드 확인
+  confirmPasswordResetCode: async (
+    email: string,
+    code: string
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/auth/verification/email/confirm`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code, type: 'PASSWORD_RESET' }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        (errorData as any).message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+  },
+
+  // 비밀번호 재설정
+  resetPassword: async (email: string, newPassword: string): Promise<void> => {
+    const url = `${API_BASE_URL}/auth/password/reset`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, newPassword }),
     })
 
     if (!response.ok) {
@@ -483,6 +564,35 @@ export const membersApi = {
 
     const data: User = await response.json()
     return data
+  },
+
+  // 이메일과 이름으로 회원 존재 여부 확인
+  verifyMember: async (email: string, name: string): Promise<boolean> => {
+    const url = `${API_BASE_URL}/auth/member/verify?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+
+    // API는 200 OK를 반환하면 true, 그 외는 false
+    return true
   },
 
   changePassword: async (
