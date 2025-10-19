@@ -168,3 +168,42 @@ export interface MemberSearchResponse {
     role: 'LEADER' | 'SUB_LEADER' | 'MEMBER'
   }[]
 }
+
+// Visit types
+export interface VisitPrayer {
+  id: string
+  prayerRequest: string
+  description: string
+  isAnswered: boolean
+  createdAt: string
+}
+
+export interface VisitMember {
+  id: string
+  churchMemberId: string
+  memberName: string
+  story: string
+  prayers: VisitPrayer[]
+}
+
+export interface Visit {
+  id: string
+  churchId: string
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+  expense: number
+  notes: string
+  memberCount: number
+  members: VisitMember[]
+}
+
+export interface CreateVisitRequest {
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+  expense: number
+  notes: string
+}

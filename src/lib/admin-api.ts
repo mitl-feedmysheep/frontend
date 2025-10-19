@@ -1,9 +1,11 @@
 import { ApiError } from '@/lib/api'
 import type {
   Church,
+  CreateVisitRequest,
   LoginRequest,
   LoginResponse,
   MemberSearchResponse,
+  Visit,
 } from '@/types'
 import { checkAndHandleJwtExpired } from './auth-handler'
 
@@ -180,5 +182,98 @@ export const adminApi = {
 
       throw apiError
     }
+  },
+
+  // Visit API
+  getAllVisits: async (churchId: string): Promise<Visit[]> => {
+    const url = `${API_BASE_URL}/visits/admin?churchId=${encodeURIComponent(churchId)}`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, { method: 'GET', headers })
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+    const data: Visit[] = await response.json()
+    return data
+  },
+
+  createVisit: async (
+    churchId: string,
+    visitData: CreateVisitRequest
+  ): Promise<Visit> => {
+    const url = `${API_BASE_URL}/visits/admin?churchId=${encodeURIComponent(churchId)}`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(visitData),
+    })
+
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+    const data: Visit = await response.json()
+    return data
+  },
+
+  getVisitDetail: async (visitId: string): Promise<Visit> => {
+    const url = `${API_BASE_URL}/visits/admin/${visitId}`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, { method: 'GET', headers })
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+
+      // JWT 만료 처리
+      checkAndHandleJwtExpired(apiError)
+
+      throw apiError
+    }
+    const data: Visit = await response.json()
+    return data
   },
 }
