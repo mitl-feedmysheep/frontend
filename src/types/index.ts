@@ -197,6 +197,15 @@ export interface Visit {
   notes: string
   memberCount: number
   members: VisitMember[]
+  medias?: Array<{
+    id: string
+    mediaType: 'THUMBNAIL' | 'MEDIUM'
+    entityType: string
+    entityId: string
+    url: string
+    accessURL: string
+    createdAt: string
+  }>
 }
 
 export interface CreateVisitRequest {
