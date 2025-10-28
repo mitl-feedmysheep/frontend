@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 interface AutoGrowInputProps {
   value: string
@@ -6,7 +6,7 @@ interface AutoGrowInputProps {
   placeholder?: string
   readOnly?: boolean
   className?: string // applied to ROOT container for width control
-  inputClassName?: string // applied to contenteditable div
+  inputClassName?: string // applied to textarea
   style?: React.CSSProperties
   autoFocus?: boolean
   onClick?: (e: React.MouseEvent) => void
@@ -23,31 +23,7 @@ function AutoGrowInput({
   autoFocus = false,
   onClick,
 }: AutoGrowInputProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const hasAutofocusedRef = useRef(false)
-
-  // 내부 텍스트를 외부 value와 동기화
-  useLayoutEffect(() => {
-    if (!ref.current) return
-    if (ref.current.innerText !== value) {
-      ref.current.innerText = value
-    }
-    autoResize()
-  }, [value])
-
-  // autoFocus는 최초 1회만 수행 (값 변경 시마다 커서가 끝으로 가지 않도록)
-  useEffect(() => {
-    if (!ref.current) return
-    if (!autoFocus || readOnly || hasAutofocusedRef.current) return
-    hasAutofocusedRef.current = true
-    ref.current.focus()
-    const sel = window.getSelection()
-    const range = document.createRange()
-    range.selectNodeContents(ref.current)
-    range.collapse(false)
-    sel?.removeAllRanges()
-    sel?.addRange(range)
-  }, [autoFocus, readOnly])
+  const ref = useRef<HTMLTextAreaElement>(null)
 
   // 높이 자동 조절
   const autoResize = () => {
@@ -57,14 +33,45 @@ function AutoGrowInput({
     el.style.height = `${el.scrollHeight}px`
   }
 
-  const handleInput = () => {
+  // value가 변경될 때마다 높이 조절
+  useEffect(() => {
     autoResize()
-    if (onChange && ref.current) {
-      onChange(ref.current.innerText)
+  }, [value])
+
+  // autoFocus 처리
+  useEffect(() => {
+    if (autoFocus && ref.current && !readOnly) {
+      ref.current.focus()
+      // 커서를 끝으로 이동
+      const len = ref.current.value.length
+      ref.current.setSelectionRange(len, len)
     }
+  }, [autoFocus, readOnly])
+
+  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget
+    // 줄바꿈이 있으면 공백으로 치환
+    if (textarea.value.includes('\n')) {
+      const cursorPos = textarea.selectionStart
+      const newValue = textarea.value.replace(/\n/g, ' ')
+      textarea.value = newValue
+
+      if (onChange) {
+        onChange(newValue)
+      }
+
+      // 커서 위치 복원
+      textarea.setSelectionRange(cursorPos, cursorPos)
+    } else {
+      if (onChange) {
+        onChange(textarea.value)
+      }
+    }
+
+    autoResize()
   }
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = e => {
+  const handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = e => {
     // 상위 카드 토글 등으로 이벤트 전파되지 않도록 차단
     e.stopPropagation()
     // Enter 차단 (한 줄 입력 유지)
@@ -73,36 +80,25 @@ function AutoGrowInput({
     }
   }
 
-  const handlePaste: React.ClipboardEventHandler<HTMLDivElement> = e => {
-    // 붙여넣기 시 줄바꿈을 공백으로 치환
-    e.preventDefault()
-    const text = e.clipboardData.getData('text').replace(/\n/g, ' ')
-    document.execCommand('insertText', false, text)
-  }
-
   return (
     <div className={`relative w-full ${className}`} style={style}>
-      {(!value || value.length === 0) && !!placeholder && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 p-1 text-[#A5BAAF] font-normal text-base leading-tight font-pretendard whitespace-nowrap overflow-hidden text-ellipsis">
-          {placeholder}
-        </div>
-      )}
-      <div
+      <textarea
         ref={ref}
-        contentEditable={!readOnly}
-        tabIndex={0}
+        value={value}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
         onClick={e => {
           e.stopPropagation()
           onClick?.(e)
         }}
+        placeholder={placeholder}
+        readOnly={readOnly}
         spellCheck={false}
-        className={`w-full p-1 text-[#405347] font-normal text-base leading-tight font-pretendard bg-transparent border-none outline-none whitespace-pre-wrap break-words ${
+        rows={1}
+        className={`w-full p-1 text-[#405347] font-normal text-base leading-tight font-pretendard bg-transparent border-none outline-none resize-none ${
           readOnly ? 'cursor-default' : ''
-        } ${inputClassName}`}
-        style={{ minHeight: 24 }}
+        } ${inputClassName} placeholder:text-[#A5BAAF]`}
+        style={{ minHeight: 24, ...style }}
         aria-label={placeholder}
       />
     </div>

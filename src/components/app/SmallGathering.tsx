@@ -1599,20 +1599,34 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   return (
     <div
-      className={`relative bg-[#F5F7F5] rounded-2xl px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#F0F4F2] active:bg-[#E6EEE9] active:scale-[0.99]`}
+      className={`relative bg-[#F5F7F5] rounded-2xl px-4 py-2.5 transition-colors ${
+        !isExpanded
+          ? 'cursor-pointer hover:bg-[#F0F4F2] active:bg-[#E6EEE9] active:scale-[0.99]'
+          : ''
+      }`}
       role="button"
       aria-expanded={isExpanded}
       tabIndex={0}
-      onClick={onToggle}
+      onClick={!isExpanded ? onToggle : undefined}
       onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (!isExpanded && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault()
           onToggle()
         }
       }}
+      style={isExpanded ? { touchAction: 'auto' } : undefined}
     >
       {/* Member Info Row */}
-      <div className={`flex items-center justify-between mb-4`}>
+      <div
+        className={`flex items-center justify-between mb-4 ${isExpanded ? 'cursor-pointer' : ''}`}
+        onClick={e => {
+          if (isExpanded) {
+            e.stopPropagation()
+            onToggle()
+          }
+          // 접힌 상태에서는 이벤트를 상위로 전파 (stopPropagation 하지 않음)
+        }}
+      >
         {/* Left: Profile and Name */}
         <div className="flex items-end gap-2">
           {/* Profile Image */}
@@ -1743,8 +1757,21 @@ const MemberCard: React.FC<MemberCardProps> = ({
       {/* Expandable Content */}
       {isExpanded && (
         <div className="space-y-4" onClick={e => e.stopPropagation()}>
-          {/* Divider (solid above '나눔') */}
-          <div className="h-0 border-t border-[#C2D0C7]"></div>
+          {/* Divider (solid above '나눔') with collapse button */}
+          <div className="relative">
+            <div className="h-0 border-t border-[#C2D0C7]"></div>
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onToggle()
+              }}
+              aria-label="카드 닫기"
+              className="absolute -top-6 left-1/2 -translate-x-1/2 transform text-xs font-pretendard font-normal text-[#A5BAAF]"
+            >
+              -
+            </button>
+          </div>
 
           {/* Sharing Section */}
           <div className="space-y-2">
