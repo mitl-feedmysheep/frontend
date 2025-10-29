@@ -14,6 +14,12 @@ function AdminVisitDetail() {
   const [toastMessage, setToastMessage] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 이미지 모달 상태
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null
+  )
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   // 심방 상세 정보 조회
   const fetchVisitDetail = useCallback(async () => {
     if (!visitId) return
@@ -21,6 +27,12 @@ function AdminVisitDetail() {
     try {
       setIsLoading(true)
       const data = await adminApi.getVisitDetail(visitId)
+      console.warn('🔍 [Visit Detail] API Response:', data)
+      console.warn('🔍 [Visit Detail] medias field:', data.medias)
+      console.warn(
+        '🔍 [Visit Detail] Full data structure:',
+        JSON.stringify(data, null, 2)
+      )
       setVisit(data)
     } catch (error) {
       console.error('Failed to fetch visit detail:', error)
@@ -187,6 +199,68 @@ function AdminVisitDetail() {
     },
     [isUploading, showToast, fetchVisitDetail]
   )
+
+  // 이미지 모달 핸들러
+  const openImageModal = (index: number) => {
+    if (visit?.medias) {
+      const mediumImages = visit.medias.filter(m => m.mediaType === 'MEDIUM')
+      console.warn('🖼️ [Modal Open] Image index:', index)
+      console.warn('🖼️ [Modal Open] Selected image:', mediumImages[index])
+      console.warn('🖼️ [Modal Open] Image URL:', mediumImages[index]?.url)
+    }
+    setSelectedImageIndex(index)
+    setIsModalOpen(true)
+  }
+
+  const closeImageModal = () => {
+    setIsModalOpen(false)
+    setSelectedImageIndex(null)
+  }
+
+  const goToPrevImage = useCallback(() => {
+    if (!visit?.medias) return
+
+    if (selectedImageIndex !== null && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1)
+    } else if (selectedImageIndex !== null && visit.medias.length > 0) {
+      setSelectedImageIndex(
+        visit.medias.filter(m => m.mediaType === 'MEDIUM').length - 1
+      ) // 마지막 이미지로
+    }
+  }, [selectedImageIndex, visit?.medias])
+
+  const goToNextImage = useCallback(() => {
+    if (!visit?.medias) return
+
+    const mediumImages = visit.medias.filter(m => m.mediaType === 'MEDIUM')
+
+    if (
+      selectedImageIndex !== null &&
+      selectedImageIndex < mediumImages.length - 1
+    ) {
+      setSelectedImageIndex(selectedImageIndex + 1)
+    } else if (selectedImageIndex !== null && mediumImages.length > 0) {
+      setSelectedImageIndex(0) // 첫 번째 이미지로
+    }
+  }, [selectedImageIndex, visit?.medias])
+
+  // 키보드 이벤트 핸들러
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!isModalOpen) return
+
+      if (e.key === 'Escape') {
+        closeImageModal()
+      } else if (e.key === 'ArrowLeft') {
+        goToPrevImage()
+      } else if (e.key === 'ArrowRight') {
+        goToNextImage()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [isModalOpen, goToPrevImage, goToNextImage])
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
@@ -417,7 +491,7 @@ function AdminVisitDetail() {
                 </svg>
               }
               label="참석 인원"
-              value={`${visit.members?.length || 0}명`}
+              value={`${visit.visitMembers?.length || 0}명`}
             />
 
             {/* 메모 */}
@@ -465,7 +539,7 @@ function AdminVisitDetail() {
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-500 font-pretendard mb-2">
                     사진
                   </div>
@@ -481,38 +555,73 @@ function AdminVisitDetail() {
                   />
 
                   {/* 이미지 갤러리 */}
-                  <div className="flex flex-wrap gap-2">
+                  <div
+                    className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide touch-pan-x -mx-1 px-1"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      touchAction: 'pan-x',
+                      overscrollBehaviorX: 'contain',
+                    }}
+                  >
+                    {(() => {
+                      console.warn('🖼️ [Render] visit.medias:', visit.medias)
+                      console.warn(
+                        '🖼️ [Render] visit object keys:',
+                        Object.keys(visit)
+                      )
+                      console.warn('🖼️ [Render] Has medias?', !!visit.medias)
+                      console.warn(
+                        '🖼️ [Render] medias length:',
+                        visit.medias?.length
+                      )
+
+                      if (visit.medias && visit.medias.length > 0) {
+                        const filtered = visit.medias.filter(
+                          m => m.mediaType === 'MEDIUM'
+                        )
+                        console.warn(
+                          '🖼️ [Render] Filtered MEDIUM images:',
+                          filtered
+                        )
+                      }
+
+                      return null
+                    })()}
                     {visit.medias &&
                       visit.medias.length > 0 &&
                       visit.medias
-                        .filter(media => media.mediaType === 'MEDIUM')
-                        .map(media => (
+                        .filter(m => m.mediaType === 'MEDIUM')
+                        .map((m, index) => (
                           <div
-                            key={media.id}
-                            className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100"
+                            key={m.id}
+                            className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100"
                           >
                             <img
-                              src={media.accessURL || media.url}
+                              src={m.url}
                               alt="심방 사진"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover cursor-pointer"
+                              onClick={() => openImageModal(index)}
                               crossOrigin="anonymous"
                               referrerPolicy="no-referrer"
                             />
                             {/* 삭제 버튼 */}
                             <button
-                              onClick={() => handleImageDelete(media.id)}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleImageDelete(m.id)
+                              }}
+                              className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center"
                             >
                               <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 12 12"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 16 16"
                                 fill="none"
                               >
                                 <path
-                                  d="M9 3L3 9M3 3L9 9"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
+                                  d="M12 4L4 12M4 4L12 12"
+                                  stroke="#9CA3AF"
+                                  strokeWidth="2"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 />
@@ -527,7 +636,7 @@ function AdminVisitDetail() {
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className={`w-20 h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors gap-0.5 px-1 ${
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed flex flex-col items-center justify-center transition-colors gap-0.5 px-1 ${
                           isUploading
                             ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
                             : 'border-blue-300 bg-blue-50 hover:border-blue-500 hover:bg-blue-100'
@@ -572,7 +681,7 @@ function AdminVisitDetail() {
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className={`w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors ${
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors ${
                           isUploading
                             ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
                             : 'border-blue-300 bg-blue-50 hover:border-blue-500 hover:bg-blue-100'
@@ -608,7 +717,7 @@ function AdminVisitDetail() {
         </div>
 
         {/* 참석 멤버 섹션 */}
-        {visit.members && visit.members.length > 0 && (
+        {visit.visitMembers && visit.visitMembers.length > 0 && (
           <div className="bg-white rounded-lg border border-gray-200 p-5 mb-3">
             <h2 className="text-base font-bold text-gray-900 font-pretendard mb-4 flex items-center gap-2">
               <svg
@@ -624,11 +733,11 @@ function AdminVisitDetail() {
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              참석 멤버 ({visit.members.length}명)
+              참석 멤버 ({visit.visitMembers.length}명)
             </h2>
 
             <div className="space-y-4">
-              {visit.members.map((member, index) => (
+              {visit.visitMembers.map((member, index) => (
                 <div
                   key={member.id}
                   className="border border-gray-200 rounded-lg p-4"
@@ -710,6 +819,97 @@ function AdminVisitDetail() {
           </div>
         )}
       </main>
+
+      {/* 이미지 모달 */}
+      {isModalOpen &&
+        selectedImageIndex !== null &&
+        visit?.medias &&
+        visit.medias.filter(m => m.mediaType === 'MEDIUM')[
+          selectedImageIndex
+        ] && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+            {/* 모달 배경 클릭으로 닫기 */}
+            <div className="absolute inset-0" onClick={closeImageModal} />
+
+            {/* 모달 콘텐츠 */}
+            <div className="relative max-w-screen-sm max-h-screen-sm mx-4">
+              <img
+                src={
+                  visit.medias.filter(m => m.mediaType === 'MEDIUM')[
+                    selectedImageIndex
+                  ].url
+                }
+                alt="심방 사진"
+                className="max-w-full max-h-full object-contain rounded-lg"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+              />
+
+              {/* 닫기 버튼 */}
+              <button
+                onClick={closeImageModal}
+                className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {/* 이전/다음 버튼 (이미지가 2개 이상일 때만) */}
+              {visit.medias.filter(m => m.mediaType === 'MEDIUM').length >
+                1 && (
+                <>
+                  {/* 이전 버튼 */}
+                  <button
+                    onClick={goToPrevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M12.5 15L7.5 10L12.5 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* 다음 버튼 */}
+                  <button
+                    onClick={goToNextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M7.5 5L12.5 10L7.5 15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              {/* 이미지 인덱스 표시 */}
+              {visit.medias.filter(m => m.mediaType === 'MEDIUM').length >
+                1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                  {selectedImageIndex + 1} /{' '}
+                  {visit.medias.filter(m => m.mediaType === 'MEDIUM').length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
     </div>
   )
 }

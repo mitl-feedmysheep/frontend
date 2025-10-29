@@ -195,17 +195,17 @@ export interface Visit {
   place: string
   expense: number
   notes: string
-  memberCount: number
-  members: VisitMember[]
+  memberCount?: number
+  visitMembers: VisitMember[]
   medias?: Array<{
     id: string
     mediaType: 'THUMBNAIL' | 'MEDIUM'
     entityType: string
     entityId: string
     url: string
-    accessURL: string
     createdAt: string
   }>
+  createdAt: string
 }
 
 export interface CreateVisitRequest {
