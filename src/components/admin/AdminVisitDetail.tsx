@@ -1,9 +1,10 @@
 import { adminApi } from '@/lib/admin-api'
 import { mediaApi } from '@/lib/api'
 import { resizeImage } from '@/lib/utils'
-import type { Visit } from '@/types'
+import type { Visit, VisitMember } from '@/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import MemberSearchModal from './MemberSearchModal'
 
 function AdminVisitDetail() {
   const navigate = useNavigate()
@@ -19,6 +20,10 @@ function AdminVisitDetail() {
     null
   )
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // 멤버 관리 상태
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
+  const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null)
 
   // 심방 상세 정보 조회
   const fetchVisitDetail = useCallback(async () => {
@@ -261,6 +266,82 @@ function AdminVisitDetail() {
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [isModalOpen, goToPrevImage, goToNextImage])
+
+  // 멤버 추가 핸들러 (여러 명 추가 가능)
+  const handleAddMembers = useCallback(
+    async (memberIds: string[]) => {
+      if (!visitId || memberIds.length === 0) return
+
+      try {
+        // 새로운 API로 한번에 여러 명 추가
+        await adminApi.addVisitMembers(visitId, memberIds)
+
+        showToast(`${memberIds.length}명이 추가되었습니다.`)
+
+        // 심방 정보 다시 불러오기
+        await fetchVisitDetail()
+      } catch (error) {
+        console.error('Failed to add members:', error)
+        showToast('멤버 추가에 실패했습니다.')
+      }
+    },
+    [visitId, showToast, fetchVisitDetail]
+  )
+
+  // 멤버 수정 핸들러
+  const handleUpdateMember = useCallback(
+    async (
+      visitMemberId: string,
+      data: {
+        story?: string
+        prayers?: Array<{
+          id?: string
+          prayerRequest: string
+          description: string
+        }>
+      }
+    ) => {
+      if (!visitId) return
+
+      try {
+        await adminApi.updateVisitMember(visitId, visitMemberId, data)
+        showToast('나눔 및 기도제목이 저장되었습니다.')
+        // 심방 정보 다시 불러오기
+        await fetchVisitDetail()
+      } catch (error) {
+        console.error('Failed to update member:', error)
+        showToast('저장에 실패했습니다.')
+      }
+    },
+    [visitId, showToast, fetchVisitDetail]
+  )
+
+  // 멤버 삭제 핸들러
+  const handleDeleteMember = useCallback(
+    async (visitMemberId: string, memberName: string) => {
+      if (!visitId) return
+
+      const confirmed = window.confirm(
+        `${memberName}님을 이 심방에서 제거하시겠습니까?`
+      )
+      if (!confirmed) return
+
+      try {
+        await adminApi.deleteVisitMember(visitId, visitMemberId)
+        showToast(`${memberName}님이 제거되었습니다.`)
+        // 심방 정보 다시 불러오기
+        await fetchVisitDetail()
+        // 확장된 멤버 ID가 삭제된 멤버인 경우 초기화
+        if (expandedMemberId === visitMemberId) {
+          setExpandedMemberId(null)
+        }
+      } catch (error) {
+        console.error('Failed to delete member:', error)
+        showToast('멤버 제거에 실패했습니다.')
+      }
+    },
+    [visitId, showToast, fetchVisitDetail, expandedMemberId]
+  )
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
@@ -717,9 +798,9 @@ function AdminVisitDetail() {
         </div>
 
         {/* 참석 멤버 섹션 */}
-        {visit.visitMembers && visit.visitMembers.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-3">
-            <h2 className="text-base font-bold text-gray-900 font-pretendard mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-5 mb-3">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-gray-900 font-pretendard flex items-center gap-2">
               <svg
                 className="w-5 h-5 text-blue-500"
                 fill="none"
@@ -733,91 +814,39 @@ function AdminVisitDetail() {
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              참석 멤버 ({visit.visitMembers.length}명)
+              참석 멤버 ({visit.visitMembers?.length || 0}명)
             </h2>
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="px-3 py-1.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors font-pretendard"
+            >
+              + 멤버 추가
+            </button>
+          </div>
 
-            <div className="space-y-4">
-              {visit.visitMembers.map((member, index) => (
-                <div
+          {visit.visitMembers && visit.visitMembers.length > 0 ? (
+            <div className="space-y-3">
+              {visit.visitMembers.map(member => (
+                <VisitMemberCard
                   key={member.id}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  {/* 멤버 이름 */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-bold text-blue-600 font-pretendard">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-gray-900 font-pretendard">
-                      {member.memberName}
-                    </span>
-                  </div>
-
-                  {/* 스토리 */}
-                  {member.story && (
-                    <div className="mb-3 pl-10">
-                      <div className="text-xs font-medium text-gray-500 font-pretendard mb-1">
-                        나눔 내용
-                      </div>
-                      <div className="text-sm text-gray-700 font-pretendard whitespace-pre-wrap bg-gray-50 rounded p-2">
-                        {member.story}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 기도 제목 */}
-                  {member.prayers && member.prayers.length > 0 && (
-                    <div className="pl-10">
-                      <div className="text-xs font-medium text-gray-500 font-pretendard mb-2">
-                        기도 제목 ({member.prayers.length}개)
-                      </div>
-                      <div className="space-y-2">
-                        {member.prayers.map(prayer => (
-                          <div
-                            key={prayer.id}
-                            className="bg-blue-50 rounded p-3 relative"
-                          >
-                            {/* 응답 여부 뱃지 */}
-                            {prayer.isAnswered && (
-                              <div className="absolute top-2 right-2">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-pretendard">
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                  응답됨
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="text-sm font-medium text-gray-900 font-pretendard mb-1 pr-16">
-                              {prayer.prayerRequest}
-                            </div>
-                            {prayer.description && (
-                              <div className="text-xs text-gray-600 font-pretendard">
-                                {prayer.description}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  member={member}
+                  isExpanded={expandedMemberId === member.id}
+                  onToggle={() =>
+                    setExpandedMemberId(
+                      expandedMemberId === member.id ? null : member.id
+                    )
+                  }
+                  onUpdate={handleUpdateMember}
+                  onDelete={handleDeleteMember}
+                />
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8 text-gray-500 font-pretendard text-sm">
+              참석 멤버가 없습니다. 멤버를 추가해주세요.
+            </div>
+          )}
+        </div>
       </main>
 
       {/* 이미지 모달 */}
@@ -910,6 +939,264 @@ function AdminVisitDetail() {
             </div>
           </div>
         )}
+
+      {/* 멤버 검색 모달 */}
+      <MemberSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleAddMembers}
+      />
+    </div>
+  )
+}
+
+// VisitMemberCard 컴포넌트
+interface VisitMemberCardProps {
+  member: VisitMember
+  isExpanded: boolean
+  onToggle: () => void
+  onUpdate: (
+    visitMemberId: string,
+    data: {
+      story?: string
+      prayers?: Array<{
+        id?: string
+        prayerRequest: string
+        description: string
+      }>
+    }
+  ) => Promise<void>
+  onDelete: (visitMemberId: string, memberName: string) => Promise<void>
+}
+
+const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
+  member,
+  isExpanded,
+  onToggle,
+  onUpdate,
+  onDelete,
+}) => {
+  const [localStory, setLocalStory] = useState(member.story || '')
+  const [prayerInputs, setPrayerInputs] = useState<
+    Array<{ id: string; value: string }>
+  >(
+    member.prayers && member.prayers.length > 0
+      ? member.prayers.map(p => ({ id: p.id, value: p.prayerRequest }))
+      : [{ id: 'new', value: '' }]
+  )
+  const [hasChanges, setHasChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // 변경사항 감지
+  useEffect(() => {
+    const storyChanged = localStory !== (member.story || '')
+
+    const originalPrayers = member.prayers?.map(p => p.prayerRequest) || []
+    const currentPrayers = prayerInputs
+      .filter(input => input.value.trim() !== '')
+      .map(input => input.value)
+
+    const prayersChanged =
+      originalPrayers.length !== currentPrayers.length ||
+      originalPrayers.some(
+        (original, index) => original !== currentPrayers[index]
+      )
+
+    setHasChanges(storyChanged || prayersChanged)
+  }, [localStory, prayerInputs, member.story, member.prayers])
+
+  // 기도제목 추가
+  const handleAddPrayer = () => {
+    setPrayerInputs([...prayerInputs, { id: `new-${Date.now()}`, value: '' }])
+  }
+
+  // 기도제목 변경
+  const handlePrayerChange = (id: string, value: string) => {
+    setPrayerInputs(
+      prayerInputs.map(input => (input.id === id ? { ...input, value } : input))
+    )
+  }
+
+  // 기도제목 삭제
+  const handleRemovePrayer = (id: string) => {
+    if (prayerInputs.length === 1) {
+      setPrayerInputs([{ id: 'new', value: '' }])
+    } else {
+      setPrayerInputs(prayerInputs.filter(input => input.id !== id))
+    }
+  }
+
+  // 저장
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const prayers = prayerInputs
+        .filter(input => input.value.trim() !== '')
+        .map(input => {
+          const originalPrayer = member.prayers?.find(p => p.id === input.id)
+          return {
+            id: input.id.startsWith('new') ? undefined : input.id,
+            prayerRequest: input.value,
+            description: originalPrayer?.description || '',
+          }
+        })
+
+      await onUpdate(member.id, {
+        story: localStory.trim() || undefined,
+        prayers: prayers.length > 0 ? prayers : undefined,
+      })
+    } catch (error) {
+      console.error('Failed to save member data:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="border border-gray-200 rounded-lg pt-4 px-4 pb-1 bg-gray-50 cursor-pointer"
+      onClick={onToggle}
+    >
+      {/* 멤버 이름 헤더 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-sm font-bold text-blue-600 font-pretendard">
+              {member.memberName.charAt(0)}
+            </span>
+          </div>
+          <span className="font-semibold text-gray-900 font-pretendard text-base">
+            {member.memberName}
+          </span>
+        </div>
+
+        {/* 삭제 버튼 */}
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            onDelete(member.id, member.memberName)
+          }}
+          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* 펼침/접힘 버튼 (하단 가운데) */}
+      <div className="flex justify-center mt-1">
+        <div className="w-5 h-5 flex items-center justify-center text-gray-400 pointer-events-none">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            {isExpanded ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
+              />
+            )}
+          </svg>
+        </div>
+      </div>
+
+      {/* 확장된 콘텐츠 */}
+      {isExpanded && (
+        <div
+          className="mt-4 px-2 pb-2 space-y-4"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* 나눔 내용 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">
+              나눔 내용
+            </label>
+            <textarea
+              value={localStory}
+              onChange={e => setLocalStory(e.target.value)}
+              placeholder="이 사람과 나눈 이야기를 기록해주세요."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-sm resize-none"
+              rows={3}
+            />
+          </div>
+
+          {/* 기도제목 */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700 font-pretendard">
+                기도제목
+              </label>
+              <button
+                onClick={handleAddPrayer}
+                className="text-blue-500 hover:text-blue-600 text-sm font-medium font-pretendard"
+              >
+                + 추가
+              </button>
+            </div>
+            <div className="space-y-3">
+              {prayerInputs.map((input, index) => (
+                <div key={input.id} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input.value}
+                    onChange={e => handlePrayerChange(input.id, e.target.value)}
+                    placeholder={`기도제목 ${index + 1}`}
+                    className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-sm"
+                  />
+                  {prayerInputs.length > 1 && (
+                    <button
+                      onClick={() => handleRemovePrayer(input.id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 저장 버튼 */}
+          {hasChanges && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-pretendard"
+            >
+              {isSaving ? '저장 중...' : '저장'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
