@@ -1,11 +1,11 @@
 import { adminApi } from '@/lib/admin-api'
-import type { Visit } from '@/types'
+import type { VisitListResponse } from '@/types'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function AdminVisit() {
   const navigate = useNavigate()
-  const [visits, setVisits] = useState<Visit[]>([])
+  const [visits, setVisits] = useState<VisitListResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -73,64 +73,41 @@ function AdminVisit() {
     }
   }
 
-  // JWT 토큰 디코딩 함수
-  const parseJwt = (token: string): Record<string, unknown> | null => {
-    try {
-      const base64Url = token.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      )
-      return JSON.parse(jsonPayload) as Record<string, unknown>
-    } catch (error) {
-      console.error('Failed to parse JWT:', error)
-      return null
-    }
-  }
-
-  // churchId를 JWT에서 가져오기
-  const getChurchId = useCallback((): string => {
-    const token = localStorage.getItem('authToken')
-    if (!token) return ''
-
-    const payload = parseJwt(token)
-    if (!payload) return ''
-
-    // JWT payload에서 churchId 추출 (키 이름은 백엔드에 따라 다를 수 있음)
-    return (
-      (payload.churchId as string) ||
-      (payload.church_id as string) ||
-      (payload.cid as string) ||
-      ''
-    )
-  }, [])
 
   // 심방 기록 조회
   const fetchVisits = useCallback(async () => {
     try {
       setIsLoading(true)
-      const churchId = getChurchId()
-      if (!churchId) {
-        console.error('Church ID not found')
+      const data = await adminApi.getAllVisits()
+      
+      if (!Array.isArray(data)) {
         setVisits([])
         return
       }
-      const data = await adminApi.getAllVisits(churchId)
-      // 최신순 정렬
-      const sortedData = data.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      )
+
+      // 최신순 정렬 (date가 optional이므로 안전하게 처리)
+      const sortedData = data.sort((a, b) => {
+        const dateA = a.date ? new Date(a.date).getTime() : 0
+        const dateB = b.date ? new Date(b.date).getTime() : 0
+        return dateB - dateA
+      })
       setVisits(sortedData)
     } catch (error) {
       console.error('Failed to fetch visits:', error)
+      if (error instanceof Error) {
+        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.')
+        } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          alert('접근 권한이 없습니다. 관리자에게 문의해주세요.')
+        } else {
+          alert('심방 기록을 불러오는데 실패했습니다.')
+        }
+      }
       setVisits([])
     } finally {
       setIsLoading(false)
     }
-  }, [getChurchId])
+  }, [])
 
   useEffect(() => {
     fetchVisits()
@@ -140,11 +117,6 @@ function AdminVisit() {
   const handleCreateVisit = async () => {
     try {
       setIsCreating(true)
-      const churchId = getChurchId()
-      if (!churchId) {
-        alert('교회 정보를 찾을 수 없습니다.')
-        return
-      }
 
       // 날짜와 시간을 합쳐서 ISO 형식으로 변환
       const startedAt = `${formData.date}T${formData.startTime}:00.000Z`
@@ -159,7 +131,7 @@ function AdminVisit() {
         notes: formData.notes,
       }
 
-      await adminApi.createVisit(churchId, visitData)
+      await adminApi.createVisit(visitData)
       setShowCreateModal(false)
       // 폼 초기화
       setFormData({
@@ -181,7 +153,8 @@ function AdminVisit() {
   }
 
   // 날짜 포맷팅
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return ''
     const date = new Date(dateString)
     const year = date.getFullYear()
     const month = date.getMonth() + 1
@@ -190,7 +163,8 @@ function AdminVisit() {
   }
 
   // 시간 포맷팅
-  const formatTime = (dateTimeString: string) => {
+  const formatTime = (dateTimeString?: string) => {
+    if (!dateTimeString) return ''
     const date = new Date(dateTimeString)
     const hours = date.getHours()
     const minutes = date.getMinutes()
@@ -283,10 +257,12 @@ function AdminVisit() {
                       <span className="font-semibold text-gray-900 font-pretendard">
                         {formatDate(visit.date)}
                       </span>
-                      <span className="text-sm text-gray-500 font-pretendard">
-                        {formatTime(visit.startedAt)} -{' '}
-                        {formatTime(visit.endedAt)}
-                      </span>
+                      {visit.startedAt && visit.endedAt && (
+                        <span className="text-sm text-gray-500 font-pretendard">
+                          {formatTime(visit.startedAt)} -{' '}
+                          {formatTime(visit.endedAt)}
+                        </span>
+                      )}
                     </div>
                     {/* 장소 */}
                     <div className="flex items-center gap-1.5 text-sm text-gray-600 font-pretendard mb-2">
@@ -309,7 +285,7 @@ function AdminVisit() {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span>{visit.place}</span>
+                      <span>{visit.place || '장소 미입력'}</span>
                     </div>
                     {/* 참석 인원 및 비용 */}
                     <div className="flex items-center gap-3 text-sm">
@@ -327,7 +303,7 @@ function AdminVisit() {
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                           />
                         </svg>
-                        {visit.memberCount}명
+                        {visit.memberCount || 0}명
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded font-pretendard">
                         <svg
@@ -343,7 +319,7 @@ function AdminVisit() {
                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        {visit.expense.toLocaleString()}원
+                        {(visit.expense || 0).toLocaleString()}원
                       </span>
                     </div>
                   </div>

@@ -945,6 +945,7 @@ function AdminVisitDetail() {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
         onSelect={handleAddMembers}
+        existingChurchMemberIds={visit?.visitMembers.map(vm => vm.churchMemberId) || []}
       />
     </div>
   )

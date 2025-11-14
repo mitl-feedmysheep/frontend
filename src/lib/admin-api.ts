@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   MemberSearchResponse,
   Visit,
+  VisitListResponse,
   VisitMember,
 } from '@/types'
 import { checkAndHandleJwtExpired } from './auth-handler'
@@ -186,8 +187,8 @@ export const adminApi = {
   },
 
   // Visit API
-  getAllVisits: async (churchId: string): Promise<Visit[]> => {
-    const url = `${API_BASE_URL}/visits/admin?churchId=${encodeURIComponent(churchId)}`
+  getAllVisits: async (): Promise<VisitListResponse[]> => {
+    const url = `${API_BASE_URL}/visits/admin`
     const token = localStorage.getItem('authToken')
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -196,11 +197,11 @@ export const adminApi = {
 
     const response = await fetch(url, { method: 'GET', headers })
     if (!response.ok) {
-      const errorData: { message?: string } = await response
+      const errorData: { message?: string; error?: string } = await response
         .json()
-        .catch(() => ({}) as { message?: string })
+        .catch(() => ({}) as { message?: string; error?: string })
       const apiError = new ApiError(
-        errorData.message || `HTTP ${response.status}`,
+        errorData.message || errorData.error || `HTTP ${response.status}`,
         response.status,
         errorData
       )
@@ -210,15 +211,13 @@ export const adminApi = {
 
       throw apiError
     }
-    const data: Visit[] = await response.json()
+
+    const data: VisitListResponse[] = await response.json()
     return data
   },
 
-  createVisit: async (
-    churchId: string,
-    visitData: CreateVisitRequest
-  ): Promise<Visit> => {
-    const url = `${API_BASE_URL}/visits/admin?churchId=${encodeURIComponent(churchId)}`
+  createVisit: async (visitData: CreateVisitRequest): Promise<Visit> => {
+    const url = `${API_BASE_URL}/visits/admin`
     const token = localStorage.getItem('authToken')
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

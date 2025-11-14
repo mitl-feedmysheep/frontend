@@ -6,11 +6,13 @@ interface MemberSearchModalProps {
   isOpen: boolean
   onClose: () => void
   onSelect: (memberIds: string[]) => void
+  existingChurchMemberIds?: string[]
 }
 
 // API 응답을 UI용 타입으로 변환
 interface MemberForSelection {
   id: string
+  churchMemberId: string
   name: string
   gender: '남' | '여'
   birthday: string
@@ -28,6 +30,7 @@ const convertApiResponseToMember = (
 ): MemberForSelection => {
   return {
     id: apiMember.memberId,
+    churchMemberId: apiMember.churchMemberId,
     name: apiMember.name,
     gender: apiMember.sex === 'M' ? '남' : '여',
     birthday: apiMember.birthday,
@@ -39,6 +42,7 @@ function MemberSearchModal({
   isOpen,
   onClose,
   onSelect,
+  existingChurchMemberIds = [],
 }: MemberSearchModalProps) {
   const [inputValue, setInputValue] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -333,12 +337,18 @@ function MemberSearchModal({
                 const birthYear = birth.getFullYear().toString().slice(2)
                 const month = birth.getMonth() + 1
                 const day = birth.getDate()
+                const isAlreadyAdded = existingChurchMemberIds.includes(member.churchMemberId)
 
                 return (
                   <div
                     key={member.id}
                     className="rounded-lg border border-gray-200 bg-gray-50 p-4 hover:border-blue-300 hover:bg-blue-50 transition-all"
                   >
+                    {isAlreadyAdded && (
+                      <div className="text-red-500 text-xs mb-2 font-pretendard">
+                        이미 추가된 참석 멤버입니다!
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {/* 프로필 사진 */}
@@ -369,9 +379,9 @@ function MemberSearchModal({
                         onClick={() =>
                           handleSelectMember(member.id, member.name)
                         }
-                        disabled={selectedMembers.some(m => m.id === member.id)}
+                        disabled={isAlreadyAdded || selectedMembers.some(m => m.id === member.id)}
                         className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors font-pretendard ${
-                          selectedMembers.some(m => m.id === member.id)
+                          isAlreadyAdded || selectedMembers.some(m => m.id === member.id)
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                             : 'bg-blue-500 text-white hover:bg-blue-600'
                         }`}

@@ -155,6 +155,7 @@ export interface SignupResponse {
 // Admin Member Search types
 export interface MemberSearchResponse {
   memberId: string
+  churchMemberId: string
   name: string
   email: string
   phone: string
@@ -186,6 +187,30 @@ export interface VisitMember {
   prayers: VisitPrayer[]
 }
 
+// Visit List Response (for getAllVisits)
+export interface VisitListResponse {
+  id?: string
+  date?: string
+  startedAt?: string
+  endedAt?: string
+  place?: string
+  expense?: number
+  memberCount?: number
+  members?: Array<{
+    id?: {
+      value?: string
+    }
+    name?: string
+    email?: string
+    sex?: 'M' | 'F'
+    birthday?: string
+    phone?: string
+    profileUrl?: string
+  }>
+  createdAt?: string
+}
+
+// Visit Detail Response (for getVisitDetail)
 export interface Visit {
   id: string
   churchId: string
