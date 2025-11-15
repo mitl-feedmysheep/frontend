@@ -183,6 +183,8 @@ export interface VisitMember {
   id: string
   churchMemberId: string
   memberName: string
+  sex: 'M' | 'F' | null
+  birthday: string | null
   story: string
   prayers: VisitPrayer[]
 }
@@ -195,6 +197,7 @@ export interface VisitListResponse {
   endedAt?: string
   place?: string
   expense?: number
+  notes?: string
   memberCount?: number
   members?: Array<{
     id?: {

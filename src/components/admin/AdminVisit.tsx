@@ -73,13 +73,12 @@ function AdminVisit() {
     }
   }
 
-
   // 심방 기록 조회
   const fetchVisits = useCallback(async () => {
     try {
       setIsLoading(true)
       const data = await adminApi.getAllVisits()
-      
+
       if (!Array.isArray(data)) {
         setVisits([])
         return
@@ -95,9 +94,15 @@ function AdminVisit() {
     } catch (error) {
       console.error('Failed to fetch visits:', error)
       if (error instanceof Error) {
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        if (
+          error.message.includes('401') ||
+          error.message.includes('Unauthorized')
+        ) {
           alert('인증이 만료되었습니다. 다시 로그인해주세요.')
-        } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        } else if (
+          error.message.includes('403') ||
+          error.message.includes('Forbidden')
+        ) {
           alert('접근 권한이 없습니다. 관리자에게 문의해주세요.')
         } else {
           alert('심방 기록을 불러오는데 실패했습니다.')
@@ -287,6 +292,12 @@ function AdminVisit() {
                       </svg>
                       <span>{visit.place || '장소 미입력'}</span>
                     </div>
+                    {/* 메모 미리보기 */}
+                    {visit.notes && (
+                      <div className="text-sm text-gray-500 font-pretendard mb-2 line-clamp-1">
+                        {visit.notes}
+                      </div>
+                    )}
                     {/* 참석 인원 및 비용 */}
                     <div className="flex items-center gap-3 text-sm">
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded font-pretendard">

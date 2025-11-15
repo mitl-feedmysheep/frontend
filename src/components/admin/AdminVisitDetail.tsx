@@ -25,6 +25,19 @@ function AdminVisitDetail() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null)
 
+  // 필드 수정 상태
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editValues, setEditValues] = useState({
+    date: '',
+    startTime: '',
+    endTime: '',
+    place: '',
+    expense: 0,
+    notes: '',
+  })
+  const [hasVisitChanges, setHasVisitChanges] = useState(false)
+  const [isSavingVisit, setIsSavingVisit] = useState(false)
+
   // 심방 상세 정보 조회
   const fetchVisitDetail = useCallback(async () => {
     if (!visitId) return
@@ -343,6 +356,79 @@ function AdminVisitDetail() {
     [visitId, showToast, fetchVisitDetail, expandedMemberId]
   )
 
+  // 필드 수정 시작
+  const handleStartEdit = (field: string) => {
+    if (!visit) return
+    
+    setEditingField(field)
+    
+    // 현재 값으로 초기화
+    const startDate = new Date(visit.startedAt)
+    const endDate = new Date(visit.endedAt)
+    
+    setEditValues({
+      date: visit.date,
+      startTime: `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`,
+      endTime: `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`,
+      place: visit.place,
+      expense: visit.expense,
+      notes: visit.notes,
+    })
+  }
+
+  // 필드 값 변경
+  const handleEditValueChange = (field: string, value: any) => {
+    setEditValues(prev => ({
+      ...prev,
+      [field]: value,
+    }))
+    setHasVisitChanges(true)
+  }
+
+  // 전체 수정사항 저장
+  const handleSaveVisit = async () => {
+    if (!visitId || !visit) return
+
+    try {
+      setIsSavingVisit(true)
+      const startedAt = `${editValues.date}T${editValues.startTime}:00.000Z`
+      const endedAt = `${editValues.date}T${editValues.endTime}:00.000Z`
+
+      const updateData = {
+        date: editValues.date,
+        startedAt,
+        endedAt,
+        place: editValues.place,
+        expense: editValues.expense,
+        notes: editValues.notes,
+      }
+
+      // API 호출 - PUT /visits/admin/{visitId}
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/visits/admin/${visitId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: localStorage.getItem('authToken') || '',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update visit')
+      }
+
+      setEditingField(null)
+      setHasVisitChanges(false)
+      showToast('수정되었습니다.')
+      await fetchVisitDetail()
+    } catch (error) {
+      console.error('Failed to update visit:', error)
+      showToast('수정에 실패했습니다.')
+    } finally {
+      setIsSavingVisit(false)
+    }
+  }
+
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -465,7 +551,7 @@ function AdminVisitDetail() {
 
           <div className="space-y-3">
             {/* 날짜 */}
-            <InfoRow
+            <EditableInfoRow
               icon={
                 <svg
                   className="w-5 h-5"
@@ -483,11 +569,17 @@ function AdminVisitDetail() {
               }
               label="날짜"
               value={formatDate(visit.date)}
+              fieldName="date"
+              editingField={editingField}
+              editValues={editValues}
+              onStartEdit={handleStartEdit}
+              onChange={handleEditValueChange}
+              inputType="date"
             />
 
             {/* 시간 */}
-            <InfoRow
-              icon={
+            <div className="flex items-start gap-3">
+              <div className="text-gray-400 flex-shrink-0">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -501,13 +593,47 @@ function AdminVisitDetail() {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              }
-              label="시간"
-              value={`${formatTime(visit.startedAt)} ~ ${formatTime(visit.endedAt)}`}
-            />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start gap-4">
+                  <div className="w-20 text-sm font-medium text-gray-500 font-pretendard">
+                    시간
+                  </div>
+                  <div className="flex-1">
+                    {editingField === 'time' ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          autoFocus
+                          type="time"
+                          value={editValues.startTime}
+                          onChange={e => handleEditValueChange('startTime', e.target.value)}
+                          className="flex-1 px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                          placeholder="입력 중..."
+                        />
+                        <span className="text-gray-500">~</span>
+                        <input
+                          type="time"
+                          value={editValues.endTime}
+                          onChange={e => handleEditValueChange('endTime', e.target.value)}
+                          className="flex-1 px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                          placeholder="입력 중..."
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => handleStartEdit('time')}
+                        className="text-sm text-gray-900 font-pretendard cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded"
+                      >
+                        {`${formatTime(visit.startedAt)} ~ ${formatTime(visit.endedAt)}`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* 장소 */}
-            <InfoRow
+            <EditableInfoRow
               icon={
                 <svg
                   className="w-5 h-5"
@@ -531,10 +657,16 @@ function AdminVisitDetail() {
               }
               label="장소"
               value={visit.place}
+              fieldName="place"
+              editingField={editingField}
+              editValues={editValues}
+              onStartEdit={handleStartEdit}
+              onChange={handleEditValueChange}
+              inputType="text"
             />
 
             {/* 비용 */}
-            <InfoRow
+            <EditableInfoRow
               icon={
                 <svg
                   className="w-5 h-5"
@@ -552,6 +684,12 @@ function AdminVisitDetail() {
               }
               label="비용"
               value={`${visit.expense.toLocaleString()}원`}
+              fieldName="expense"
+              editingField={editingField}
+              editValues={editValues}
+              onStartEdit={handleStartEdit}
+              onChange={handleEditValueChange}
+              inputType="number"
             />
 
             {/* 참석 인원 */}
@@ -576,11 +714,11 @@ function AdminVisitDetail() {
             />
 
             {/* 메모 */}
-            {visit.notes && (
-              <div className="pt-3 border-t border-gray-100">
-                <div className="flex items-start gap-3">
+            <div className="pt-3 border-t border-gray-100">
+              <EditableInfoRow
+                icon={
                   <svg
-                    className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
+                    className="w-5 h-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -592,17 +730,17 @@ function AdminVisitDetail() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-500 font-pretendard mb-1">
-                      메모
-                    </div>
-                    <div className="text-sm text-gray-900 font-pretendard whitespace-pre-wrap">
-                      {visit.notes}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                }
+                label="메모"
+                value={visit.notes || '메모 없음'}
+                fieldName="notes"
+                editingField={editingField}
+                editValues={editValues}
+                onStartEdit={handleStartEdit}
+                onChange={handleEditValueChange}
+                inputType="textarea"
+              />
+            </div>
 
             {/* 사진 */}
             <div className="pt-3 border-t border-gray-100">
@@ -644,30 +782,6 @@ function AdminVisitDetail() {
                       overscrollBehaviorX: 'contain',
                     }}
                   >
-                    {(() => {
-                      console.warn('🖼️ [Render] visit.medias:', visit.medias)
-                      console.warn(
-                        '🖼️ [Render] visit object keys:',
-                        Object.keys(visit)
-                      )
-                      console.warn('🖼️ [Render] Has medias?', !!visit.medias)
-                      console.warn(
-                        '🖼️ [Render] medias length:',
-                        visit.medias?.length
-                      )
-
-                      if (visit.medias && visit.medias.length > 0) {
-                        const filtered = visit.medias.filter(
-                          m => m.mediaType === 'MEDIUM'
-                        )
-                        console.warn(
-                          '🖼️ [Render] Filtered MEDIUM images:',
-                          filtered
-                        )
-                      }
-
-                      return null
-                    })()}
                     {visit.medias &&
                       visit.medias.length > 0 &&
                       visit.medias
@@ -795,6 +909,21 @@ function AdminVisitDetail() {
               </div>
             </div>
           </div>
+
+          {/* 저장 버튼 */}
+          {hasVisitChanges && (
+            <div className="pt-4">
+              <button
+                onClick={handleSaveVisit}
+                disabled={isSavingVisit}
+                className={`w-full ${
+                  isSavingVisit ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white py-2.5 rounded-lg font-medium text-base font-pretendard transition-colors`}
+              >
+                {isSavingVisit ? '저장 중...' : '수정'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 참석 멤버 섹션 */}
@@ -1074,9 +1203,29 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
               {member.memberName.charAt(0)}
             </span>
           </div>
-          <span className="font-semibold text-gray-900 font-pretendard text-base">
-            {member.memberName}
-          </span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900 font-pretendard text-base">
+                {member.memberName}
+              </span>
+              {member.sex && (
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    member.sex === 'M'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-pink-100 text-pink-700'
+                  }`}
+                >
+                  {member.sex === 'M' ? '남' : '여'}
+                </span>
+              )}
+              {member.birthday && (
+                <span className="text-xs text-gray-500 font-pretendard">
+                  {String(new Date(member.birthday).getFullYear()).slice(-2)}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 삭제 버튼 */}
@@ -1235,5 +1384,91 @@ const InfoRow = ({
     </div>
   </div>
 )
+
+// EditableInfoRow 컴포넌트
+const EditableInfoRow = ({
+  icon,
+  label,
+  value,
+  fieldName,
+  editingField,
+  editValues,
+  onStartEdit,
+  onChange,
+  inputType = 'text',
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  fieldName: string
+  editingField: string | null
+  editValues: any
+  onStartEdit: (field: string) => void
+  onChange: (field: string, value: any) => void
+  inputType?: 'text' | 'number' | 'date' | 'time' | 'textarea'
+}) => {
+  const isEditing = editingField === fieldName
+
+  return (
+    <div className="flex items-start gap-3">
+      <div className="text-gray-400 flex-shrink-0">{icon}</div>
+      <div className="flex-1">
+        <div className="flex items-start gap-4">
+          <div className="w-20 text-sm font-medium text-gray-500 font-pretendard">
+            {label}
+          </div>
+          <div className="flex-1">
+            {isEditing ? (
+              inputType === 'textarea' ? (
+                <textarea
+                  autoFocus
+                  value={editValues[fieldName]}
+                  onChange={e => onChange(fieldName, e.target.value)}
+                  onFocus={e => {
+                    // 커서를 텍스트의 맨 뒤로 이동
+                    const len = e.target.value.length
+                    e.target.setSelectionRange(len, len)
+                  }}
+                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  rows={3}
+                  placeholder="입력 중..."
+                />
+              ) : inputType === 'number' ? (
+                <input
+                  autoFocus
+                  type="tel"
+                  inputMode="numeric"
+                  value={editValues[fieldName]}
+                  onChange={e => {
+                    const value = e.target.value.replace(/[^0-9]/g, '')
+                    onChange(fieldName, value === '' ? 0 : parseInt(value))
+                  }}
+                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  placeholder="입력 중..."
+                />
+              ) : (
+                <input
+                  autoFocus
+                  type={inputType}
+                  value={editValues[fieldName]}
+                  onChange={e => onChange(fieldName, e.target.value)}
+                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  placeholder="입력 중..."
+                />
+              )
+            ) : (
+              <div
+                onClick={() => onStartEdit(fieldName)}
+                className="text-sm text-gray-900 font-pretendard cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded"
+              >
+                {value}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default AdminVisitDetail
