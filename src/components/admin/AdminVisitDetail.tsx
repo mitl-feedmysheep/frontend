@@ -987,6 +987,7 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
   )
   const [hasChanges, setHasChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const lastInputRef = useRef<HTMLInputElement>(null)
 
   // 변경사항 감지
   useEffect(() => {
@@ -1007,8 +1008,15 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
   }, [localStory, prayerInputs, member.story, member.prayers])
 
   // 기도제목 추가
-  const handleAddPrayer = () => {
-    setPrayerInputs([...prayerInputs, { id: `new-${Date.now()}`, value: '' }])
+  const handleAddPrayer = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const newId = `new-${Date.now()}`
+    setPrayerInputs([...prayerInputs, { id: newId, value: '' }])
+    // 즉시 새로운 input에 focus (키보드 유지)
+    requestAnimationFrame(() => {
+      lastInputRef.current?.focus({ preventScroll: true })
+    })
   }
 
   // 기도제목 변경
@@ -1145,7 +1153,9 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
                 기도제목
               </label>
               <button
-                onClick={handleAddPrayer}
+                type="button"
+                onMouseDown={handleAddPrayer}
+                onTouchStart={handleAddPrayer}
                 className="text-blue-500 hover:text-blue-600 text-sm font-medium font-pretendard"
               >
                 + 추가
@@ -1155,6 +1165,7 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
               {prayerInputs.map((input, index) => (
                 <div key={input.id} className="flex gap-2">
                   <input
+                    ref={index === prayerInputs.length - 1 ? lastInputRef : null}
                     type="text"
                     value={input.value}
                     onChange={e => handlePrayerChange(input.id, e.target.value)}

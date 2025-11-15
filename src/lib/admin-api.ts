@@ -360,7 +360,7 @@ export const adminApi = {
       }>
     }
   ): Promise<VisitMember> => {
-    const url = `${API_BASE_URL}/visits/admin/${visitId}/members/${visitMemberId}`
+    const url = `${API_BASE_URL}/visits/admin/${visitId}/visitMembers/${visitMemberId}`
     const token = localStorage.getItem('authToken')
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -368,7 +368,7 @@ export const adminApi = {
     if (token) headers['Authorization'] = `${token}`
 
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'PATCH',
       headers,
       body: JSON.stringify(data),
     })
