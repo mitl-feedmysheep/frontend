@@ -359,13 +359,13 @@ function AdminVisitDetail() {
   // 필드 수정 시작
   const handleStartEdit = (field: string) => {
     if (!visit) return
-    
+
     setEditingField(field)
-    
+
     // 현재 값으로 초기화
     const startDate = new Date(visit.startedAt)
     const endDate = new Date(visit.endedAt)
-    
+
     setEditValues({
       date: visit.date,
       startTime: `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`,
@@ -404,14 +404,17 @@ function AdminVisitDetail() {
       }
 
       // API 호출 - PUT /visits/admin/{visitId}
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/visits/admin/${visitId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: localStorage.getItem('authToken') || '',
-        },
-        body: JSON.stringify(updateData),
-      })
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/visits/admin/${visitId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('authToken') || '',
+          },
+          body: JSON.stringify(updateData),
+        }
+      )
 
       if (!response.ok) {
         throw new Error('Failed to update visit')
@@ -606,16 +609,20 @@ function AdminVisitDetail() {
                           autoFocus
                           type="time"
                           value={editValues.startTime}
-                          onChange={e => handleEditValueChange('startTime', e.target.value)}
-                          className="flex-1 px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                          onChange={e =>
+                            handleEditValueChange('startTime', e.target.value)
+                          }
+                          className="flex-1 px-3 py-3 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-base"
                           placeholder="입력 중..."
                         />
                         <span className="text-gray-500">~</span>
                         <input
                           type="time"
                           value={editValues.endTime}
-                          onChange={e => handleEditValueChange('endTime', e.target.value)}
-                          className="flex-1 px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                          onChange={e =>
+                            handleEditValueChange('endTime', e.target.value)
+                          }
+                          className="flex-1 px-3 py-3 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-base"
                           placeholder="입력 중..."
                         />
                       </div>
@@ -917,7 +924,9 @@ function AdminVisitDetail() {
                 onClick={handleSaveVisit}
                 disabled={isSavingVisit}
                 className={`w-full ${
-                  isSavingVisit ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+                  isSavingVisit
+                    ? 'bg-gray-400'
+                    : 'bg-blue-500 hover:bg-blue-600'
                 } text-white py-2.5 rounded-lg font-medium text-base font-pretendard transition-colors`}
               >
                 {isSavingVisit ? '저장 중...' : '수정'}
@@ -1074,7 +1083,9 @@ function AdminVisitDetail() {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
         onSelect={handleAddMembers}
-        existingChurchMemberIds={visit?.visitMembers.map(vm => vm.churchMemberId) || []}
+        existingChurchMemberIds={
+          visit?.visitMembers.map(vm => vm.churchMemberId) || []
+        }
       />
     </div>
   )
@@ -1290,7 +1301,7 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
               value={localStory}
               onChange={e => setLocalStory(e.target.value)}
               placeholder="이 사람과 나눈 이야기를 기록해주세요."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-sm resize-none"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-base resize-none"
               rows={3}
             />
           </div>
@@ -1314,12 +1325,14 @@ const VisitMemberCard: React.FC<VisitMemberCardProps> = ({
               {prayerInputs.map((input, index) => (
                 <div key={input.id} className="flex gap-2">
                   <input
-                    ref={index === prayerInputs.length - 1 ? lastInputRef : null}
+                    ref={
+                      index === prayerInputs.length - 1 ? lastInputRef : null
+                    }
                     type="text"
                     value={input.value}
                     onChange={e => handlePrayerChange(input.id, e.target.value)}
                     placeholder={`기도제목 ${index + 1}`}
-                    className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-sm"
+                    className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-pretendard text-base"
                   />
                   {prayerInputs.length > 1 && (
                     <button
@@ -1429,7 +1442,7 @@ const EditableInfoRow = ({
                     const len = e.target.value.length
                     e.target.setSelectionRange(len, len)
                   }}
-                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  className="w-full px-3 py-3 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-base"
                   rows={3}
                   placeholder="입력 중..."
                 />
@@ -1443,7 +1456,7 @@ const EditableInfoRow = ({
                     const value = e.target.value.replace(/[^0-9]/g, '')
                     onChange(fieldName, value === '' ? 0 : parseInt(value))
                   }}
-                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  className="w-full px-3 py-3 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-base"
                   placeholder="입력 중..."
                 />
               ) : (
@@ -1452,7 +1465,7 @@ const EditableInfoRow = ({
                   type={inputType}
                   value={editValues[fieldName]}
                   onChange={e => onChange(fieldName, e.target.value)}
-                  className="w-full px-3 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-sm"
+                  className="w-full px-3 py-3 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-pretendard text-base"
                   placeholder="입력 중..."
                 />
               )
