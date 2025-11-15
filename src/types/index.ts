@@ -155,6 +155,7 @@ export interface SignupResponse {
 // Admin Member Search types
 export interface MemberSearchResponse {
   memberId: string
+  churchMemberId: string
   name: string
   email: string
   phone: string
@@ -167,4 +168,79 @@ export interface MemberSearchResponse {
     groupName: string
     role: 'LEADER' | 'SUB_LEADER' | 'MEMBER'
   }[]
+}
+
+// Visit types
+export interface VisitPrayer {
+  id: string
+  prayerRequest: string
+  description: string
+  isAnswered: boolean
+  createdAt: string
+}
+
+export interface VisitMember {
+  id: string
+  churchMemberId: string
+  memberName: string
+  sex: 'M' | 'F' | null
+  birthday: string | null
+  story: string
+  prayers: VisitPrayer[]
+}
+
+// Visit List Response (for getAllVisits)
+export interface VisitListResponse {
+  id?: string
+  date?: string
+  startedAt?: string
+  endedAt?: string
+  place?: string
+  expense?: number
+  notes?: string
+  memberCount?: number
+  members?: Array<{
+    id?: {
+      value?: string
+    }
+    name?: string
+    email?: string
+    sex?: 'M' | 'F'
+    birthday?: string
+    phone?: string
+    profileUrl?: string
+  }>
+  createdAt?: string
+}
+
+// Visit Detail Response (for getVisitDetail)
+export interface Visit {
+  id: string
+  churchId: string
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+  expense: number
+  notes: string
+  memberCount?: number
+  visitMembers: VisitMember[]
+  medias?: Array<{
+    id: string
+    mediaType: 'THUMBNAIL' | 'MEDIUM'
+    entityType: string
+    entityId: string
+    url: string
+    createdAt: string
+  }>
+  createdAt: string
+}
+
+export interface CreateVisitRequest {
+  date: string
+  startedAt: string
+  endedAt: string
+  place: string
+  expense: number
+  notes: string
 }

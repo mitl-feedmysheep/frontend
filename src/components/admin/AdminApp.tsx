@@ -17,6 +17,7 @@ import AdminMembers from './AdminMembers'
 import AdminSettings from './AdminSettings'
 import AdminSplashScreen from './AdminSplashScreen'
 import AdminVisit from './AdminVisit'
+import AdminVisitDetail from './AdminVisitDetail'
 
 // AdminLogin Wrapper 컴포넌트
 const AdminLoginWrapper = () => {
@@ -144,6 +145,14 @@ function RoutesWithScrollReset() {
           element={
             <AdminProtectedRoute>
               <AdminVisit />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/visit/:visitId"
+          element={
+            <AdminProtectedRoute>
+              <AdminVisitDetail />
             </AdminProtectedRoute>
           }
         />
