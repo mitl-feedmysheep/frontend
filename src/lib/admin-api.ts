@@ -1,5 +1,6 @@
 import { ApiError } from '@/lib/api'
 import type {
+  AdminMeResponse,
   Church,
   CreateVisitRequest,
   LoginRequest,
@@ -81,6 +82,31 @@ export const adminApi = {
       throw apiError
     }
     const data: Church[] = await response.json()
+    return data
+  },
+
+  getMyRoleInChurch: async (): Promise<AdminMeResponse> => {
+    const url = `${API_BASE_URL}/members/admin/me`
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) headers['Authorization'] = `${token}`
+
+    const response = await fetch(url, { method: 'GET', headers })
+    if (!response.ok) {
+      const errorData: { message?: string } = await response
+        .json()
+        .catch(() => ({}) as { message?: string })
+      const apiError = new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      )
+      checkAndHandleJwtExpired(apiError)
+      throw apiError
+    }
+    const data: AdminMeResponse = await response.json()
     return data
   },
 

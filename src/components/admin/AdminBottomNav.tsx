@@ -1,14 +1,33 @@
+import { adminApi } from '@/lib/admin-api'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const AdminBottomNav = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        // 토큰에 churchId가 포함되어 있으므로 인자 없이 호출
+        const response = await adminApi.getMyRoleInChurch()
+        if (response.role === 'ADMIN') {
+          setIsAdmin(true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch role:', error)
+      }
+    }
+    checkRole()
+  }, [])
 
   const menuItems = [
     {
       id: 'home',
       label: '홈',
       path: '/',
+      show: true,
       icon: (isActive: boolean) => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
@@ -34,6 +53,7 @@ const AdminBottomNav = () => {
       id: 'members',
       label: '교적부',
       path: '/members',
+      show: true,
       icon: (isActive: boolean) => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
@@ -73,10 +93,11 @@ const AdminBottomNav = () => {
       id: 'visit',
       label: '심방',
       path: '/visit',
+      show: isAdmin,
       icon: (isActive: boolean) => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
-            d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21"
+            d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 19V21"
             stroke={isActive ? '#3B82F6' : '#9CA3AF'}
             strokeWidth="2"
             strokeLinecap="round"
@@ -112,6 +133,7 @@ const AdminBottomNav = () => {
       id: 'groups',
       label: '소모임',
       path: '/groups',
+      show: true,
       icon: (isActive: boolean) => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
@@ -172,38 +194,40 @@ const AdminBottomNav = () => {
       }}
     >
       <div className="flex items-center justify-around h-16">
-        {menuItems.map(item => {
-          const isActive = location.pathname === item.path
-          return (
-            <button
-              type="button"
-              key={item.id}
-              onClick={e => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleNavigate(item.path)
-              }}
-              onTouchEnd={e => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleNavigate(item.path)
-              }}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors"
-              style={{ touchAction: 'manipulation' }}
-            >
-              {item.icon(isActive)}
-              <span
-                className={`text-xs font-pretendard transition-colors ${
-                  isActive
-                    ? 'text-blue-500 font-medium'
-                    : 'text-gray-400 font-normal'
-                }`}
+        {menuItems
+          .filter(item => item.show)
+          .map(item => {
+            const isActive = location.pathname === item.path
+            return (
+              <button
+                type="button"
+                key={item.id}
+                onClick={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleNavigate(item.path)
+                }}
+                onTouchEnd={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleNavigate(item.path)
+                }}
+                className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors"
+                style={{ touchAction: 'manipulation' }}
               >
-                {item.label}
-              </span>
-            </button>
-          )
-        })}
+                {item.icon(isActive)}
+                <span
+                  className={`text-xs font-pretendard transition-colors ${
+                    isActive
+                      ? 'text-blue-500 font-medium'
+                      : 'text-gray-400 font-normal'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
       </div>
     </nav>
   )

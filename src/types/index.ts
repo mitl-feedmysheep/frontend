@@ -244,3 +244,7 @@ export interface CreateVisitRequest {
   expense: number
   notes: string
 }
+
+export interface AdminMeResponse {
+  role: 'MEMBER' | 'LEADER' | 'ADMIN'
+}

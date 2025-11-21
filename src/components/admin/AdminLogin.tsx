@@ -75,6 +75,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       const list = await adminApi.getAdminChurches()
       if (Array.isArray(list) && list.length === 1) {
         await adminApi.selectChurch(list[0].id)
+        localStorage.setItem('churchId', list[0].id) // Store churchId
         onLoginSuccess()
         return
       }
@@ -103,6 +104,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     setSelecting(true)
     try {
       await adminApi.selectChurch(churchId)
+      localStorage.setItem('churchId', churchId) // Store churchId
       onLoginSuccess()
     } catch (error) {
       if (error instanceof ApiError)
