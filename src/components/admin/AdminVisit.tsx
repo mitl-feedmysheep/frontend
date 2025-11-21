@@ -178,13 +178,19 @@ function AdminVisit() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <main className="max-w-screen-sm mx-auto px-4 py-4">
-        {/* 헤더 */}
-        <div className="mb-4">
+      {/* Header without Profile Icon */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-screen-sm mx-auto px-4 py-4 flex items-center justify-start h-[60px]">
           <h1 className="text-xl font-bold text-gray-900 font-pretendard">
-            심방 관리
+            심방
           </h1>
-          <p className="text-sm text-gray-600 font-pretendard mt-1">
+        </div>
+      </div>
+
+      <main className="max-w-screen-sm mx-auto px-4 py-4">
+        {/* 심방 설명 헤더 제거 */}
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 font-pretendard">
             심방 기록을 관리하고 조회합니다.
           </p>
         </div>
